@@ -88,6 +88,7 @@ export interface Review {
   user_id: string | null
   rating: number
   text: string | null
+  reviewer_name: string | null
   verified_booking: boolean
   created_at: string
   business?: Business
@@ -104,6 +105,7 @@ export interface Booking {
   time: string | null
   status: string
   source: string
+  notes: string | null
   created_at: string
 }
 
@@ -121,6 +123,7 @@ export interface BusinessPhoto {
   business_id: string
   url: string
   alt_text: string | null
+  reviewer_name: string | null
   position: number
   is_cover: boolean
 }
