@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -8,16 +8,24 @@ import ProgressSteps from '@/components/ui/ProgressSteps'
 import Toast from '@/components/ui/Toast'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Category, Area } from '@/lib/types'
 
-const STEPS = ['Basics', 'Location', 'Contact', 'Hours', 'Description', 'Review']
+const STEPS = ['Basics', 'Location', 'Contact', 'Hours', 'Description', 'Photos', 'Review']
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const MAX_PHOTOS = 5
 
 interface HourEntry {
   day: number
   open_time: string
   close_time: string
   closed: boolean
+}
+
+interface PhotoEntry {
+  file: File
+  preview: string
+  isCover: boolean
 }
 
 interface FormData {
@@ -32,6 +40,17 @@ interface FormData {
   website: string
   description: string
   hours: HourEntry[]
+}
+
+interface FieldErrors {
+  name?: string
+  category_id?: string
+  area_id?: string
+  phone?: string
+  whatsapp?: string
+  email?: string
+  website?: string
+  description?: string
 }
 
 function generateSlug(name: string): string {
@@ -51,6 +70,27 @@ function formatNigerianPhone(value: string): string {
   return value
 }
 
+function isValidNigerianPhone(value: string): boolean {
+  if (!value) return false
+  const formatted = formatNigerianPhone(value)
+  return /^\+234[789]\d{9}$/.test(formatted)
+}
+
+function isValidEmail(value: string): boolean {
+  if (!value) return true // optional
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function isValidUrl(value: string): boolean {
+  if (!value) return true // optional
+  try {
+    new URL(value)
+    return true
+  } catch {
+    return false
+  }
+}
+
 type AreaWithCity = Omit<Area, 'city'> & {
   city?: { name: string; state: string }
 }
@@ -63,6 +103,11 @@ export default function OnboardingPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Category[]>([])
   const [areas, setAreas] = useState<AreaWithCity[]>([])
+  const [photos, setPhotos] = useState<PhotoEntry[]>([])
+  const [uploadingPhotos, setUploadingPhotos] = useState(false)
+  const [errors, setErrors] = useState<FieldErrors>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { user } = useAuth()
   const router = useRouter()
   const supabase = createClient()
@@ -128,6 +173,30 @@ export default function OnboardingPage() {
     }
   }, [formData.category_id, supabase])
 
+  // Validate fields
+  const validate = useCallback((data: FormData): FieldErrors => {
+    const errs: FieldErrors = {}
+    if (!data.name.trim()) errs.name = 'Business name is required'
+    else if (data.name.trim().length < 2) errs.name = 'Name must be at least 2 characters'
+    if (!data.category_id) errs.category_id = 'Please select a category'
+    if (!data.area_id) errs.area_id = 'Please select an area'
+    if (!data.phone) errs.phone = 'Phone number is required'
+    else if (!isValidNigerianPhone(data.phone)) errs.phone = 'Enter a valid Nigerian phone number (e.g. 08012345678 or +2348012345678)'
+    if (data.whatsapp && !isValidNigerianPhone(data.whatsapp)) errs.whatsapp = 'Enter a valid Nigerian phone number'
+    if (!isValidEmail(data.email)) errs.email = 'Enter a valid email address'
+    if (!isValidUrl(data.website)) errs.website = 'Enter a valid URL (e.g. https://example.com)'
+    if (!data.description || data.description.length < 20) errs.description = 'Description must be at least 20 characters'
+    return errs
+  }, [])
+
+  useEffect(() => {
+    setErrors(validate(formData))
+  }, [formData, validate])
+
+  const markTouched = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+  }
+
   const updateField = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
@@ -143,13 +212,68 @@ export default function OnboardingPage() {
 
   const canProceed = (): boolean => {
     switch (step) {
-      case 0: return !!(formData.name && formData.category_id)
-      case 1: return !!(formData.area_id)
-      case 2: return !!(formData.phone)
+      case 0: return !!(formData.name.trim() && formData.category_id && !errors.name && !errors.category_id)
+      case 1: return !!(formData.area_id && !errors.area_id)
+      case 2: return !!(formData.phone && !errors.phone && !errors.whatsapp && !errors.email && !errors.website)
       case 3: return true
-      case 4: return !!(formData.description && formData.description.length >= 20)
+      case 4: return !!(formData.description && formData.description.length >= 20 && !errors.description)
+      case 5: return true // photos optional
       default: return true
     }
+  }
+
+  const handleNext = () => {
+    // Mark all fields in current step as touched
+    switch (step) {
+      case 0:
+        setTouched(prev => ({ ...prev, name: true, category_id: true }))
+        break
+      case 1:
+        setTouched(prev => ({ ...prev, area_id: true }))
+        break
+      case 2:
+        setTouched(prev => ({ ...prev, phone: true, whatsapp: true, email: true, website: true }))
+        break
+      case 4:
+        setTouched(prev => ({ ...prev, description: true }))
+        break
+    }
+    if (canProceed()) {
+      setStep(s => s + 1)
+    }
+  }
+
+  // Photo handling
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    const remaining = MAX_PHOTOS - photos.length
+    const newFiles = Array.from(files).slice(0, remaining)
+
+    const newPhotos: PhotoEntry[] = newFiles.map((file, i) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      isCover: photos.length === 0 && i === 0,
+    }))
+
+    setPhotos(prev => [...prev, ...newPhotos])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removePhoto = (index: number) => {
+    const removed = photos[index]
+    URL.revokeObjectURL(removed.preview)
+    const updated = photos.filter((_, i) => i !== index)
+    // If removed was cover, make first remaining the cover
+    if (removed.isCover && updated.length > 0) {
+      updated[0].isCover = true
+    }
+    setPhotos(updated)
+  }
+
+  const setCoverPhoto = (index: number) => {
+    setPhotos(prev => prev.map((p, i) => ({ ...p, isCover: i === index })))
   }
 
   const handleSubmit = async () => {
@@ -178,7 +302,7 @@ export default function OnboardingPage() {
           category_id: categoryId,
           area_id: formData.area_id,
           city_id: area?.city_id || null,
-          phone: formData.phone,
+          phone: formatNigerianPhone(formData.phone),
           whatsapp: formData.whatsapp ? formatNigerianPhone(formData.whatsapp) : null,
           email: formData.email || null,
           website: formData.website || null,
@@ -193,6 +317,7 @@ export default function OnboardingPage() {
       if (bizError) throw bizError
 
       if (business) {
+        // Insert hours
         const hoursData = formData.hours.map(h => ({
           business_id: business.id,
           day: h.day,
@@ -200,8 +325,38 @@ export default function OnboardingPage() {
           close_time: h.closed ? null : h.close_time,
           closed: h.closed,
         }))
-
         await supabase.from('business_hours').insert(hoursData)
+
+        // Upload photos
+        if (photos.length > 0) {
+          setUploadingPhotos(true)
+          for (let i = 0; i < photos.length; i++) {
+            const photo = photos[i]
+            const ext = photo.file.name.split('.').pop() || 'jpg'
+            const filePath = `businesses/${business.id}/${Date.now()}-${i}.${ext}`
+
+            const { error: uploadError } = await supabase.storage
+              .from('business-photos')
+              .upload(filePath, photo.file, {
+                cacheControl: '3600',
+                upsert: false,
+              })
+
+            if (!uploadError) {
+              const { data: urlData } = supabase.storage
+                .from('business-photos')
+                .getPublicUrl(filePath)
+
+              await supabase.from('business_photos').insert({
+                business_id: business.id,
+                url: urlData.publicUrl,
+                is_cover: photo.isCover,
+                position: i,
+              })
+            }
+          }
+          setUploadingPhotos(false)
+        }
       }
 
       setToast({ message: 'Business listed successfully! Redirecting...', type: 'success' })
@@ -212,6 +367,12 @@ export default function OnboardingPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Inline error component
+  const FieldError = ({ field }: { field: keyof FieldErrors }) => {
+    if (!touched[field] || !errors[field]) return null
+    return <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠️ {errors[field]}</p>
   }
 
   if (dataLoading) {
@@ -257,30 +418,43 @@ export default function OnboardingPage() {
             <div className="space-y-4">
               <h2 className="font-heading text-xl font-semibold text-hustle-dark">Business Basics</h2>
               <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">Business Name *</label>
+                <label className="block text-sm font-medium text-hustle-dark mb-1">
+                  Business Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => updateField('name', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                  onBlur={() => markTouched('name')}
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                    touched.name && errors.name ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="e.g. Ada's Hair Studio"
                 />
+                <FieldError field="name" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">Category *</label>
+                <label className="block text-sm font-medium text-hustle-dark mb-1">
+                  Category <span className="text-red-500">*</span>
+                </label>
                 <select
                   value={formData.category_id}
                   onChange={(e) => {
                     updateField('category_id', e.target.value)
                     updateField('subcategory_id', '')
+                    markTouched('category_id')
                   }}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                  onBlur={() => markTouched('category_id')}
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                    touched.category_id && errors.category_id ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                 >
                   <option value="">Select a category</option>
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
                   ))}
                 </select>
+                <FieldError field="category_id" />
               </div>
               {subcategories.length > 0 && (
                 <div>
@@ -305,11 +479,19 @@ export default function OnboardingPage() {
             <div className="space-y-4">
               <h2 className="font-heading text-xl font-semibold text-hustle-dark">Location</h2>
               <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">Area *</label>
+                <label className="block text-sm font-medium text-hustle-dark mb-1">
+                  Area <span className="text-red-500">*</span>
+                </label>
                 <select
                   value={formData.area_id}
-                  onChange={(e) => updateField('area_id', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                  onChange={(e) => {
+                    updateField('area_id', e.target.value)
+                    markTouched('area_id')
+                  }}
+                  onBlur={() => markTouched('area_id')}
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                    touched.area_id && errors.area_id ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                 >
                   <option value="">Select your area</option>
                   {areas.map(a => (
@@ -318,6 +500,7 @@ export default function OnboardingPage() {
                     </option>
                   ))}
                 </select>
+                <FieldError field="area_id" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-hustle-dark mb-1">Street Address</label>
@@ -337,14 +520,23 @@ export default function OnboardingPage() {
             <div className="space-y-4">
               <h2 className="font-heading text-xl font-semibold text-hustle-dark">Contact Information</h2>
               <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">Phone Number *</label>
+                <label className="block text-sm font-medium text-hustle-dark mb-1">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => updateField('phone', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                  onBlur={() => markTouched('phone')}
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                    touched.phone && errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="08012345678"
                 />
+                <FieldError field="phone" />
+                {formData.phone && !errors.phone && (
+                  <p className="text-xs text-green-600 mt-1">✓ Will be saved as: {formatNigerianPhone(formData.phone)}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-hustle-dark mb-1">WhatsApp Number</label>
@@ -352,13 +544,15 @@ export default function OnboardingPage() {
                   type="tel"
                   value={formData.whatsapp}
                   onChange={(e) => updateField('whatsapp', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                  onBlur={() => markTouched('whatsapp')}
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                    touched.whatsapp && errors.whatsapp ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="08012345678 (auto-formats to +234)"
                 />
-                {formData.whatsapp && (
-                  <p className="text-xs text-hustle-muted mt-1">
-                    Will be saved as: {formatNigerianPhone(formData.whatsapp)}
-                  </p>
+                <FieldError field="whatsapp" />
+                {formData.whatsapp && !errors.whatsapp && (
+                  <p className="text-xs text-green-600 mt-1">✓ Will be saved as: {formatNigerianPhone(formData.whatsapp)}</p>
                 )}
               </div>
               <div>
@@ -367,9 +561,13 @@ export default function OnboardingPage() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => updateField('email', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                  onBlur={() => markTouched('email')}
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                    touched.email && errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="business@example.com"
                 />
+                <FieldError field="email" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-hustle-dark mb-1">Website</label>
@@ -377,9 +575,13 @@ export default function OnboardingPage() {
                   type="url"
                   value={formData.website}
                   onChange={(e) => updateField('website', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                  onBlur={() => markTouched('website')}
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                    touched.website && errors.website ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="https://www.example.com"
                 />
+                <FieldError field="website" />
               </div>
             </div>
           )}
@@ -391,7 +593,7 @@ export default function OnboardingPage() {
               <p className="text-sm text-hustle-muted">Set your opening hours for each day of the week.</p>
               <div className="space-y-3">
                 {DAYS.map((day, i) => (
-                  <div key={day} className="flex items-center gap-3 p-3 rounded-lg bg-hustle-light">
+                  <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-hustle-light">
                     <div className="w-24 text-sm font-medium text-hustle-dark">{day}</div>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -403,7 +605,7 @@ export default function OnboardingPage() {
                       <span className="text-sm text-hustle-muted">Open</span>
                     </label>
                     {!formData.hours[i].closed && (
-                      <>
+                      <div className="flex items-center gap-2">
                         <input
                           type="time"
                           value={formData.hours[i].open_time}
@@ -417,7 +619,7 @@ export default function OnboardingPage() {
                           onChange={(e) => updateHour(i, 'close_time', e.target.value)}
                           className="px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
                         />
-                      </>
+                      </div>
                     )}
                     {formData.hours[i].closed && (
                       <span className="text-sm text-red-500 font-medium">Closed</span>
@@ -434,29 +636,111 @@ export default function OnboardingPage() {
               <h2 className="font-heading text-xl font-semibold text-hustle-dark">Description</h2>
               <div>
                 <label className="block text-sm font-medium text-hustle-dark mb-1">
-                  Business Description * <span className="text-hustle-muted font-normal">(min. 20 characters)</span>
+                  Business Description <span className="text-red-500">*</span>
+                  <span className="text-hustle-muted font-normal"> (min. 20 characters)</span>
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => updateField('description', e.target.value)}
+                  onBlur={() => markTouched('description')}
                   rows={5}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent resize-none"
+                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent resize-none ${
+                    touched.description && errors.description ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                  }`}
                   placeholder="Tell customers about your business, services, and what makes you special..."
                 />
-                <p className="text-xs text-hustle-muted mt-1">
-                  {formData.description.length}/20 characters minimum
-                </p>
-              </div>
-              <div className="bg-hustle-light rounded-lg p-4 border border-dashed border-gray-300">
-                <p className="text-sm text-hustle-muted text-center">
-                  Photo uploads coming soon! You can add photos from your dashboard after setup.
-                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <FieldError field="description" />
+                  <p className={`text-xs ${
+                    formData.description.length >= 20 ? 'text-green-600' : 'text-hustle-muted'
+                  }`}>
+                    {formData.description.length}/20 min
+                  </p>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Step 5: Review */}
+          {/* Step 5: Photos */}
           {step === 5 && (
+            <div className="space-y-4">
+              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Photos</h2>
+              <p className="text-sm text-hustle-muted">
+                Add up to {MAX_PHOTOS} photos of your business. The cover photo will be shown in search results.
+              </p>
+
+              {/* Photo grid */}
+              {photos.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {photos.map((photo, i) => (
+                    <div key={i} className="relative group rounded-lg overflow-hidden border-2 border-gray-200 aspect-square">
+                      <Image
+                        src={photo.preview}
+                        alt={`Photo ${i + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      {photo.isCover && (
+                        <div className="absolute top-2 left-2 bg-hustle-amber text-hustle-dark text-xs font-bold px-2 py-1 rounded">
+                          Cover
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        {!photo.isCover && (
+                          <button
+                            onClick={() => setCoverPhoto(i)}
+                            className="px-3 py-1.5 rounded bg-white text-hustle-dark text-xs font-medium hover:bg-hustle-amber transition-colors"
+                          >
+                            Set Cover
+                          </button>
+                        )}
+                        <button
+                          onClick={() => removePhoto(i)}
+                          className="px-3 py-1.5 rounded bg-red-500 text-white text-xs font-medium hover:bg-red-600 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload area */}
+              {photos.length < MAX_PHOTOS && (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-hustle-blue hover:bg-hustle-light/50 transition-colors"
+                >
+                  <p className="text-3xl mb-2">📷</p>
+                  <p className="text-sm font-medium text-hustle-dark">Click to upload photos</p>
+                  <p className="text-xs text-hustle-muted mt-1">
+                    {photos.length}/{MAX_PHOTOS} photos added &bull; JPG, PNG up to 5MB each
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={handlePhotoSelect}
+                    className="hidden"
+                  />
+                </div>
+              )}
+
+              {photos.length === 0 && (
+                <div className="bg-hustle-light rounded-lg p-4">
+                  <p className="text-sm text-hustle-muted text-center">
+                    📸 Photos are optional but businesses with photos get 3x more views!
+                    You can also add photos later from your dashboard.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 6: Review */}
+          {step === 6 && (
             <div className="space-y-4">
               <h2 className="font-heading text-xl font-semibold text-hustle-dark">Review Your Listing</h2>
               <p className="text-sm text-hustle-muted">Please review your details before submitting.</p>
@@ -488,7 +772,7 @@ export default function OnboardingPage() {
 
                 <div className="p-4 bg-hustle-light rounded-lg">
                   <h3 className="text-sm font-medium text-hustle-muted mb-1">Contact</h3>
-                  <p className="text-hustle-dark">Phone: {formData.phone}</p>
+                  <p className="text-hustle-dark">Phone: {formatNigerianPhone(formData.phone)}</p>
                   {formData.whatsapp && <p className="text-hustle-dark">WhatsApp: {formatNigerianPhone(formData.whatsapp)}</p>}
                   {formData.email && <p className="text-hustle-dark">Email: {formData.email}</p>}
                   {formData.website && <p className="text-hustle-dark">Web: {formData.website}</p>}
@@ -514,6 +798,24 @@ export default function OnboardingPage() {
                   <h3 className="text-sm font-medium text-hustle-muted mb-1">Description</h3>
                   <p className="text-hustle-dark text-sm">{formData.description}</p>
                 </div>
+
+                {photos.length > 0 && (
+                  <div className="p-4 bg-hustle-light rounded-lg">
+                    <h3 className="text-sm font-medium text-hustle-muted mb-2">Photos ({photos.length})</h3>
+                    <div className="flex gap-2 overflow-x-auto">
+                      {photos.map((photo, i) => (
+                        <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
+                          <Image src={photo.preview} alt={`Photo ${i + 1}`} fill className="object-cover" />
+                          {photo.isCover && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-hustle-amber text-hustle-dark text-[10px] font-bold text-center py-0.5">
+                              Cover
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -532,7 +834,7 @@ export default function OnboardingPage() {
             {step < STEPS.length - 1 ? (
               <button
                 type="button"
-                onClick={() => setStep(s => s + 1)}
+                onClick={handleNext}
                 disabled={!canProceed()}
                 className="px-6 py-2.5 rounded-lg text-sm font-bold bg-hustle-blue text-white hover:bg-hustle-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -542,10 +844,14 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={loading || uploadingPhotos}
                 className="px-8 py-2.5 rounded-lg text-sm font-bold bg-hustle-amber text-hustle-dark hover:bg-hustle-sunset hover:text-white transition-colors disabled:opacity-50 flex items-center gap-2"
               >
-                {loading ? <><LoadingSpinner size="sm" /> Submitting...</> : 'Submit Listing'}
+                {loading || uploadingPhotos ? (
+                  <><LoadingSpinner size="sm" /> {uploadingPhotos ? 'Uploading photos...' : 'Submitting...'}</>
+                ) : (
+                  'Submit Listing'
+                )}
               </button>
             )}
           </div>

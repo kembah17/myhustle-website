@@ -4,20 +4,36 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase-browser'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: '📊' },
-  { href: '/dashboard/edit', label: 'Edit Listing', icon: '✏️' },
-  { href: '/dashboard/hours', label: 'Business Hours', icon: '🕒' },
   { href: '/dashboard/bookings', label: 'Bookings', icon: '📅' },
   { href: '/dashboard/reviews', label: 'Reviews', icon: '⭐' },
+  { href: '/dashboard/edit', label: 'Edit Profile', icon: '✏️' },
+  { href: '/dashboard/hours', label: 'Business Hours', icon: '🕒' },
 ]
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, loading, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [businessSlug, setBusinessSlug] = useState<string | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    async function fetchSlug() {
+      if (!user) return
+      const { data } = await supabase
+        .from('businesses')
+        .select('slug')
+        .eq('user_id', user.id)
+        .maybeSingle()
+      if (data?.slug) setBusinessSlug(data.slug)
+    }
+    fetchSlug()
+  }, [user, supabase])
 
   if (loading) {
     return (
@@ -26,6 +42,55 @@ export default function DashboardShell({ children }: { children: React.ReactNode
       </div>
     )
   }
+
+  const sidebarContent = (
+    <>
+      {navItems.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={() => setMobileMenuOpen(false)}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            pathname === item.href
+              ? 'bg-hustle-blue text-white'
+              : 'text-hustle-dark hover:bg-hustle-light'
+          }`}
+        >
+          <span>{item.icon}</span>
+          {item.label}
+        </Link>
+      ))}
+      <hr className="my-2 border-gray-200" />
+      {businessSlug && (
+        <Link
+          href={`/business/${businessSlug}`}
+          onClick={() => setMobileMenuOpen(false)}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-hustle-muted hover:bg-hustle-light transition-colors"
+        >
+          <span>👁️</span>
+          View My Listing
+        </Link>
+      )}
+      <Link
+        href="/"
+        onClick={() => setMobileMenuOpen(false)}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-hustle-muted hover:bg-hustle-light transition-colors"
+      >
+        <span>🌐</span>
+        View Public Site
+      </Link>
+      <button
+        onClick={() => {
+          setMobileMenuOpen(false)
+          signOut()
+        }}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+      >
+        <span>🚪</span>
+        Logout
+      </button>
+    </>
+  )
 
   return (
     <div className="min-h-screen bg-hustle-light">
@@ -38,7 +103,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden text-white"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" width="24" height="24" style={{width:"24px",height:"24px",maxWidth:"24px",maxHeight:"24px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
@@ -66,28 +131,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           {/* Sidebar - desktop */}
           <aside className="hidden lg:block w-56 shrink-0">
             <nav className="bg-white rounded-xl border border-gray-200 p-3 space-y-1 sticky top-24">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === item.href
-                      ? 'bg-hustle-blue text-white'
-                      : 'text-hustle-dark hover:bg-hustle-light'
-                  }`}
-                >
-                  <span>{item.icon}</span>
-                  {item.label}
-                </Link>
-              ))}
-              <hr className="my-2" />
-              <Link
-                href="/"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-hustle-muted hover:bg-hustle-light transition-colors"
-              >
-                <span>🌐</span>
-                View Public Site
-              </Link>
+              {sidebarContent}
             </nav>
           </aside>
 
@@ -105,21 +149,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                   </button>
                 </div>
                 <nav className="space-y-1">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                        pathname === item.href
-                          ? 'bg-hustle-blue text-white'
-                          : 'text-hustle-dark hover:bg-hustle-light'
-                      }`}
-                    >
-                      <span>{item.icon}</span>
-                      {item.label}
-                    </Link>
-                  ))}
+                  {sidebarContent}
                 </nav>
               </div>
             </div>

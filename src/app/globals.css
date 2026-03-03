@@ -15,3 +15,12 @@
 :root {
   --spacing: 0.25rem;
 }
+
+/* Bulletproof SVG sizing - prevent Tailwind v4 icon blowup */
+svg.w-3, svg.h-3 { width: 0.75rem !important; height: 0.75rem !important; }
+svg.w-4, svg.h-4 { width: 1rem !important; height: 1rem !important; }
+svg.w-5, svg.h-5 { width: 1.25rem !important; height: 1.25rem !important; }
+svg.w-6, svg.h-6 { width: 1.5rem !important; height: 1.5rem !important; }
+svg.w-8, svg.h-8 { width: 2rem !important; height: 2rem !important; }
+svg.w-10, svg.h-10 { width: 2.5rem !important; height: 2.5rem !important; }
+svg.w-12, svg.h-12 { width: 3rem !important; height: 3rem !important; }
