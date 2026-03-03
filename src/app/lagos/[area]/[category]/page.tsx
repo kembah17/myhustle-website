@@ -1,0 +1,200 @@
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { createServiceClient } from '@/lib/supabase'
+import Breadcrumbs from '@/components/Breadcrumbs'
+import BusinessGrid from '@/components/BusinessGrid'
+import JsonLd from '@/components/JsonLd'
+import type { Metadata } from 'next'
+import type { Business, Category, Area, Review } from '@/lib/types'
+
+interface PageProps {
+  params: Promise<{ area: string; category: string }>
+}
+
+export async function generateStaticParams() {
+  const supabase = createServiceClient()
+  const { data: areas } = await supabase.from('areas').select('slug')
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('slug, parent_id')
+    .is('parent_id', null)
+  
+  const params: { area: string; category: string }[] = []
+  for (const area of areas || []) {
+    for (const cat of categories || []) {
+      params.push({ area: area.slug, category: cat.slug })
+    }
+  }
+  return params
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { area: areaSlug, category: catSlug } = await params
+  const supabase = createServiceClient()
+
+  const { data: area } = await supabase
+    .from('areas').select('name').eq('slug', areaSlug).single()
+  const { data: category } = await supabase
+    .from('categories').select('name').eq('slug', catSlug).single()
+
+  if (!area || !category) return { title: 'Not Found' }
+
+  const title = `Best ${category.name} in ${area.name}, Lagos | MyHustle`
+  const description = `Find the best ${category.name} services in ${area.name}, Lagos. Read reviews, compare prices, and book appointments on MyHustle.`
+
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+  }
+}
+
+export const revalidate = 3600
+
+export default async function AreaCategoryPage({ params }: PageProps) {
+  const { area: areaSlug, category: catSlug } = await params
+  const supabase = createServiceClient()
+
+  // Fetch area and category
+  const { data: area } = await supabase
+    .from('areas').select('*').eq('slug', areaSlug).single()
+  const { data: category } = await supabase
+    .from('categories').select('*').eq('slug', catSlug).single()
+
+  if (!area || !category) notFound()
+
+  const isParent = !category.parent_id
+
+  // Build category IDs (include children if parent)
+  let categoryIds = [category.id]
+  if (isParent) {
+    const { data: children } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('parent_id', category.id)
+    if (children) categoryIds = [category.id, ...children.map(c => c.id)]
+  }
+
+  // Fetch businesses matching area + category
+  const { data: businesses } = await supabase
+    .from('businesses')
+    .select('*, category:categories(*), area:areas(*), reviews(*)')
+    .eq('area_id', area.id)
+    .in('category_id', categoryIds)
+    .eq('active', true)
+    .order('verified', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
+
+  // Get subcategories if parent
+  let subcategories: Category[] = []
+  if (isParent) {
+    const { data: subs } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('parent_id', category.id)
+      .order('name')
+    subcategories = subs || []
+  }
+
+  // Schema.org
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `${category.name} in ${area.name}, Lagos`,
+    description: `Best ${category.name} businesses in ${area.name}, Lagos`,
+    numberOfItems: bizList.length,
+    itemListElement: bizList.map((biz, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'LocalBusiness',
+        name: biz.name,
+        url: `https://myhustle.com/business/${biz.slug}`,
+      },
+    })),
+  }
+
+  return (
+    <div>
+      <JsonLd data={itemListJsonLd} />
+
+      {/* Header */}
+      <section className="bg-hustle-blue text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Breadcrumbs
+            items={[
+              { label: 'Home', href: '/' },
+              { label: 'Lagos', href: '/lagos' },
+              { label: area.name, href: `/lagos/${areaSlug}` },
+              { label: category.name },
+            ]}
+          />
+          <h1 className="font-heading text-3xl md:text-5xl font-bold mt-4">
+            Best <span className="text-hustle-amber">{category.name}</span> in {area.name}
+          </h1>
+          <p className="text-blue-200 text-lg mt-3">
+            Find and book top-rated {category.name.toLowerCase()} services in {area.name}, Lagos
+          </p>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Subcategory filter pills */}
+        {isParent && subcategories.length > 0 && (
+          <div className="mb-8">
+            <h2 className="font-heading text-lg font-semibold mb-4">Filter by Subcategory</h2>
+            <div className="flex flex-wrap gap-2">
+              {subcategories.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/lagos/${areaSlug}/${sub.slug}`}
+                  className="inline-flex items-center gap-1 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm hover:border-hustle-amber hover:shadow-sm transition-all"
+                >
+                  {sub.icon && <span>{sub.icon}</span>}
+                  <span className="font-medium text-hustle-dark">{sub.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Business Listings */}
+        <div className="mb-12">
+          <h2 className="font-heading text-2xl font-bold mb-6">
+            {category.name} in {area.name}
+            <span className="text-hustle-muted text-lg font-normal ml-2">({bizList.length})</span>
+          </h2>
+          <BusinessGrid
+            businesses={bizList}
+            emptyTitle={`No ${category.name} businesses in ${area.name} yet`}
+            emptyMessage={`Be the first to list your ${category.name} business in ${area.name}, Lagos!`}
+          />
+        </div>
+
+        {/* Related links */}
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-hustle-light rounded-xl p-6">
+            <h3 className="font-heading font-semibold text-lg mb-3">More in {area.name}</h3>
+            <Link
+              href={`/lagos/${areaSlug}`}
+              className="text-hustle-blue hover:text-hustle-amber transition-colors"
+            >
+              View all businesses in {area.name} →
+            </Link>
+          </div>
+          <div className="bg-hustle-light rounded-xl p-6">
+            <h3 className="font-heading font-semibold text-lg mb-3">More {category.name}</h3>
+            <Link
+              href={`/category/${catSlug}`}
+              className="text-hustle-blue hover:text-hustle-amber transition-colors"
+            >
+              View all {category.name} in Lagos →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

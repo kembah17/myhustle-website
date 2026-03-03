@@ -1,65 +1,218 @@
-import Image from "next/image";
+import Link from 'next/link'
+import { createServiceClient } from '@/lib/supabase'
+import SearchBar from '@/components/SearchBar'
+import CategoryGrid from '@/components/CategoryGrid'
+import BusinessCard from '@/components/BusinessCard'
+import JsonLd from '@/components/JsonLd'
+import type { Category, Business, Area, Review } from '@/lib/types'
 
-export default function Home() {
+export const revalidate = 3600 // revalidate every hour
+
+async function getHomePageData() {
+  const supabase = createServiceClient()
+
+  // Get parent categories
+  const { data: parentCategories } = await supabase
+    .from('categories')
+    .select('*')
+    .is('parent_id', null)
+    .order('name')
+
+  // Get all businesses to compute counts
+  const { data: allBusinesses } = await supabase
+    .from('businesses')
+    .select('id, category_id, area_id')
+    .eq('active', true)
+
+  // Get all categories (including children) for count mapping
+  const { data: allCategories } = await supabase
+    .from('categories')
+    .select('id, parent_id')
+
+  // Build category count map (parent counts include children)
+  const catCountMap: Record<string, number> = {}
+  if (allBusinesses && allCategories) {
+    // Map child category -> parent category
+    const childToParent: Record<string, string> = {}
+    for (const cat of allCategories) {
+      if (cat.parent_id) {
+        childToParent[cat.id] = cat.parent_id
+      }
+    }
+    for (const biz of allBusinesses) {
+      const catId = biz.category_id
+      // Count for the direct category
+      catCountMap[catId] = (catCountMap[catId] || 0) + 1
+      // Also count for parent
+      if (childToParent[catId]) {
+        catCountMap[childToParent[catId]] = (catCountMap[childToParent[catId]] || 0) + 1
+      }
+    }
+  }
+
+  // Attach counts to parent categories
+  const categoriesWithCounts = (parentCategories || []).map(cat => ({
+    ...cat,
+    business_count: catCountMap[cat.id] || 0,
+  }))
+
+  // Get featured/recent businesses with relations
+  const { data: featuredBusinesses } = await supabase
+    .from('businesses')
+    .select('*, category:categories(*), area:areas(*), reviews(*)')
+    .eq('active', true)
+    .order('created_at', { ascending: false })
+    .limit(6)
+
+  // Get areas with business counts
+  const { data: areas } = await supabase
+    .from('areas')
+    .select('id, slug, name')
+    .order('name')
+
+  const areaCountMap: Record<string, number> = {}
+  if (allBusinesses) {
+    for (const biz of allBusinesses) {
+      if (biz.area_id) {
+        areaCountMap[biz.area_id] = (areaCountMap[biz.area_id] || 0) + 1
+      }
+    }
+  }
+
+  // Sort areas by business count (most first), take top 12
+  const areasWithCounts = (areas || [])
+    .map(area => ({ ...area, business_count: areaCountMap[area.id] || 0 }))
+    .sort((a, b) => b.business_count - a.business_count)
+    .slice(0, 12)
+
+  return {
+    categories: categoriesWithCounts,
+    businesses: (featuredBusinesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[],
+    areas: areasWithCounts,
+  }
+}
+
+export default async function HomePage() {
+  const { categories, businesses, areas } = await getHomePageData()
+
+  const websiteJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'MyHustle.com',
+    url: 'https://myhustle.com',
+    description: 'Nigeria\'s #1 SME Directory. Get Found. Get Booked. Get Paid.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://myhustle.com/search?q={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div>
+      <JsonLd data={websiteJsonLd} />
+
+      {/* Hero Section */}
+      <section className="bg-hustle-blue text-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="font-heading text-4xl md:text-6xl font-bold mb-6">
+            Find &amp; Book Local{' '}
+            <span className="text-hustle-amber">Businesses</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl md:text-2xl text-blue-200 mb-8 max-w-3xl mx-auto">
+            Get Found. Get Booked. Get Paid.
           </p>
+          <SearchBar />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-16 bg-hustle-light">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-heading text-3xl font-bold text-center mb-4">
+            Browse by Category
+          </h2>
+          <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
+            Discover top-rated businesses across Lagos in fashion, beauty, events, photography, and dining.
+          </p>
+          <CategoryGrid categories={categories} />
         </div>
-      </main>
+      </section>
+
+      {/* Featured Businesses */}
+      {businesses.length > 0 && (
+        <section className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="font-heading text-3xl font-bold">Featured Businesses</h2>
+                <p className="text-hustle-muted mt-2">Recently listed and top-rated businesses in Lagos</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {businesses.map((business) => (
+                <BusinessCard key={business.id} business={business} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Popular Areas */}
+      {areas.length > 0 && (
+        <section className="py-16 bg-hustle-light">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="font-heading text-3xl font-bold text-center mb-4">
+              Popular Areas in Lagos
+            </h2>
+            <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
+              Browse businesses by location across Lagos
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {areas.map((area) => (
+                <Link
+                  key={area.id}
+                  href={`/lagos/${area.slug}`}
+                  className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber group"
+                >
+                  <h3 className="font-heading font-semibold text-hustle-dark group-hover:text-hustle-blue transition-colors">
+                    {area.name}
+                  </h3>
+                  <p className="text-sm text-hustle-muted mt-1">
+                    {area.business_count} {area.business_count === 1 ? 'business' : 'businesses'}
+                  </p>
+                </Link>
+              ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link
+                href="/lagos"
+                className="inline-block text-hustle-blue font-semibold hover:text-hustle-amber transition-colors"
+              >
+                View all areas →
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CTA Section */}
+      <section className="py-16 bg-hustle-sunset text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold mb-6">
+            Own a Business in Lagos?
+          </h2>
+          <p className="text-xl mb-8 max-w-2xl mx-auto">
+            Join thousands of Nigerian SMEs already getting discovered on MyHustle.
+          </p>
+          <Link
+            href="/list-business"
+            className="inline-block bg-white text-hustle-sunset px-8 py-4 rounded-lg text-lg font-bold hover:bg-hustle-light transition-colors"
+          >
+            List Your Business — It&apos;s Free
+          </Link>
+        </div>
+      </section>
     </div>
-  );
+  )
 }

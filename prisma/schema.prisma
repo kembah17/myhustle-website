@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Business {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  description String?
+  categoryId  String   @map("category_id")
+  cityId      String   @map("city_id")
+  areaId      String?  @map("area_id")
+  address     String?
+  lat         Float?
+  lon         Float?
+  phone       String?
+  email       String?
+  whatsapp    String?
+  website     String?
+  tier        String   @default("free")
+  verified    Boolean  @default(false)
+  active      Boolean  @default(true)
+  userId      String?  @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category    Category       @relation(fields: [categoryId], references: [id])
+  city        City           @relation(fields: [cityId], references: [id])
+  area        Area?          @relation(fields: [areaId], references: [id])
+  reviews     Review[]
+  bookings    Booking[]
+  hours       BusinessHour[]
+  photos      BusinessPhoto[]
+
+  @@map("businesses")
+}
+
+model Category {
+  id                     String   @id @default(uuid())
+  slug                   String   @unique
+  name                   String
+  description            String?
+  parentId               String?  @map("parent_id")
+  icon                   String?
+  seoTitleTemplate       String?  @map("seo_title_template")
+  seoDescriptionTemplate String?  @map("seo_description_template")
+
+  parent     Category?   @relation("CategoryTree", fields: [parentId], references: [id])
+  children   Category[]  @relation("CategoryTree")
+  businesses Business[]
+
+  @@map("categories")
+}
+
+model City {
+  id      String @id @default(uuid())
+  slug    String @unique
+  name    String
+  state   String
+  country String @default("Nigeria")
+  lat     Float
+  lon     Float
+
+  areas      Area[]
+  landmarks  Landmark[]
+  businesses Business[]
+
+  @@map("cities")
+}
+
+model Area {
+  id          String  @id @default(uuid())
+  slug        String  @unique
+  name        String
+  cityId      String  @map("city_id")
+  lat         Float
+  lon         Float
+  description String?
+
+  city       City       @relation(fields: [cityId], references: [id])
+  landmarks  Landmark[]
+  businesses Business[]
+
+  @@map("areas")
+}
+
+model Landmark {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  cityId      String   @map("city_id")
+  areaId      String?  @map("area_id")
+  lat         Float
+  lon         Float
+  type        String
+  radiusKm    Float    @default(3) @map("radius_km")
+  aliases     String[] @default([])
+  description String?
+
+  city City  @relation(fields: [cityId], references: [id])
+  area Area? @relation(fields: [areaId], references: [id])
+
+  @@map("landmarks")
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  businessId      String   @map("business_id")
+  userId          String?  @map("user_id")
+  rating          Int
+  text            String?
+  verifiedBooking Boolean  @default(false) @map("verified_booking")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@map("reviews")
+}
+
+model Booking {
+  id            String   @id @default(uuid())
+  businessId    String   @map("business_id")
+  customerName  String   @map("customer_name")
+  customerPhone String?  @map("customer_phone")
+  customerEmail String?  @map("customer_email")
+  service       String?
+  date          DateTime
+  time          String?
+  status        String   @default("pending")
+  source        String   @default("website")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@map("bookings")
+}
+
+model BusinessHour {
+  id         String  @id @default(uuid())
+  businessId String  @map("business_id")
+  day        Int
+  openTime   String? @map("open_time")
+  closeTime  String? @map("close_time")
+  closed     Boolean @default(false)
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@map("business_hours")
+}
+
+model BusinessPhoto {
+  id         String  @id @default(uuid())
+  businessId String  @map("business_id")
+  url        String
+  altText    String? @map("alt_text")
+  position   Int     @default(0)
+  isCover    Boolean @default(false) @map("is_cover")
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@map("business_photos")
+}
