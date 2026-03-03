@@ -358,7 +358,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
             </div>
 
             {/* Booking Form */}
-            <BookingForm businessName={biz.name} businessSlug={biz.slug} />
+            <BookingForm businessId={biz.id} businessName={biz.name} businessSlug={biz.slug} businessWhatsapp={biz.whatsapp} businessPhone={biz.phone} />
           </div>
         </div>
       </div>
