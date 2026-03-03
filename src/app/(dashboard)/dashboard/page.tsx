@@ -84,7 +84,6 @@ export default function DashboardPage() {
   if (!business) return null
 
   const totalBookings = allBookings.length
-  const pendingBookings = allBookings.filter(b => b.status === 'pending').length
   const totalReviews = allReviews.length
   const avgRating = totalReviews > 0
     ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
@@ -152,22 +151,18 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between">
+              <p className="text-sm text-hustle-muted">Total Views</p>
+              <span className="text-2xl">👁️</span>
+            </div>
+            <p className="text-2xl font-bold text-hustle-dark mt-2">—</p>
+            <p className="text-xs text-hustle-muted mt-1">Coming soon</p>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between">
               <p className="text-sm text-hustle-muted">Total Bookings</p>
               <span className="text-2xl">📅</span>
             </div>
             <p className="text-2xl font-bold text-hustle-dark mt-2">{totalBookings}</p>
-          </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-hustle-muted">Pending Bookings</p>
-              <span className="text-2xl">⏳</span>
-            </div>
-            <p className="text-2xl font-bold text-hustle-dark mt-2">
-              {pendingBookings}
-              {pendingBookings > 0 && (
-                <span className="text-sm font-normal text-amber-600 ml-2">needs action</span>
-              )}
-            </p>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between">

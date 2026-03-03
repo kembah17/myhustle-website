@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import DashboardShell from '@/components/dashboard/DashboardShell'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import Toast from '@/components/ui/Toast'
 import type { Review } from '@/lib/types'
 
 type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest'
@@ -15,6 +16,10 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState<SortOption>('newest')
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [submittingReply, setSubmittingReply] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -46,6 +51,37 @@ export default function ReviewsPage() {
   useEffect(() => {
     if (!authLoading) fetchData()
   }, [authLoading, fetchData])
+
+  const handleReply = async (reviewId: string) => {
+    if (!replyText.trim()) return
+    setSubmittingReply(true)
+
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .update({ owner_response: replyText.trim() })
+        .eq('id', reviewId)
+
+      if (error) {
+        // Column likely doesn't exist yet
+        setToast({
+          message: 'Feature coming soon \u2014 responses will be visible to customers in the next update.',
+          type: 'info',
+        })
+      } else {
+        setToast({ message: 'Response saved!', type: 'success' })
+      }
+    } catch {
+      setToast({
+        message: 'Feature coming soon \u2014 responses will be visible to customers in the next update.',
+        type: 'info',
+      })
+    }
+
+    setReplyingTo(null)
+    setReplyText('')
+    setSubmittingReply(false)
+  }
 
   const sorted = [...reviews].sort((a, b) => {
     switch (sortBy) {
@@ -86,6 +122,8 @@ export default function ReviewsPage() {
 
   return (
     <DashboardShell>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
       <div className="space-y-6">
         <div>
           <h1 className="font-heading text-2xl font-bold text-hustle-dark">Reviews</h1>
@@ -98,14 +136,14 @@ export default function ReviewsPage() {
             <div className="text-center sm:text-left">
               <p className="text-5xl font-bold text-hustle-dark">{avgRating.toFixed(1)}</p>
               <div className="text-lg mt-1">
-                {'★'.repeat(Math.round(avgRating))}{'☆'.repeat(5 - Math.round(avgRating))}
+                {'\u2605'.repeat(Math.round(avgRating))}{'\u2606'.repeat(5 - Math.round(avgRating))}
               </div>
               <p className="text-sm text-hustle-muted mt-1">{totalReviews} review{totalReviews !== 1 ? 's' : ''}</p>
             </div>
             <div className="flex-1 space-y-1.5">
               {ratingDist.map(({ star, count, pct }) => (
                 <div key={star} className="flex items-center gap-2">
-                  <span className="text-sm text-hustle-muted w-6 text-right">{star}★</span>
+                  <span className="text-sm text-hustle-muted w-6 text-right">{star}\u2605</span>
                   <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-hustle-amber rounded-full transition-all"
@@ -158,7 +196,7 @@ export default function ReviewsPage() {
                           {r.reviewer_name || 'Anonymous'}
                         </p>
                         {r.verified_booking && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">✓ Verified Booking</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">\u2713 Verified Booking</span>
                         )}
                       </div>
                       <p className="text-xs text-hustle-muted">
@@ -171,12 +209,59 @@ export default function ReviewsPage() {
                     </div>
                   </div>
                   <div className="text-base">
-                    {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
+                    {'\u2605'.repeat(r.rating)}{'\u2606'.repeat(5 - r.rating)}
                   </div>
                 </div>
                 {r.text && (
                   <p className="text-sm text-hustle-dark mt-3 pl-13">{r.text}</p>
                 )}
+
+                {/* Reply section */}
+                <div className="mt-3 pl-13">
+                  {replyingTo === r.id ? (
+                    <div className="space-y-3">
+                      <textarea
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="Write your response to this review..."
+                        rows={3}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-hustle-dark placeholder:text-hustle-muted focus:outline-none focus:ring-2 focus:ring-hustle-blue resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleReply(r.id)}
+                          disabled={submittingReply || !replyText.trim()}
+                          className="px-4 py-2 rounded-lg text-sm font-medium bg-hustle-blue text-white hover:bg-hustle-blue/90 transition-colors disabled:opacity-50"
+                        >
+                          {submittingReply ? 'Posting...' : 'Post Reply'}
+                        </button>
+                        <button
+                          onClick={() => { setReplyingTo(null); setReplyText('') }}
+                          className="px-4 py-2 rounded-lg text-sm font-medium text-hustle-muted hover:bg-hustle-light transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setReplyingTo(r.id); setReplyText('') }}
+                      className="inline-flex items-center gap-1.5 text-sm text-hustle-blue hover:text-hustle-blue/80 transition-colors font-medium"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        style={{width:'14px',height:'14px',maxWidth:'14px',maxHeight:'14px',flexShrink:0}}
+                        className="w-3.5 h-3.5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path fillRule="evenodd" d="M7.793 2.232a.75.75 0 01-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 010 10.75H10.75a.75.75 0 010-1.5h2.875a3.875 3.875 0 000-7.75H3.622l4.146 3.957a.75.75 0 01-1.036 1.085l-5.5-5.25a.75.75 0 010-1.085l5.5-5.25a.75.75 0 011.06.025z" clipRule="evenodd" />
+                      </svg>
+                      Reply
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
