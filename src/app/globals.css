@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
+  --spacing: 0.25rem;
   --color-hustle-blue: #1B4965;
   --color-hustle-amber: #F59E0B;
   --color-hustle-sunset: #EA580C;
@@ -9,4 +10,8 @@
   --color-hustle-light: #F8FAFC;
   --font-heading: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
+}
+
+:root {
+  --spacing: 0.25rem;
 }
