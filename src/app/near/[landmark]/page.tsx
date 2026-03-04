@@ -35,6 +35,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     openGraph: { title, description },
     twitter: { card: 'summary_large_image', title, description },
+    alternates: {
+      canonical: `https://myhustle.com/near/${slug}`,
+    },
   }
 }
 

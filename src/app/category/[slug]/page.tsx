@@ -31,10 +31,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!category) return { title: 'Category Not Found' }
 
   const title = category.seo_title_template
-    ? category.seo_title_template.replace('{name}', '').replace('{area}', 'Nigeria').trim().replace(/^-\s*/, '')
+    ? category.seo_title_template
+        .replace('{name}', category.name)
+        .replace('{area}', 'Nigeria')
+        .replace(/,\s*Lagos/gi, '')
+        .replace(/Lagos,?\s*/gi, '')
+        .trim()
+        .replace(/^-\s*/, '')
     : `${category.name} in Nigeria | MyHustle`
   const description = category.seo_description_template
-    ? category.seo_description_template.replace('{name}', 'top professionals').replace('{area}', 'Nigeria')
+    ? category.seo_description_template
+        .replace('{name}', 'top professionals')
+        .replace('{area}', 'Nigeria')
+        .replace(/,\s*Lagos/gi, '')
+        .replace(/Lagos,?\s*/gi, '')
     : `Looking for ${category.name} in Nigeria? Browse verified businesses, read real reviews, and book directly on MyHustle.`
 
   return {
@@ -42,6 +52,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     openGraph: { title, description },
     twitter: { card: 'summary_large_image', title, description },
+    alternates: {
+      canonical: `https://myhustle.com/category/${slug}`,
+    },
   }
 }
 

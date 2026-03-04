@@ -54,9 +54,7 @@ export const metadata: Metadata = {
     description:
       'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark.',
   },
-  alternates: {
-    canonical: 'https://myhustle.com',
-  },
+
   verification: {
     google: 'GOOGLE_SEARCH_CONSOLE_VERIFICATION_CODE',
   },
