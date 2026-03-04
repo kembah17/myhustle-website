@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase-browser'
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: '📊' },
+  { href: '/dashboard/analytics', label: 'Analytics', icon: '📈' },
   { href: '/dashboard/bookings', label: 'Bookings', icon: '📅' },
   { href: '/dashboard/reviews', label: 'Reviews', icon: '⭐' },
   { href: '/dashboard/edit', label: 'Edit Profile', icon: '✏️' },

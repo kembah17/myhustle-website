@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { trackBookingStarted, trackBookingCompleted } from '@/lib/analytics'
 import { createClient } from '@/lib/supabase-browser'
 import type { BusinessHour } from '@/lib/types'
 
@@ -137,6 +138,7 @@ export default function BookingForm({
   businessPhone,
 }: BookingFormProps) {
   const [step, setStep] = useState(1)
+  const bookingStartedRef = useRef(false)
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([])
   const [hoursLoading, setHoursLoading] = useState(true)
   const [hoursError, setHoursError] = useState<string | null>(null)
@@ -267,6 +269,7 @@ export default function BookingForm({
       }
 
       setBookingResult(data.booking)
+      trackBookingCompleted(businessId)
       setStep(5) // Success state
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
@@ -520,7 +523,7 @@ export default function BookingForm({
               </p>
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={() => { if (!bookingStartedRef.current) { trackBookingStarted(businessId); bookingStartedRef.current = true; } setStep(2); }}
                 className="bg-hustle-amber text-hustle-dark px-6 py-2.5 rounded-lg font-bold hover:bg-hustle-sunset hover:text-white transition-colors"
               >
                 Next →

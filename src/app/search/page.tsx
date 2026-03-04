@@ -5,6 +5,7 @@ import SearchBar from '@/components/SearchBar'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
+import SearchImpressionTracker from '@/components/analytics/SearchImpressionTracker'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; category?: string; area?: string; sort?: string }>
@@ -225,7 +226,13 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
         {/* Results or empty state */}
         {bizList.length > 0 ? (
-          <BusinessGrid businesses={bizList} />
+          <>
+            <SearchImpressionTracker
+              businessIds={bizList.map((b) => b.id)}
+              query={q || catSlug || areaSlug || 'browse'}
+            />
+            <BusinessGrid businesses={bizList} />
+          </>
         ) : (
           <div className="text-center py-16">
             <div className="text-5xl mb-4">🔍</div>
