@@ -195,3 +195,21 @@ export interface CategoryWithChildren extends Category {
 export interface AreaWithCount extends Area {
   business_count?: number
 }
+
+// Voice Receptionist types
+export interface VoiceMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+export interface VoiceChatRequest {
+  businessId: string;
+  message: string;
+  conversationHistory: VoiceMessage[];
+}
+
+export interface VoiceChatResponse {
+  response: string;
+  error?: string;
+}

@@ -10,6 +10,7 @@ import ReviewForm from '@/components/ReviewForm'
 import type { Metadata } from 'next'
 import VerificationBadge from '@/components/VerificationBadge'
 import PageViewTracker from '@/components/analytics/PageViewTracker'
+import VoiceReceptionist from '@/components/VoiceReceptionist'
 import ContactTracker from '@/components/analytics/ContactTracker'
 import type { Business, Category, Area, Review, ReviewResponse, BusinessHour } from '@/lib/types'
 
@@ -156,6 +157,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     <div>
       <JsonLd data={localBusinessJsonLd} />
       <PageViewTracker businessId={biz.id} />
+      <VoiceReceptionist businessId={biz.id} businessName={biz.name} />
 
       {/* Header */}
       <section className="bg-hustle-blue text-white py-12">
