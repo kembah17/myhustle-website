@@ -19,7 +19,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'MyHustle.com - Nigeria\'s #1 SME Directory',
-  description: 'Get Found. Get Booked. Get Paid. Discover and connect with local businesses across Nigeria.',
+  description: 'Find and book trusted businesses in Lagos. Fashion, beauty, events, food, and more — all in one place.',
 }
 
 export default function RootLayout({

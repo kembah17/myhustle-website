@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${biz.name} — ${catName} in ${areaName}, Lagos | MyHustle`
   const description = biz.description
     ? biz.description.slice(0, 160)
-    : `${biz.name} is a top-rated ${catName} business in ${areaName}, Lagos. Book appointments and read reviews on MyHustle.`
+    : `${biz.name} — ${catName} in ${areaName}, Lagos. See services, read reviews, and book on MyHustle.`
 
   return { title, description, openGraph: { title, description } }
 }

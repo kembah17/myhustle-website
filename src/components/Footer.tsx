@@ -13,19 +13,19 @@ export default function Footer() {
               Get Found. Get Booked. Get Paid.
             </p>
             <p className="text-hustle-muted text-sm mt-2">
-              Nigeria&apos;s #1 SME Directory &amp; Digital Office.
+              Your digital front door in Lagos.
             </p>
           </div>
           <div>
-            <h4 className="font-heading font-semibold mb-4">Discover</h4>
+            <h4 className="font-heading font-semibold mb-4">Find Businesses</h4>
             <ul className="space-y-2 text-sm text-hustle-muted">
               <li><Link href="/categories" className="hover:text-hustle-amber transition-colors">All Categories</Link></li>
-              <li><Link href="/areas" className="hover:text-hustle-amber transition-colors">Lagos Areas</Link></li>
+              <li><Link href="/areas" className="hover:text-hustle-amber transition-colors">Browse Areas</Link></li>
               <li><Link href="/near-me" className="hover:text-hustle-amber transition-colors">Near Me</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-heading font-semibold mb-4">For Business</h4>
+            <h4 className="font-heading font-semibold mb-4">For Business Owners</h4>
             <ul className="space-y-2 text-sm text-hustle-muted">
               <li><Link href="/list-your-business" className="hover:text-hustle-amber transition-colors">List Your Business</Link></li>
               <li><Link href="/pricing" className="hover:text-hustle-amber transition-colors">Pricing</Link></li>

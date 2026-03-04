@@ -18,7 +18,7 @@ export default function Header() {
               Areas
             </Link>
             <Link href="/near-me" className="text-sm font-medium hover:text-hustle-amber transition-colors">
-              Near Me
+              Nearby
             </Link>
             <Link
               href="/list-your-business"

@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!landmark) return { title: 'Landmark Not Found' }
 
   const title = `Businesses Near ${landmark.name}, Lagos | MyHustle`
-  const description = `Find top-rated businesses near ${landmark.name} in Lagos. Browse fashion, beauty, events, photography & dining services nearby.`
+  const description = `Businesses near ${landmark.name}, Lagos. Find local services, read reviews, and book appointments on MyHustle.`
   return { title, description, openGraph: { title, description } }
 }
 
@@ -136,8 +136,8 @@ export default async function LandmarkPage({ params }: PageProps) {
           </h2>
           <BusinessGrid
             businesses={bizList}
-            emptyTitle={`No businesses near ${landmark.name} yet`}
-            emptyMessage={`Be the first to list your business near ${landmark.name}!`}
+            emptyTitle={`Nothing near ${landmark.name} yet`}
+            emptyMessage={`Know a business near ${landmark.name}? Tell them to list on MyHustle!`}
           />
         </div>
 

@@ -31,10 +31,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
-    description: `Find and book top-rated businesses in ${area.name}, Lagos. Browse fashion, beauty, events, photography & dining services.`,
+    description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
     openGraph: {
       title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
-      description: `Find and book top-rated businesses in ${area.name}, Lagos. Browse fashion, beauty, events, photography & dining services.`,
+      description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
     },
   }
 }
@@ -138,7 +138,7 @@ export default async function AreaPage({ params }: PageProps) {
             Businesses in <span className="text-hustle-amber">{area.name}</span>
           </h1>
           <p className="text-blue-200 text-lg mt-3">
-            Find and book top-rated businesses in {area.name}, Lagos
+            See what's happening in {area.name}
           </p>
           {area.description && (
             <p className="text-blue-300 mt-2 max-w-3xl">{area.description}</p>
@@ -150,7 +150,7 @@ export default async function AreaPage({ params }: PageProps) {
         {/* Categories filter */}
         {categoriesWithCounts.some(c => c.business_count > 0) && (
           <div className="mb-12">
-            <h2 className="font-heading text-2xl font-bold mb-6">Browse by Category</h2>
+            <h2 className="font-heading text-2xl font-bold mb-6">What are you looking for?</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {categoriesWithCounts.map((cat) => (
                 <Link
@@ -179,8 +179,8 @@ export default async function AreaPage({ params }: PageProps) {
           </h2>
           <BusinessGrid
             businesses={bizList}
-            emptyTitle={`No businesses in ${area.name} yet`}
-            emptyMessage={`Be the first to list your business in ${area.name}, Lagos!`}
+            emptyTitle={`${area.name} is waiting for you`}
+            emptyMessage={`No businesses listed here yet. Be the first to put ${area.name} on the map!`}
           />
         </div>
 

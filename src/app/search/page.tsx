@@ -237,15 +237,15 @@ export default async function SearchPage({ searchParams }: PageProps) {
           <div className="text-center py-16">
             <div className="text-5xl mb-4">🔍</div>
             <h2 className="font-heading text-xl font-bold text-hustle-dark mb-2">
-              No results found
+              No matches
             </h2>
             <p className="text-hustle-muted mb-8 max-w-md mx-auto">
-              We couldn&apos;t find any businesses matching your search. Try adjusting your filters or browse by category.
+              We couldn&apos;t find what you&apos;re looking for. Try different words or browse by category below.
             </p>
 
             {suggestedCategories.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-sm font-medium text-hustle-muted mb-3">Browse by category</h3>
+                <h3 className="text-sm font-medium text-hustle-muted mb-3">Try a category</h3>
                 <div className="flex flex-wrap justify-center gap-2">
                   {suggestedCategories.map((cat) => (
                     <Link
@@ -262,7 +262,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
             {suggestedAreas.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-hustle-muted mb-3">Browse by area</h3>
+                <h3 className="text-sm font-medium text-hustle-muted mb-3">Try an area</h3>
                 <div className="flex flex-wrap justify-center gap-2">
                   {suggestedAreas.map((area) => (
                     <Link

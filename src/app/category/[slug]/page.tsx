@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : `${category.name} in Lagos | MyHustle`
   const description = category.seo_description_template
     ? category.seo_description_template.replace('{name}', 'top professionals').replace('{area}', 'Lagos')
-    : `Find the best ${category.name} services in Lagos. Browse listings, read reviews, and book appointments on MyHustle.`
+    : `Looking for ${category.name} in Lagos? Browse verified businesses, read real reviews, and book directly on MyHustle.`
 
   return {
     title,
@@ -185,7 +185,7 @@ export default async function CategoryPage({ params }: PageProps) {
         {areasWithCount.length > 0 && (
           <div className="mb-12">
             <h2 className="font-heading text-2xl font-bold mb-6">
-              {category.name} by Area
+              Find {category.name} Near You
             </h2>
             <div className="flex flex-wrap gap-3">
               {areasWithCount.map((area) => (
@@ -210,8 +210,8 @@ export default async function CategoryPage({ params }: PageProps) {
           </h2>
           <BusinessGrid
             businesses={bizList}
-            emptyTitle={`No ${category.name} businesses listed yet`}
-            emptyMessage={`Be the first to list your ${category.name} business on MyHustle!`}
+            emptyTitle={`No ${category.name} businesses yet`}
+            emptyMessage={`Know a great ${category.name} business? Tell them about MyHustle!`}
           />
         </div>
 

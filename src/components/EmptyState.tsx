@@ -8,10 +8,10 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState({
-  title = 'No businesses found',
-  message = 'There are no businesses listed in this area yet. Be the first to list yours!',
+  title = 'Nothing here yet',
+  message = 'This spot is waiting for its first business. Could be yours!',
   actionLabel = 'List Your Business',
-  actionHref = '/list-business',
+  actionHref = '/list-your-business',
 }: EmptyStateProps) {
   return (
     <div className="text-center py-16 px-4">

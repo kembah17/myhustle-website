@@ -117,8 +117,8 @@ export default async function HomePage() {
       <section className="bg-hustle-blue text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="font-heading text-4xl md:text-6xl font-bold mb-6">
-            Find &amp; Book Local{' '}
-            <span className="text-hustle-amber">Businesses</span>
+            Find the Right Business in{' '}
+            <span className="text-hustle-amber">Lagos</span>
           </h1>
           <p className="text-xl md:text-2xl text-blue-200 mb-8 max-w-3xl mx-auto">
             Get Found. Get Booked. Get Paid.
@@ -190,7 +190,7 @@ export default async function HomePage() {
             Browse by Category
           </h2>
           <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
-            Discover top-rated businesses across Lagos in fashion, beauty, events, photography, and dining.
+            Whatever you need, someone in Lagos does it. Find them here.
           </p>
           <CategoryGrid categories={categories} />
         </div>
@@ -203,7 +203,7 @@ export default async function HomePage() {
             <div className="flex items-center justify-between mb-12">
               <div>
                 <h2 className="font-heading text-3xl font-bold">Featured Businesses</h2>
-                <p className="text-hustle-muted mt-2">Recently listed and top-rated businesses in Lagos</p>
+                <p className="text-hustle-muted mt-2">Fresh on MyHustle — check them out</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -223,7 +223,7 @@ export default async function HomePage() {
               Popular Areas in Lagos
             </h2>
             <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
-              Browse businesses by location across Lagos
+              Every area, every hustle. Pick your neighbourhood.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {areas.map((area) => (
@@ -260,7 +260,7 @@ export default async function HomePage() {
             Own a Business in Lagos?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join thousands of Nigerian SMEs already getting discovered on MyHustle.
+            Your customers are searching for businesses like yours. Make sure they find you.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <WhatsAppCTA variant="inline" className="!bg-[#25D366] !hover:bg-[#1da851]" />
