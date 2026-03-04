@@ -29,13 +29,18 @@ model Business {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  category    Category       @relation(fields: [categoryId], references: [id])
-  city        City           @relation(fields: [cityId], references: [id])
-  area        Area?          @relation(fields: [areaId], references: [id])
-  reviews     Review[]
-  bookings    Booking[]
-  hours       BusinessHour[]
-  photos      BusinessPhoto[]
+  verificationTier  Int       @default(0) @map("verification_tier")
+  verificationPhone String?   @map("verification_phone")
+  verificationDate  DateTime? @map("verification_date")
+
+  category              Category              @relation(fields: [categoryId], references: [id])
+  city                  City                  @relation(fields: [cityId], references: [id])
+  area                  Area?                 @relation(fields: [areaId], references: [id])
+  reviews               Review[]
+  bookings              Booking[]
+  hours                 BusinessHour[]
+  photos                BusinessPhoto[]
+  verificationRequests  VerificationRequest[]
 
   @@map("businesses")
 }
@@ -164,4 +169,29 @@ model BusinessPhoto {
   business Business @relation(fields: [businessId], references: [id])
 
   @@map("business_photos")
+}
+
+
+model VerificationRequest {
+  id                String    @id @default(uuid())
+  businessId        String    @map("business_id")
+  requestedTier     Int       @map("requested_tier")
+  status            String    @default("pending")
+  submittedAt       DateTime  @default(now()) @map("submitted_at")
+  reviewedAt        DateTime? @map("reviewed_at")
+  reviewerNotes     String?   @map("reviewer_notes")
+  phoneNumber       String?   @map("phone_number")
+  otpVerified       Boolean   @default(false) @map("otp_verified")
+  documentType      String?   @map("document_type")
+  documentUrl       String?   @map("document_url")
+  businessNameOnDoc String?   @map("business_name_on_doc")
+  registrationNumber String?  @map("registration_number")
+  visitDate         DateTime? @map("visit_date") @db.Date
+  visitPhotos       String[]  @map("visit_photos")
+  visitNotes        String?   @map("visit_notes")
+  verifiedAddress   String?   @map("verified_address")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("verification_requests")
 }

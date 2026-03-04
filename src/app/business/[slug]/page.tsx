@@ -6,6 +6,7 @@ import StarRating from '@/components/StarRating'
 import BookingForm from '@/components/BookingForm'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
+import VerificationBadge from '@/components/VerificationBadge'
 import type { Business, Category, Area, Review, BusinessHour } from '@/lib/types'
 
 interface PageProps {
@@ -146,13 +147,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="font-heading text-3xl md:text-5xl font-bold">{biz.name}</h1>
-                  {biz.verified && (
-                    <span className="inline-flex items-center gap-1 bg-green-500/20 text-green-200 text-sm font-medium px-3 py-1 rounded-full">
-                      <svg className="w-4 h-4" width="16" height="16" style={{width:"16px",height:"16px",maxWidth:"16px",maxHeight:"16px",flexShrink:0}} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                      Verified
-                    </span>
+                  {(biz.verification_tier > 0 || biz.verified) && (
+                    <VerificationBadge tier={biz.verification_tier || (biz.verified ? 1 : 0)} variant="full" />
                   )}
                 </div>
                 <div className="flex items-center gap-4 mt-3 flex-wrap">

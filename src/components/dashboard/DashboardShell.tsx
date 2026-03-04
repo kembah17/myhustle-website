@@ -13,6 +13,7 @@ const navItems = [
   { href: '/dashboard/reviews', label: 'Reviews', icon: '⭐' },
   { href: '/dashboard/edit', label: 'Edit Profile', icon: '✏️' },
   { href: '/dashboard/hours', label: 'Business Hours', icon: '🕒' },
+  { href: '/dashboard/verification', label: 'Verification', icon: '🛡️' },
 ]
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {

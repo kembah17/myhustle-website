@@ -70,6 +70,9 @@ export interface Business {
   website: string | null
   tier: string
   verified: boolean
+  verification_tier: number
+  verification_phone: string | null
+  verification_date: string | null
   active: boolean
   user_id: string | null
   created_at: string
@@ -126,6 +129,29 @@ export interface BusinessPhoto {
   reviewer_name: string | null
   position: number
   is_cover: boolean
+}
+
+
+export type VerificationTier = 0 | 1 | 2 | 3
+
+export interface VerificationRequest {
+  id: string
+  business_id: string
+  requested_tier: number
+  status: string
+  submitted_at: string
+  reviewed_at: string | null
+  reviewer_notes: string | null
+  phone_number: string | null
+  otp_verified: boolean
+  document_type: string | null
+  document_url: string | null
+  business_name_on_doc: string | null
+  registration_number: string | null
+  visit_date: string | null
+  visit_photos: string[] | null
+  visit_notes: string | null
+  verified_address: string | null
 }
 
 // Helper type for business with all relations loaded

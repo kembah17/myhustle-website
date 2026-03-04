@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import StarRating from './StarRating'
+import VerificationBadge from './VerificationBadge'
 import type { Business, Category, Area, Review } from '@/lib/types'
 
 interface BusinessCardProps {
@@ -28,13 +29,8 @@ export default function BusinessCard({ business }: BusinessCardProps) {
               </h3>
             </Link>
           </div>
-          {business.verified && (
-            <span className="ml-2 flex-shrink-0 inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-medium px-2 py-1 rounded-full">
-              <svg className="w-3 h-3" width="12" height="12" style={{width:"12px",height:"12px",maxWidth:"12px",maxHeight:"12px",flexShrink:0}} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Verified
-            </span>
+          {(business.verification_tier > 0 || business.verified) && (
+            <VerificationBadge tier={business.verification_tier || (business.verified ? 1 : 0)} variant="compact" />
           )}
         </div>
 
