@@ -43,19 +43,16 @@ export default async function CityPage({ params }: PageProps) {
   const { city: citySlug } = await params
   const supabase = createServiceClient()
 
-  // Fetch city
   const { data: city } = await supabase
     .from('cities').select('*').eq('slug', citySlug).single()
 
   if (!city) notFound()
 
-  // Fetch areas for this city
   const { data: areas } = await supabase
     .from('areas').select('id, slug, name, description')
     .eq('city_id', city.id)
     .order('name')
 
-  // Count businesses per area in this city
   const { data: businesses } = await supabase
     .from('businesses').select('id, area_id')
     .eq('city_id', city.id)
@@ -71,7 +68,16 @@ export default async function CityPage({ params }: PageProps) {
     business_count: countMap[a.id] || 0,
   }))
 
-  const jsonLd = {
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myhustle.com' },
+      { '@type': 'ListItem', position: 2, name: city.name, item: `https://myhustle.com/${citySlug}` },
+    ],
+  }
+
+  const itemListLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `Areas in ${city.name}`,
@@ -89,7 +95,8 @@ export default async function CityPage({ params }: PageProps) {
 
   return (
     <div>
-      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbLd} />
+      <JsonLd data={itemListLd} />
 
       <section className="bg-hustle-blue text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

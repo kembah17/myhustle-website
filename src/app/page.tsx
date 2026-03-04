@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     description:
       'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark.',
   },
+  alternates: {
+    canonical: 'https://myhustle.com',
+  },
 }
 
 export const revalidate = 3600
