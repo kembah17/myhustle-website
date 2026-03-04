@@ -4,14 +4,14 @@
 -- Tier 0: Unverified (default)
 -- Tier 1: Phone Verified (OTP)
 -- Tier 2: Document Verified (CAC, Tax ID, etc.)
--- Tier 3: Physically Verified (in-person visit)
+-- Tier 3: Remotely Verified (live video call)
 -- ============================================================
 
 -- a) Alter businesses table
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS verification_tier INTEGER DEFAULT 0;
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS verification_phone TEXT;
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS verification_date TIMESTAMPTZ;
--- verification_tier: 0=unverified, 1=phone, 2=document, 3=physical
+-- verification_tier: 0=unverified, 1=phone, 2=document, 3=remote video call
 -- Keep verified boolean as computed: true if verification_tier >= 1
 
 -- b) Create verification_requests table
@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS verification_requests (
   document_url TEXT,
   business_name_on_doc TEXT,
   registration_number TEXT,
-  visit_date DATE,
-  visit_photos TEXT[],
-  visit_notes TEXT,
-  verified_address TEXT
+  video_call_date DATE,
+  video_call_screenshots TEXT[],
+  video_call_notes TEXT,
+  verified_address TEXT  -- confirmed via video call
 );
 
 -- c) RLS policies

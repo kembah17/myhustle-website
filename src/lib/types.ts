@@ -148,9 +148,9 @@ export interface VerificationRequest {
   document_url: string | null
   business_name_on_doc: string | null
   registration_number: string | null
-  visit_date: string | null
-  visit_photos: string[] | null
-  visit_notes: string | null
+  video_call_date: string | null
+  video_call_screenshots: string[] | null
+  video_call_notes: string | null
   verified_address: string | null
 }
 

@@ -157,7 +157,7 @@ export default function VerificationPage() {
   }
 
   // Tier 3: Request visit
-  const handleRequestVisit = async () => {
+  const handleRequestVideoCall = async () => {
     if (!businessId) return
     setTier3Loading(true)
     setTier3Message(null)
@@ -479,7 +479,7 @@ export default function VerificationPage() {
           ) : null}
         </div>
 
-        {/* Tier 3: Physical Verification */}
+        {/* Tier 3: Remote Video Verification */}
         <div className={`bg-white rounded-xl border border-gray-200 p-6 ${currentTier < 2 ? 'opacity-50 pointer-events-none' : currentTier >= 3 ? 'opacity-75' : ''}`}>
           <div className="flex items-center gap-3 mb-4">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${currentTier >= 3 ? 'bg-green-500' : currentTier >= 2 ? 'bg-green-500' : 'bg-gray-300'}`}>
@@ -492,8 +492,8 @@ export default function VerificationPage() {
               )}
             </div>
             <div>
-              <h3 className="font-semibold text-hustle-dark">Physical Verification</h3>
-              <p className="text-sm text-hustle-muted">A MyHustle team member visits your business location</p>
+              <h3 className="font-semibold text-hustle-dark">Remote Video Verification</h3>
+              <p className="text-sm text-hustle-muted">Verify your business via a live video call with our team</p>
             </div>
             {currentTier < 2 && (
               <span className="ml-auto text-xs bg-gray-100 text-hustle-muted px-2 py-1 rounded-full">Complete Tier 2 first</span>
@@ -502,28 +502,28 @@ export default function VerificationPage() {
 
           {currentTier >= 3 ? (
             <div className="ml-11 bg-green-50 text-green-700 rounded-lg p-3 text-sm">
-              ✓ Business physically verified by MyHustle team
+              ✓ Business remotely verified by MyHustle team via video call
             </div>
           ) : currentTier >= 2 ? (
             <div className="ml-11 space-y-4">
               <div className="bg-hustle-light rounded-lg p-4">
-                <h4 className="text-sm font-medium text-hustle-dark mb-2">How Physical Verification Works</h4>
+                <h4 className="text-sm font-medium text-hustle-dark mb-2">How Remote Video Verification Works</h4>
                 <ul className="text-sm text-hustle-muted space-y-1.5">
                   <li className="flex items-start gap-2">
                     <span className="text-hustle-blue mt-0.5">1.</span>
-                    <span>Request a verification visit below</span>
+                    <span>Request a video verification call below</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-hustle-blue mt-0.5">2.</span>
-                    <span>Our team will contact you to schedule a convenient time</span>
+                    <span>Our team will contact you to schedule a convenient video call time</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-hustle-blue mt-0.5">3.</span>
-                    <span>A MyHustle representative visits your business location</span>
+                    <span>Join a live video call and show your business premises, signage, and operations</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-hustle-blue mt-0.5">4.</span>
-                    <span>They verify your address, premises, and business operations</span>
+                    <span>Our team verifies your address, premises, and business operations via the video feed</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-hustle-blue mt-0.5">5.</span>
@@ -539,9 +539,9 @@ export default function VerificationPage() {
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         {renderStatusBadge('pending')}
-                        <span className="text-sm text-hustle-dark font-medium">Visit requested</span>
+                        <span className="text-sm text-hustle-dark font-medium">Video call requested</span>
                       </div>
-                      <p className="text-sm text-hustle-muted">Your visit request has been submitted. Our team will contact you to schedule the visit.</p>
+                      <p className="text-sm text-hustle-muted">Your video verification request has been submitted. Our team will contact you to schedule the call.</p>
                     </div>
                   )
                 }
@@ -550,7 +550,7 @@ export default function VerificationPage() {
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
                       <div className="flex items-center gap-2 mb-2">
                         {renderStatusBadge('rejected')}
-                        <span className="text-sm text-hustle-dark font-medium">Visit not approved</span>
+                        <span className="text-sm text-hustle-dark font-medium">Video verification not approved</span>
                       </div>
                       {tier3Req.reviewer_notes && (
                         <p className="text-sm text-red-700">Reason: {tier3Req.reviewer_notes}</p>
@@ -566,11 +566,11 @@ export default function VerificationPage() {
                 if (tier3Req && tier3Req.status === 'pending') return null
                 return (
                   <button
-                    onClick={handleRequestVisit}
+                    onClick={handleRequestVideoCall}
                     disabled={tier3Loading}
                     className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {tier3Loading ? 'Requesting...' : 'Request Verification Visit'}
+                    {tier3Loading ? 'Requesting...' : 'Request Video Verification Call'}
                   </button>
                 )
               })()}
