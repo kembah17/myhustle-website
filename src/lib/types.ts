@@ -1,10 +1,21 @@
 // Database entity types for MyHustle.com
 
+export interface State {
+  id: string
+  slug: string
+  name: string
+  code: string | null
+  geo_zone: string | null
+  created_at: string
+  cities?: City[]
+}
+
 export interface City {
   id: string
   slug: string
   name: string
   state: string
+  state_id: string | null
   country: string
   lat: number
   lon: number
