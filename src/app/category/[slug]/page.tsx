@@ -5,6 +5,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
 import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Category, Business, Area, Review } from '@/lib/types'
 
@@ -40,6 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     openGraph: { title, description },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }
 
@@ -152,6 +154,15 @@ export default async function CategoryPage({ params }: PageProps) {
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.com' },
+          ...(parentCategory
+            ? [{ name: parentCategory.name, url: `https://myhustle.com/category/${parentCategory.slug}` }]
+            : []),
+          { name: category.name, url: `https://myhustle.com/category/${slug}` },
+        ]}
+      />
 
       {/* Header */}
       <section className="bg-hustle-blue text-white py-12">

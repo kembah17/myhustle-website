@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 
@@ -39,7 +40,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `Best ${category.name} Near ${landmark.name} | MyHustle`
   const description = `Find the best ${category.name} services near ${landmark.name} in Lagos. Read reviews and book appointments on MyHustle.`
-  return { title, description, openGraph: { title, description } }
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 
 export const revalidate = 3600
@@ -93,6 +99,13 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.com' },
+          { name: `Near ${landmark.name}`, url: `https://myhustle.com/near/${lmSlug}` },
+          { name: category.name, url: `https://myhustle.com/near/${lmSlug}/${catSlug}` },
+        ]}
+      />
 
       <section className="bg-hustle-blue text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

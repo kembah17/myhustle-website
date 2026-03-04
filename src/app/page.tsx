@@ -6,6 +6,25 @@ import BusinessCard from '@/components/BusinessCard'
 import JsonLd from '@/components/JsonLd'
 import WhatsAppCTA from '@/components/WhatsAppCTA'
 import type { Category, Business, Area, Review } from '@/lib/types'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'MyHustle.com \u2014 Find & Book Trusted Businesses in Lagos',
+  description:
+    'Discover trusted businesses in Lagos. Browse by area, category, or landmark. Read real reviews and book appointments directly.',
+  openGraph: {
+    title: 'MyHustle.com \u2014 Find & Book Trusted Businesses in Lagos',
+    description:
+      'Discover trusted businesses in Lagos. Browse by area, category, or landmark.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'MyHustle.com \u2014 Find & Book Trusted Businesses in Lagos',
+    description:
+      'Discover trusted businesses in Lagos. Browse by area, category, or landmark.',
+  },
+}
 
 export const revalidate = 3600 // revalidate every hour
 
@@ -101,7 +120,7 @@ export default async function HomePage() {
     '@type': 'WebSite',
     name: 'MyHustle.com',
     url: 'https://myhustle.com',
-    description: 'Nigeria\'s #1 SME Directory. Get Found. Get Booked. Get Paid.',
+    description: "Nigeria's trusted SME directory. Find and book businesses in Lagos.",
     potentialAction: {
       '@type': 'SearchAction',
       target: 'https://myhustle.com/search?q={search_term_string}',
@@ -109,9 +128,25 @@ export default async function HomePage() {
     },
   }
 
+  const organizationJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'MyHustle.com',
+    url: 'https://myhustle.com',
+    logo: 'https://myhustle.com/logo-dark.png',
+    description: "Nigeria's trusted SME directory",
+    sameAs: [],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      availableLanguage: ['English'],
+    },
+  }
+
   return (
     <div>
       <JsonLd data={websiteJsonLd} />
+      <JsonLd data={organizationJsonLd} />
 
       {/* Hero Section */}
       <section className="bg-hustle-blue text-white py-20">
@@ -246,7 +281,7 @@ export default async function HomePage() {
                 href="/lagos"
                 className="inline-block text-hustle-blue font-semibold hover:text-hustle-amber transition-colors"
               >
-                View all areas →
+                View all areas \u2192
               </Link>
             </div>
           </div>

@@ -5,6 +5,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
 import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
 
@@ -33,6 +34,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
     description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
     openGraph: {
+      title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
+      description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
+    },
+    twitter: {
+      card: 'summary_large_image',
       title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
       description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
     },
@@ -123,6 +129,13 @@ export default async function AreaPage({ params }: PageProps) {
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.com' },
+          { name: 'Lagos', url: 'https://myhustle.com/lagos' },
+          { name: area.name, url: `https://myhustle.com/lagos/${areaSlug}` },
+        ]}
+      />
 
       {/* Header */}
       <section className="bg-hustle-blue text-white py-12">

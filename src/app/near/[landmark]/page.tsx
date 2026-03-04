@@ -5,6 +5,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
 import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 
@@ -28,7 +29,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `Businesses Near ${landmark.name}, Lagos | MyHustle`
   const description = `Businesses near ${landmark.name}, Lagos. Find local services, read reviews, and book appointments on MyHustle.`
-  return { title, description, openGraph: { title, description } }
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 
 export const revalidate = 3600
@@ -85,6 +91,13 @@ export default async function LandmarkPage({ params }: PageProps) {
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.com' },
+          { name: 'Near', url: 'https://myhustle.com' },
+          { name: landmark.name, url: `https://myhustle.com/near/${slug}` },
+        ]}
+      />
 
       <section className="bg-hustle-blue text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

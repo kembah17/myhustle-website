@@ -6,7 +6,19 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'All Areas in Lagos | MyHustle',
-  description: 'Browse businesses across all areas in Lagos. Find top-rated services in Lekki, Victoria Island, Ikeja, Surulere, and more.',
+  description:
+    'Browse businesses across all areas in Lagos. Find top-rated services in Lekki, Victoria Island, Ikeja, Surulere, and more.',
+  openGraph: {
+    title: 'All Areas in Lagos | MyHustle',
+    description:
+      'Browse businesses across all areas in Lagos. Find top-rated services in Lekki, Victoria Island, Ikeja, Surulere, and more.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'All Areas in Lagos | MyHustle',
+    description:
+      'Browse businesses across all areas in Lagos. Find top-rated services in Lekki, Victoria Island, Ikeja, Surulere, and more.',
+  },
 }
 
 export const revalidate = 3600

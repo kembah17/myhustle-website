@@ -10,7 +10,7 @@ export default function Footer() {
             <Link href="/" className="inline-block mb-4">
               <Image
                 src="/logo-white.svg"
-                alt="MyHustle"
+                alt="MyHustle - Nigeria's trusted SME directory"
                 width={140}
                 height={42}
                 className="h-9 w-auto"

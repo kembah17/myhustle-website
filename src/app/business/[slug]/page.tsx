@@ -5,6 +5,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import StarRating from '@/components/StarRating'
 import BookingForm from '@/components/BookingForm'
 import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import ReviewSummary from '@/components/ReviewSummary'
 import ReviewForm from '@/components/ReviewForm'
 import type { Metadata } from 'next'
@@ -43,7 +44,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? biz.description.slice(0, 160)
     : `${biz.name} — ${catName} in ${areaName}, Lagos. See services, read reviews, and book on MyHustle.`
 
-  return { title, description, openGraph: { title, description } }
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: 'article' },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 
 export const revalidate = 3600
@@ -137,7 +143,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       },
       review: reviewList.slice(0, 5).map(r => ({
         '@type': 'Review',
-        author: { '@type': 'Person', name: 'MyHustle User' },
+        author: { '@type': 'Person', name: r.reviewer_name || 'MyHustle User' },
         reviewRating: { '@type': 'Rating', ratingValue: r.rating },
         reviewBody: r.text || '',
         datePublished: r.created_at,
@@ -156,6 +162,14 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   return (
     <div>
       <JsonLd data={localBusinessJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.com' },
+          { name: 'Lagos', url: 'https://myhustle.com/lagos' },
+          ...(biz.area ? [{ name: biz.area.name, url: `https://myhustle.com/lagos/${biz.area.slug}` }] : []),
+          { name: biz.name, url: `https://myhustle.com/business/${biz.slug}` },
+        ]}
+      />
       <PageViewTracker businessId={biz.id} />
       <VoiceReceptionist businessId={biz.id} businessName={biz.name} />
 

@@ -72,7 +72,7 @@ export default function PhotoLightbox({ photos, initialIndex, onClose }: PhotoLi
       >
         <img
           src={photos[currentIndex]}
-          alt={`Review photo ${currentIndex + 1}`}
+          alt={`Customer review photo ${currentIndex + 1} of business`}
           className="max-w-full max-h-[90vh] object-contain rounded-lg"
         />
       </div>

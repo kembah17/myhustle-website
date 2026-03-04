@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 
@@ -46,6 +47,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     openGraph: { title, description },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }
 
@@ -119,6 +121,14 @@ export default async function AreaCategoryPage({ params }: PageProps) {
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.com' },
+          { name: 'Lagos', url: 'https://myhustle.com/lagos' },
+          { name: area.name, url: `https://myhustle.com/lagos/${areaSlug}` },
+          { name: category.name, url: `https://myhustle.com/lagos/${areaSlug}/${catSlug}` },
+        ]}
+      />
 
       {/* Header */}
       <section className="bg-hustle-blue text-white py-12">

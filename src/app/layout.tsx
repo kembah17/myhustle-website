@@ -18,8 +18,52 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'MyHustle.com - Nigeria\'s #1 SME Directory',
-  description: 'Find and book trusted businesses in Lagos. Fashion, beauty, events, food, and more — all in one place.',
+  metadataBase: new URL('https://myhustle.com'),
+  title: 'MyHustle.com — Find & Book Trusted Businesses in Lagos',
+  description:
+    'Discover trusted businesses in Lagos. Browse by area, category, or landmark. Read real reviews and book appointments directly.',
+  keywords: [
+    'Lagos business directory',
+    'Nigerian SME directory',
+    'find businesses in Lagos',
+    'book appointments Lagos',
+    'Lagos services',
+    'MyHustle',
+    'business listing Nigeria',
+  ],
+  openGraph: {
+    title: 'MyHustle.com — Find & Book Trusted Businesses in Lagos',
+    description:
+      'Discover trusted businesses in Lagos. Browse by area, category, or landmark. Read real reviews and book appointments directly.',
+    siteName: 'MyHustle.com',
+    locale: 'en_NG',
+    type: 'website',
+    images: [
+      {
+        url: '/logo-dark.png',
+        width: 512,
+        height: 512,
+        alt: "MyHustle.com - Nigeria's trusted SME directory",
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@myhustle_ng',
+    title: 'MyHustle.com — Find & Book Trusted Businesses in Lagos',
+    description:
+      'Discover trusted businesses in Lagos. Browse by area, category, or landmark.',
+  },
+  alternates: {
+    canonical: 'https://myhustle.com',
+  },
+  verification: {
+    google: 'GOOGLE_SEARCH_CONSOLE_VERIFICATION_CODE',
+  },
+  icons: {
+    icon: '/logo-icon.svg',
+    apple: '/logo-dark.png',
+  },
 }
 
 export default function RootLayout({

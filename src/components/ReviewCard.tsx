@@ -130,7 +130,7 @@ export default function ReviewCard({ review, showHelpful = true }: ReviewCardPro
               >
                 <img
                   src={photo}
-                  alt={`Review photo ${i + 1}`}
+                  alt={`Customer review photo ${i + 1}`}
                   className="w-full h-full object-cover"
                 />
               </button>

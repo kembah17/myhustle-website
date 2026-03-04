@@ -18,7 +18,15 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   if (category) parts.push(category)
   if (area) parts.push(area)
   const title = `${parts.join(' — ')} | MyHustle`
-  return { title, robots: { index: false } }
+  const description = q
+    ? `Search results for "${q}" on MyHustle. Find businesses in Lagos.`
+    : 'Search for businesses in Lagos on MyHustle.'
+  return {
+    title,
+    robots: { index: false },
+    openGraph: { title, description },
+    twitter: { card: 'summary_large_image', title, description },
+  }
 }
 
 type BizWithRelations = Business & { category: Category; area: Area; reviews: Review[] }
