@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <!-- Three ascending bars with rounded corners -->
+  <rect x="20" y="65" width="22" height="40" rx="6" ry="6" fill="#1B4965"/>
+  <rect x="50" y="42" width="22" height="63" rx="6" ry="6" fill="#F59E0B"/>
+  <rect x="80" y="18" width="22" height="87" rx="6" ry="6" fill="#EA580C"/>
+  
+  <!-- White wordmark for dark backgrounds -->
+  <text x="118" y="95" font-family="'Space Grotesk', 'Inter', 'Helvetica Neue', sans-serif" font-size="42" fill="#FFFFFF">
+    <tspan font-weight="400">my</tspan><tspan font-weight="700">HUSTLE</tspan>
+  </text>
+</svg>

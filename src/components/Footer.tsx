@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Footer() {
   return (
@@ -6,9 +7,15 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-heading text-xl font-bold mb-4">
-              My<span className="text-hustle-amber">Hustle</span>
-            </h3>
+            <Link href="/" className="inline-block mb-4">
+              <Image
+                src="/logo-white.svg"
+                alt="MyHustle"
+                width={140}
+                height={42}
+                className="h-9 w-auto"
+              />
+            </Link>
             <p className="text-hustle-muted text-sm">
               Get Found. Get Booked. Get Paid.
             </p>
