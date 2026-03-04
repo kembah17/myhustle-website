@@ -21,7 +21,7 @@ export default function Header() {
               Near Me
             </Link>
             <Link
-              href="/list-business"
+              href="/list-your-business"
               className="bg-hustle-amber text-hustle-dark px-4 py-2 rounded-lg text-sm font-bold hover:bg-hustle-sunset hover:text-white transition-colors"
             >
               List Your Business
