@@ -92,9 +92,31 @@ export interface Review {
   rating: number
   text: string | null
   reviewer_name: string | null
-  verified_booking: boolean
+  photos: string[]
+  booking_id: string | null
+  is_verified_booking: boolean
+  verified_booking: boolean // legacy compat
+  status: 'published' | 'flagged' | 'hidden'
+  helpful_count: number
   created_at: string
   business?: Business
+  response?: ReviewResponse | null
+}
+
+export interface ReviewResponse {
+  id: string
+  review_id: string
+  business_id: string
+  response_text: string
+  created_at: string
+}
+
+export interface ReviewFormData {
+  rating: number
+  text: string
+  reviewer_name: string
+  photos: File[]
+  business_id: string
 }
 
 export interface Booking {

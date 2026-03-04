@@ -5,9 +5,11 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import StarRating from '@/components/StarRating'
 import BookingForm from '@/components/BookingForm'
 import JsonLd from '@/components/JsonLd'
+import ReviewSummary from '@/components/ReviewSummary'
+import ReviewForm from '@/components/ReviewForm'
 import type { Metadata } from 'next'
 import VerificationBadge from '@/components/VerificationBadge'
-import type { Business, Category, Area, Review, BusinessHour } from '@/lib/types'
+import type { Business, Category, Area, Review, ReviewResponse, BusinessHour } from '@/lib/types'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -60,14 +62,34 @@ export default async function BusinessDetailPage({ params }: PageProps) {
 
   const biz = business as Business & { category: Category; area: Area }
 
-  // Fetch reviews
+  // Fetch reviews with responses
   const { data: reviews } = await supabase
     .from('reviews')
     .select('*')
     .eq('business_id', biz.id)
+    .eq('status', 'published')
     .order('created_at', { ascending: false })
 
-  const reviewList = (reviews || []) as Review[]
+  const rawReviews = (reviews || []) as Review[]
+
+  // Fetch review responses
+  const reviewIds = rawReviews.map(r => r.id)
+  let responses: ReviewResponse[] = []
+  if (reviewIds.length > 0) {
+    const { data: respData } = await supabase
+      .from('review_responses')
+      .select('*')
+      .in('review_id', reviewIds)
+    responses = (respData || []) as ReviewResponse[]
+  }
+
+  // Merge responses into reviews
+  const reviewList = rawReviews.map(r => ({
+    ...r,
+    photos: r.photos || [],
+    helpful_count: r.helpful_count || 0,
+    response: responses.find(resp => resp.review_id === r.id) || null,
+  }))
   const avgRating = reviewList.length > 0
     ? reviewList.reduce((sum, r) => sum + r.rating, 0) / reviewList.length
     : 0
@@ -249,35 +271,13 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                   <p className="text-hustle-muted">No reviews yet. Be the first to review {biz.name}!</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {reviewList.map((review) => (
-                    <div key={review.id} className="bg-white border border-gray-200 rounded-xl p-5">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <p className="font-semibold text-hustle-dark">MyHustle User</p>
-                          <StarRating rating={review.rating} size="sm" showCount={false} />
-                        </div>
-                        <time className="text-sm text-hustle-muted">
-                          {new Date(review.created_at).toLocaleDateString('en-NG', {
-                            year: 'numeric', month: 'short', day: 'numeric',
-                          })}
-                        </time>
-                      </div>
-                      {review.text && (
-                        <p className="text-hustle-muted mt-2">{review.text}</p>
-                      )}
-                      {review.verified_booking && (
-                        <span className="inline-flex items-center gap-1 text-xs text-green-600 mt-2">
-                          <svg className="w-3 h-3" width="12" height="12" style={{width:"12px",height:"12px",maxWidth:"12px",maxHeight:"12px",flexShrink:0}} fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          Verified Booking
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <ReviewSummary reviews={reviewList} />
               )}
+
+              {/* Write a Review */}
+              <div className="mt-6">
+                <ReviewForm businessId={biz.id} businessName={biz.name} />
+              </div>
             </div>
           </div>
 
