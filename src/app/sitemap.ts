@@ -7,13 +7,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createServiceClient()
 
   // Fetch all data in parallel
-  const [areasRes, categoriesRes, businessesRes, landmarksRes] = await Promise.all([
-    supabase.from('areas').select('slug, updated_at'),
+  const [citiesRes, areasRes, categoriesRes, businessesRes, landmarksRes] = await Promise.all([
+    supabase.from('cities').select('slug, updated_at'),
+    supabase.from('areas').select('slug, updated_at, city:cities(slug)'),
     supabase.from('categories').select('slug, parent_id, updated_at'),
     supabase.from('businesses').select('slug, updated_at').eq('active', true),
     supabase.from('landmarks').select('slug, updated_at'),
   ])
 
+  const cities = citiesRes.data || []
   const areas = areasRes.data || []
   const categories = categoriesRes.data || []
   const businesses = businessesRes.data || []
@@ -30,18 +32,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 1.0,
   })
 
-  // Lagos index
-  entries.push({
-    url: `${BASE_URL}/lagos`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  })
-
-  // Area pages: /lagos/[area]
-  for (const area of areas) {
+  // City index pages: /[city]
+  for (const city of cities) {
     entries.push({
-      url: `${BASE_URL}/lagos/${area.slug}`,
+      url: `${BASE_URL}/${city.slug}`,
+      lastModified: city.updated_at ? new Date(city.updated_at) : new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    })
+  }
+
+  // Area pages: /[city]/[area]
+  for (const area of areas) {
+    const citySlug = (area.city as any)?.slug || 'lagos'
+    entries.push({
+      url: `${BASE_URL}/${citySlug}/${area.slug}`,
       lastModified: area.updated_at ? new Date(area.updated_at) : new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
@@ -58,11 +63,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
-  // Area + Category combos: /lagos/[area]/[category]
+  // Area + Category combos: /[city]/[area]/[category]
   for (const area of areas) {
+    const citySlug = (area.city as any)?.slug || 'lagos'
     for (const cat of parentCategories) {
       entries.push({
-        url: `${BASE_URL}/lagos/${area.slug}/${cat.slug}`,
+        url: `${BASE_URL}/${citySlug}/${area.slug}/${cat.slug}`,
         lastModified: new Date(),
         changeFrequency: 'weekly',
         priority: 0.6,

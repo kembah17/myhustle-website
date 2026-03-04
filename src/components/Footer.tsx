@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-hustle-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div>
             <Link href="/" className="inline-block mb-4">
               <Image
@@ -20,14 +20,21 @@ export default function Footer() {
               Get Found. Get Booked. Get Paid.
             </p>
             <p className="text-hustle-muted text-sm mt-2">
-              Your digital front door in Lagos.
+              Your digital front door across Nigeria.
             </p>
+          </div>
+          <div>
+            <h4 className="font-heading font-semibold mb-4">Cities</h4>
+            <ul className="space-y-2 text-sm text-hustle-muted">
+              <li><Link href="/lagos" className="hover:text-hustle-amber transition-colors">Lagos</Link></li>
+              <li><Link href="/abuja" className="hover:text-hustle-amber transition-colors">Abuja</Link></li>
+              <li><Link href="/port-harcourt" className="hover:text-hustle-amber transition-colors">Port Harcourt</Link></li>
+            </ul>
           </div>
           <div>
             <h4 className="font-heading font-semibold mb-4">Find Businesses</h4>
             <ul className="space-y-2 text-sm text-hustle-muted">
               <li><Link href="/categories" className="hover:text-hustle-amber transition-colors">All Categories</Link></li>
-              <li><Link href="/areas" className="hover:text-hustle-amber transition-colors">Browse Areas</Link></li>
               <li><Link href="/near-me" className="hover:text-hustle-amber transition-colors">Near Me</Link></li>
             </ul>
           </div>

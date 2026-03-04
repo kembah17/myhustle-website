@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!landmark || !category) return { title: 'Not Found' }
 
   const title = `Best ${category.name} Near ${landmark.name} | MyHustle`
-  const description = `Find the best ${category.name} services near ${landmark.name} in Lagos. Read reviews and book appointments on MyHustle.`
+  const description = `Find the best ${category.name} services near ${landmark.name} in Nigeria. Read reviews and book appointments on MyHustle.`
   return {
     title,
     description,
@@ -55,7 +55,7 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
   const supabase = createServiceClient()
 
   const { data: landmark } = await supabase
-    .from('landmarks').select('*, area:areas(*)').eq('slug', lmSlug).single()
+    .from('landmarks').select('*, area:areas(*, city:cities(*))').eq('slug', lmSlug).single()
   const { data: category } = await supabase
     .from('categories').select('*').eq('slug', catSlug).single()
 
@@ -71,7 +71,7 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
 
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('*, category:categories(*), area:areas(*), reviews(*)')
+    .select('*, category:categories(*), area:areas(*, city:cities(*)), reviews(*)')
     .eq('area_id', landmark.area_id)
     .in('category_id', categoryIds)
     .eq('active', true)
@@ -120,7 +120,7 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
             Best <span className="text-hustle-amber">{category.name}</span> Near {landmark.name}
           </h1>
           <p className="text-blue-200 text-lg mt-3">
-            {landmark.area?.name && `${landmark.area.name}, Lagos`}
+            {landmark.area?.name && `${landmark.area.name}${(landmark.area as any)?.city?.name ? `, ${(landmark.area as any).city.name}` : ''}`}
           </p>
         </div>
       </section>
@@ -154,7 +154,7 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
               href={`/category/${catSlug}`}
               className="text-hustle-blue hover:text-hustle-amber transition-colors"
             >
-              View all {category.name} in Lagos →
+              View all {category.name} in {(landmark.area as any)?.city?.name || 'this area'} →
             </Link>
           </div>
         </div>

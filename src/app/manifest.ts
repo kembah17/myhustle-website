@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'MyHustle.com',
     short_name: 'MyHustle',
-    description: 'Find and book trusted businesses in Lagos',
+    description: 'Find and book trusted businesses across Nigeria',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

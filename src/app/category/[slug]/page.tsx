@@ -31,11 +31,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!category) return { title: 'Category Not Found' }
 
   const title = category.seo_title_template
-    ? category.seo_title_template.replace('{name}', '').replace('{area}', 'Lagos').trim().replace(/^-\s*/, '')
-    : `${category.name} in Lagos | MyHustle`
+    ? category.seo_title_template.replace('{name}', '').replace('{area}', 'Nigeria').trim().replace(/^-\s*/, '')
+    : `${category.name} in Nigeria | MyHustle`
   const description = category.seo_description_template
-    ? category.seo_description_template.replace('{name}', 'top professionals').replace('{area}', 'Lagos')
-    : `Looking for ${category.name} in Lagos? Browse verified businesses, read real reviews, and book directly on MyHustle.`
+    ? category.seo_description_template.replace('{name}', 'top professionals').replace('{area}', 'Nigeria')
+    : `Looking for ${category.name} in Nigeria? Browse verified businesses, read real reviews, and book directly on MyHustle.`
 
   return {
     title,
@@ -92,7 +92,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // Fetch businesses
   const { data: businesses } = await supabase
     .from('businesses')
-    .select('*, category:categories(*), area:areas(*), reviews(*)')
+    .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)')
     .in('category_id', categoryIds)
     .eq('active', true)
     .order('verified', { ascending: false })
@@ -110,14 +110,14 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   // Get areas that have businesses in this category
-  const areaMap = new Map<string, { slug: string; name: string; count: number }>()
+  const areaMap = new Map<string, { slug: string; name: string; count: number; citySlug: string }>()
   for (const biz of bizList) {
     if (biz.area) {
       const existing = areaMap.get(biz.area.id)
       if (existing) {
         existing.count++
       } else {
-        areaMap.set(biz.area.id, { slug: biz.area.slug, name: biz.area.name, count: 1 })
+        areaMap.set(biz.area.id, { slug: biz.area.slug, name: biz.area.name, count: 1, citySlug: (biz.area as any)?.city?.slug || 'lagos' })
       }
     }
   }
@@ -127,8 +127,8 @@ export default async function CategoryPage({ params }: PageProps) {
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `${category.name} in Lagos`,
-    description: `Top ${category.name} businesses in Lagos`,
+    name: `${category.name} in Nigeria`,
+    description: `Top ${category.name} businesses across Nigeria`,
     numberOfItems: bizList.length,
     itemListElement: bizList.slice(0, 20).map((biz, index) => ({
       '@type': 'ListItem',
@@ -173,7 +173,7 @@ export default async function CategoryPage({ params }: PageProps) {
             <div>
               <h1 className="font-heading text-3xl md:text-5xl font-bold">
                 {category.name}
-                <span className="text-hustle-amber"> in Lagos</span>
+                <span className="text-hustle-amber"> in Nigeria</span>
               </h1>
               {category.description && (
                 <p className="text-blue-200 text-lg mt-2">{category.description}</p>
@@ -202,7 +202,7 @@ export default async function CategoryPage({ params }: PageProps) {
               {areasWithCount.map((area) => (
                 <Link
                   key={area.slug}
-                  href={`/lagos/${area.slug}/${slug}`}
+                  href={`/${area.citySlug}/${area.slug}/${slug}`}
                   className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm hover:border-hustle-amber hover:shadow-sm transition-all"
                 >
                   <span className="font-medium text-hustle-dark">{area.name}</span>

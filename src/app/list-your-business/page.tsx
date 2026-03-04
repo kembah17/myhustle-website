@@ -4,13 +4,13 @@ import JsonLd from '@/components/JsonLd'
 import WhatsAppCTA from '@/components/WhatsAppCTA'
 
 export const metadata: Metadata = {
-  title: 'List Your Business Free on MyHustle | Get Found by Customers in Lagos',
+  title: 'List Your Business Free on MyHustle | Get Found by Customers Across Nigeria',
   description:
-    'Add your business to MyHustle.com for free. Get discovered by thousands of customers searching for services in Lagos. List via WhatsApp in 2 minutes or use our web form.',
+    'Add your business to MyHustle.com for free. Get discovered by thousands of customers searching for services across Nigeria. List via WhatsApp in 2 minutes or use our web form.',
   openGraph: {
     title: 'List Your Business Free on MyHustle',
     description:
-      'Get discovered by thousands of customers in Lagos. List your business via WhatsApp in 2 minutes.',
+      'Get discovered by thousands of customers across Nigeria. List your business via WhatsApp in 2 minutes.',
     url: 'https://myhustle.com/list-your-business',
     siteName: 'MyHustle.com',
     type: 'website',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'List Your Business Free on MyHustle',
     description:
-      'Get discovered by thousands of customers in Lagos. List your business via WhatsApp in 2 minutes.',
+      'Get discovered by thousands of customers across Nigeria. List your business via WhatsApp in 2 minutes.',
   },
   alternates: {
     canonical: 'https://myhustle.com/list-your-business',
@@ -32,7 +32,7 @@ export default function ListYourBusinessPage() {
     '@type': 'WebPage',
     name: 'List Your Business on MyHustle',
     description:
-      'Add your business to Nigeria\'s #1 SME directory for free. Get found by customers in Lagos.',
+      'Add your business to Nigeria\'s #1 SME directory for free. Get found by customers across Nigeria.',
     url: 'https://myhustle.com/list-your-business',
     isPartOf: {
       '@type': 'WebSite',
@@ -51,7 +51,7 @@ export default function ListYourBusinessPage() {
       },
       areaServed: {
         '@type': 'City',
-        name: 'Lagos',
+        name: 'Nigeria',
         containedInPlace: {
           '@type': 'Country',
           name: 'Nigeria',
@@ -91,7 +91,7 @@ export default function ListYourBusinessPage() {
         name: 'What information do I need to provide?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Just the basics: your business name, what you do, your location in Lagos, and a phone number. Photos and extra details help customers find you, but they are optional to start.',
+          text: 'Just the basics: your business name, what you do, your city and area, and a phone number. Photos and extra details help customers find you, but they are optional to start.',
         },
       },
       {
@@ -127,7 +127,7 @@ export default function ListYourBusinessPage() {
               <span className="text-hustle-amber">MyHustle</span>
             </h1>
             <p className="text-xl md:text-2xl text-blue-200 mb-10">
-              Get found by thousands of customers searching for businesses like yours in Lagos. It&apos;s free and takes less than 2 minutes.
+              Get found by thousands of customers searching for businesses like yours across Nigeria. It&apos;s free and takes less than 2 minutes.
             </p>
 
             {/* WhatsApp Primary CTA */}
@@ -196,7 +196,7 @@ export default function ListYourBusinessPage() {
                 </svg>
               </div>
               <h3 className="font-heading font-bold text-hustle-dark mb-2">Your Location</h3>
-              <p className="text-hustle-muted text-sm">Area in Lagos where you operate</p>
+              <p className="text-hustle-muted text-sm">City and area where you operate</p>
             </div>
             <div className="bg-hustle-light rounded-xl p-6 text-center">
               <div className="w-12 h-12 bg-[#25D366]/10 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -218,7 +218,7 @@ export default function ListYourBusinessPage() {
             Why List on MyHustle?
           </h2>
           <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
-            We&apos;re building the go-to place for people to find businesses in Lagos. Here&apos;s what you get — for free.
+            We&apos;re building the go-to place for people to find businesses across Nigeria. Here&apos;s what you get — for free.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
@@ -275,7 +275,7 @@ export default function ListYourBusinessPage() {
               <p className="text-blue-200 mt-2">Your listing works for you</p>
             </div>
             <div>
-              <div className="font-heading text-4xl md:text-5xl font-bold text-hustle-amber">Lagos</div>
+              <div className="font-heading text-4xl md:text-5xl font-bold text-hustle-amber">3 Cities</div>
               <p className="text-blue-200 mt-2">All areas covered</p>
             </div>
           </div>
@@ -310,7 +310,7 @@ export default function ListYourBusinessPage() {
                 What information do I need to provide?
               </h3>
               <p className="text-hustle-muted">
-                Just the basics: your business name, what you do, your location in Lagos, and a phone number. Photos and extra details help customers find you, but they&apos;re optional to start.
+                Just the basics: your business name, what you do, your city and area, and a phone number. Photos and extra details help customers find you, but they&apos;re optional to start.
               </p>
             </div>
             <div className="border-b border-gray-200 pb-6">
@@ -348,7 +348,7 @@ export default function ListYourBusinessPage() {
             Ready to Get More Customers?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join smart business owners across Lagos who are already getting discovered on MyHustle.
+            Join smart business owners across Nigeria who are already getting discovered on MyHustle.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <WhatsAppCTA variant="inline" />

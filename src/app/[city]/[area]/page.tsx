@@ -3,61 +3,61 @@ import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
-import CategoryGrid from '@/components/CategoryGrid'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
 
 interface PageProps {
-  params: Promise<{ area: string }>
+  params: Promise<{ city: string; area: string }>
 }
 
 export async function generateStaticParams() {
   const supabase = createServiceClient()
-  const { data: areas } = await supabase.from('areas').select('slug')
-  return (areas || []).map((a) => ({ area: a.slug }))
+  const { data: areas } = await supabase
+    .from('areas')
+    .select('slug, city:cities(slug)')
+  return (areas || []).map((a) => ({
+    city: (a.city as any)?.slug || 'lagos',
+    area: a.slug,
+  }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { area: areaSlug } = await params
+  const { city: citySlug, area: areaSlug } = await params
   const supabase = createServiceClient()
+  const { data: city } = await supabase
+    .from('cities').select('name').eq('slug', citySlug).single()
   const { data: area } = await supabase
-    .from('areas')
-    .select('name')
-    .eq('slug', areaSlug)
-    .single()
+    .from('areas').select('name').eq('slug', areaSlug).single()
 
-  if (!area) return { title: 'Area Not Found' }
+  if (!city || !area) return { title: 'Not Found' }
+
+  const title = `Best Businesses in ${area.name}, ${city.name} | MyHustle`
+  const description = `Discover businesses in ${area.name}, ${city.name}. Browse local services, read reviews, and book appointments on MyHustle.`
 
   return {
-    title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
-    description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
-    openGraph: {
-      title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
-      description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `Best Businesses in ${area.name}, Lagos | MyHustle`,
-      description: `Discover businesses in ${area.name}, Lagos. Browse local services, read reviews, and book appointments on MyHustle.`,
-    },
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }
 
 export const revalidate = 3600
 
 export default async function AreaPage({ params }: PageProps) {
-  const { area: areaSlug } = await params
+  const { city: citySlug, area: areaSlug } = await params
   const supabase = createServiceClient()
+
+  // Fetch city
+  const { data: city } = await supabase
+    .from('cities').select('*').eq('slug', citySlug).single()
+  if (!city) notFound()
 
   // Fetch area
   const { data: area } = await supabase
-    .from('areas')
-    .select('*')
-    .eq('slug', areaSlug)
-    .single()
-
+    .from('areas').select('*').eq('slug', areaSlug).eq('city_id', city.id).single()
   if (!area) notFound()
 
   // Fetch businesses in this area with relations
@@ -110,8 +110,8 @@ export default async function AreaPage({ params }: PageProps) {
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: `Businesses in ${area.name}, Lagos`,
-    description: `Top-rated businesses in ${area.name}, Lagos`,
+    name: `Businesses in ${area.name}, ${city.name}`,
+    description: `Top-rated businesses in ${area.name}, ${city.name}`,
     numberOfItems: bizList.length,
     itemListElement: bizList.map((biz, index) => ({
       '@type': 'ListItem',
@@ -132,8 +132,8 @@ export default async function AreaPage({ params }: PageProps) {
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.com' },
-          { name: 'Lagos', url: 'https://myhustle.com/lagos' },
-          { name: area.name, url: `https://myhustle.com/lagos/${areaSlug}` },
+          { name: city.name, url: `https://myhustle.com/${citySlug}` },
+          { name: area.name, url: `https://myhustle.com/${citySlug}/${areaSlug}` },
         ]}
       />
 
@@ -143,7 +143,7 @@ export default async function AreaPage({ params }: PageProps) {
           <Breadcrumbs
             items={[
               { label: 'Home', href: '/' },
-              { label: 'Lagos', href: '/lagos' },
+              { label: city.name, href: `/${citySlug}` },
               { label: area.name },
             ]}
           />
@@ -151,7 +151,7 @@ export default async function AreaPage({ params }: PageProps) {
             Businesses in <span className="text-hustle-amber">{area.name}</span>
           </h1>
           <p className="text-blue-200 text-lg mt-3">
-            See what's happening in {area.name}
+            See what&apos;s happening in {area.name}
           </p>
           {area.description && (
             <p className="text-blue-300 mt-2 max-w-3xl">{area.description}</p>
@@ -168,7 +168,7 @@ export default async function AreaPage({ params }: PageProps) {
               {categoriesWithCounts.map((cat) => (
                 <Link
                   key={cat.id}
-                  href={`/lagos/${areaSlug}/${cat.slug}`}
+                  href={`/${citySlug}/${areaSlug}/${cat.slug}`}
                   className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber group"
                 >
                   <span className="text-2xl mb-2 block">{cat.icon || '📁'}</span>

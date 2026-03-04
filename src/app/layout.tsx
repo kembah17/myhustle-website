@@ -19,22 +19,22 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://myhustle.com'),
-  title: 'MyHustle.com — Find & Book Trusted Businesses in Lagos',
+  title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
   description:
-    'Discover trusted businesses in Lagos. Browse by area, category, or landmark. Read real reviews and book appointments directly.',
+    'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark. Read real reviews and book appointments directly.',
   keywords: [
-    'Lagos business directory',
+    'Nigeria business directory',
     'Nigerian SME directory',
-    'find businesses in Lagos',
-    'book appointments Lagos',
-    'Lagos services',
+    'find businesses in Nigeria',
+    'book appointments Nigeria',
+    'Nigeria services',
     'MyHustle',
     'business listing Nigeria',
   ],
   openGraph: {
-    title: 'MyHustle.com — Find & Book Trusted Businesses in Lagos',
+    title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
     description:
-      'Discover trusted businesses in Lagos. Browse by area, category, or landmark. Read real reviews and book appointments directly.',
+      'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark. Read real reviews and book appointments directly.',
     siteName: 'MyHustle.com',
     locale: 'en_NG',
     type: 'website',
@@ -50,9 +50,9 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@myhustle_ng',
-    title: 'MyHustle.com — Find & Book Trusted Businesses in Lagos',
+    title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
     description:
-      'Discover trusted businesses in Lagos. Browse by area, category, or landmark.',
+      'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark.',
   },
   alternates: {
     canonical: 'https://myhustle.com',

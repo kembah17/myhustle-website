@@ -17,11 +17,22 @@ export default function Header() {
             />
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
+            {/* City dropdown */}
+            <div className="relative group">
+              <button className="text-sm font-medium hover:text-hustle-amber transition-colors flex items-center gap-1">
+                Cities
+                <svg className="w-4 h-4" width="16" height="16" style={{width:'16px',height:'16px',maxWidth:'16px',maxHeight:'16px',flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div className="absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 min-w-[160px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <Link href="/lagos" className="block px-4 py-2 text-hustle-dark hover:bg-gray-50 text-sm">Lagos</Link>
+                <Link href="/abuja" className="block px-4 py-2 text-hustle-dark hover:bg-gray-50 text-sm">Abuja</Link>
+                <Link href="/port-harcourt" className="block px-4 py-2 text-hustle-dark hover:bg-gray-50 text-sm">Port Harcourt</Link>
+              </div>
+            </div>
             <Link href="/categories" className="text-sm font-medium hover:text-hustle-amber transition-colors">
               Categories
-            </Link>
-            <Link href="/areas" className="text-sm font-medium hover:text-hustle-amber transition-colors">
-              Areas
             </Link>
             <Link href="/near-me" className="text-sm font-medium hover:text-hustle-amber transition-colors">
               Nearby

@@ -126,7 +126,7 @@ BUSINESS INFORMATION:
 - Name: ${business.name}
 - Category: ${categoryName}
 - Description: ${business.description || 'Not provided'}
-- Location: ${business.address || 'Not specified'}${areaName ? `, ${areaName}, Lagos` : ''}
+- Location: ${business.address || 'Not specified'}${areaName ? `, ${areaName}` : ''}
 - Phone: ${business.phone || 'Not listed'}
 - WhatsApp: ${business.whatsapp || 'Not listed'}
 - Email: ${business.email || 'Not listed'}

@@ -73,7 +73,7 @@ export default function SignupPage() {
             List Your Business
           </h1>
           <p className="mt-2 text-hustle-muted">
-            Get found by thousands of customers in Lagos
+            Get found by thousands of customers across Nigeria
           </p>
         </div>
 

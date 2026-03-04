@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const supabase = createServiceClient()
   const { data: biz } = await supabase
     .from('businesses')
-    .select('name, description, category:categories(name), area:areas(name)')
+    .select('name, description, category:categories(name), area:areas(name, city:cities(name, slug))')
     .eq('slug', slug)
     .single()
 
@@ -39,10 +39,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const catName = (biz.category as unknown as Category)?.name || ''
   const areaName = (biz.area as unknown as Area)?.name || ''
-  const title = `${biz.name} — ${catName} in ${areaName}, Lagos | MyHustle`
+  const cityName = (biz.area as any)?.city?.name || 'Nigeria'
+  const title = `${biz.name} — ${catName} in ${areaName}, ${cityName} | MyHustle`
   const description = biz.description
     ? biz.description.slice(0, 160)
-    : `${biz.name} — ${catName} in ${areaName}, Lagos. See services, read reviews, and book on MyHustle.`
+    : `${biz.name} — ${catName} in ${areaName}, ${cityName}. See services, read reviews, and book on MyHustle.`
 
   return {
     title,
@@ -63,7 +64,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
 
   const { data: business } = await supabase
     .from('businesses')
-    .select('*, category:categories(*), area:areas(*)')
+    .select('*, category:categories(*), area:areas(*, city:cities(*))')
     .eq('slug', slug)
     .single()
 
@@ -128,8 +129,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       address: {
         '@type': 'PostalAddress',
         streetAddress: biz.address,
-        addressLocality: biz.area?.name || 'Lagos',
-        addressRegion: 'Lagos',
+        addressLocality: biz.area?.name || 'Nigeria',
+        addressRegion: (biz.area as any)?.city?.state || (biz.area as any)?.city?.name || 'Nigeria',
         addressCountry: 'NG',
       },
     } : {}),
@@ -165,8 +166,10 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.com' },
-          { name: 'Lagos', url: 'https://myhustle.com/lagos' },
-          ...(biz.area ? [{ name: biz.area.name, url: `https://myhustle.com/lagos/${biz.area.slug}` }] : []),
+          ...(biz.area ? [
+            { name: (biz.area as any)?.city?.name || 'Nigeria', url: `https://myhustle.com/${(biz.area as any)?.city?.slug || 'lagos'}` },
+            { name: biz.area.name, url: `https://myhustle.com/${(biz.area as any)?.city?.slug || 'lagos'}/${biz.area.slug}` },
+          ] : []),
           { name: biz.name, url: `https://myhustle.com/business/${biz.slug}` },
         ]}
       />
@@ -204,14 +207,14 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                   )}
                   {biz.area && (
                     <Link
-                      href={`/lagos/${biz.area.slug}`}
+                      href={`/${(biz.area as any)?.city?.slug || 'lagos'}/${biz.area.slug}`}
                       className="inline-flex items-center gap-1 text-blue-200 hover:text-white transition-colors text-sm"
                     >
                       <svg className="w-4 h-4" width="16" height="16" style={{width:"16px",height:"16px",maxWidth:"16px",maxHeight:"16px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      {biz.area.name}, Lagos
+                      {biz.area.name}{(biz.area as any)?.city?.name ? `, ${(biz.area as any).city.name}` : ''}
                     </Link>
                   )}
                   {reviewList.length > 0 && (

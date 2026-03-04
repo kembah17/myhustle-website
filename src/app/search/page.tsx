@@ -19,8 +19,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   if (area) parts.push(area)
   const title = `${parts.join(' — ')} | MyHustle`
   const description = q
-    ? `Search results for "${q}" on MyHustle. Find businesses in Lagos.`
-    : 'Search for businesses in Lagos on MyHustle.'
+    ? `Search results for "${q}" on MyHustle. Find businesses across Nigeria.`
+    : 'Search for businesses across Nigeria on MyHustle.'
   return {
     title,
     robots: { index: false },

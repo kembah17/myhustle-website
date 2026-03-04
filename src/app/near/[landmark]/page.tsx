@@ -23,12 +23,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { landmark: slug } = await params
   const supabase = createServiceClient()
   const { data: landmark } = await supabase
-    .from('landmarks').select('name').eq('slug', slug).single()
+    .from('landmarks').select('name, area:areas(city:cities(name))').eq('slug', slug).single()
 
   if (!landmark) return { title: 'Landmark Not Found' }
 
-  const title = `Businesses Near ${landmark.name}, Lagos | MyHustle`
-  const description = `Businesses near ${landmark.name}, Lagos. Find local services, read reviews, and book appointments on MyHustle.`
+  const cityName = (landmark.area as any)?.city?.name || 'Nigeria'
+  const title = `Businesses Near ${landmark.name}, ${cityName} | MyHustle`
+  const description = `Businesses near ${landmark.name}, ${cityName}. Find local services, read reviews, and book appointments on MyHustle.`
   return {
     title,
     description,
@@ -44,7 +45,7 @@ export default async function LandmarkPage({ params }: PageProps) {
   const supabase = createServiceClient()
 
   const { data: landmark } = await supabase
-    .from('landmarks').select('*, area:areas(*)').eq('slug', slug).single()
+    .from('landmarks').select('*, area:areas(*, city:cities(*))').eq('slug', slug).single()
 
   if (!landmark) notFound()
 
@@ -115,7 +116,7 @@ export default async function LandmarkPage({ params }: PageProps) {
                 Businesses Near <span className="text-hustle-amber">{landmark.name}</span>
               </h1>
               <p className="text-blue-200 text-lg mt-2">
-                {landmark.area?.name && `${landmark.area.name}, Lagos`}
+                {landmark.area?.name && `${landmark.area.name}${(landmark.area as any)?.city?.name ? `, ${(landmark.area as any).city.name}` : ''}`}
               </p>
             </div>
           </div>
@@ -158,7 +159,7 @@ export default async function LandmarkPage({ params }: PageProps) {
           <div className="bg-hustle-light rounded-xl p-6 text-center">
             <p className="text-hustle-muted mb-2">Explore more in this area</p>
             <Link
-              href={`/lagos/${landmark.area.slug}`}
+              href={`/${(landmark.area as any)?.city?.slug || 'lagos'}/${landmark.area.slug}`}
               className="text-hustle-blue font-semibold hover:text-hustle-amber transition-colors"
             >
               View all businesses in {landmark.area.name} →
