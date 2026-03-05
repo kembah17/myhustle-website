@@ -55,6 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export const revalidate = 3600
+export const dynamicParams = true
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0] // Mon-Sun

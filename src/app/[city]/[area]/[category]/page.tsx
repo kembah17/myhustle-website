@@ -59,6 +59,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export const revalidate = 3600
+export const dynamicParams = true
 
 export default async function AreaCategoryPage({ params }: PageProps) {
   const { city: citySlug, area: areaSlug, category: catSlug } = await params

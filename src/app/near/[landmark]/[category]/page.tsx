@@ -50,6 +50,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export const revalidate = 3600
+export const dynamicParams = true
 
 export default async function LandmarkCategoryPage({ params }: PageProps) {
   const { landmark: lmSlug, category: catSlug } = await params
