@@ -8,23 +8,12 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ landmark: string; category: string }>
 }
 
-export async function generateStaticParams() {
-  const { data: landmarks } = await getSupabase().from('landmarks').select('slug')
-  const { data: categories } = await getSupabase()
-    .from('categories').select('slug, parent_id').is('parent_id', null)
-
-  const params: { landmark: string; category: string }[] = []
-  for (const lm of landmarks || []) {
-    for (const cat of categories || []) {
-      params.push({ landmark: lm.slug, category: cat.slug })
-    }
-  }
-  return params
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { landmark: lmSlug, category: catSlug } = await params
@@ -49,8 +38,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export const revalidate = 3600
-export const dynamicParams = true
 
 export default async function LandmarkCategoryPage({ params }: PageProps) {
   const { landmark: lmSlug, category: catSlug } = await params

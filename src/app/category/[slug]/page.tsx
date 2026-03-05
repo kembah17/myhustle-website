@@ -9,14 +9,12 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Category, Business, Area, Review } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  const { data: categories } = await getSupabase().from('categories').select('slug')
-  return (categories || []).map((c) => ({ slug: c.slug }))
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
@@ -56,8 +54,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export const revalidate = 3600
-export const dynamicParams = true
 
 export default async function CategoryPage({ params }: PageProps) {
   const { slug } = await params

@@ -8,6 +8,8 @@ import WhatsAppCTA from '@/components/WhatsAppCTA'
 import type { Category, Business, Area, Review } from '@/lib/types'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'MyHustle.com \u2014 Find & Book Trusted Businesses Across Nigeria',
   description:
@@ -28,8 +30,6 @@ export const metadata: Metadata = {
     canonical: 'https://myhustle.com',
   },
 }
-
-export const revalidate = 3600
 
 async function getHomePageData() {
 

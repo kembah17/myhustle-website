@@ -15,15 +15,12 @@ import VoiceReceptionist from '@/components/VoiceReceptionist'
 import ContactTracker from '@/components/analytics/ContactTracker'
 import type { Business, Category, Area, Review, ReviewResponse, BusinessHour } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  const { data: businesses } = await getSupabase()
-    .from('businesses').select('slug').eq('active', true)
-  return (businesses || []).map((b) => ({ slug: b.slug }))
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
@@ -54,8 +51,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export const revalidate = 3600
-export const dynamicParams = true
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0] // Mon-Sun

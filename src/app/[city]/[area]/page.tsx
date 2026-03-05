@@ -8,19 +8,12 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ city: string; area: string }>
 }
 
-export async function generateStaticParams() {
-  const { data: areas } = await getSupabase()
-    .from('areas')
-    .select('slug, city:cities(slug)')
-  return (areas || []).map((a) => ({
-    city: (a.city as any)?.slug || 'lagos',
-    area: a.slug,
-  }))
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city: citySlug, area: areaSlug } = await params
@@ -45,8 +38,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export const revalidate = 3600
-export const dynamicParams = true
 
 export default async function AreaPage({ params }: PageProps) {
   const { city: citySlug, area: areaSlug } = await params

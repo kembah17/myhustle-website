@@ -5,14 +5,12 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ city: string }>
 }
 
-export async function generateStaticParams() {
-  const { data: cities } = await getSupabase().from('cities').select('slug')
-  return (cities || []).map((c) => ({ city: c.slug }))
-}
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city: citySlug } = await params
@@ -35,8 +33,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-export const revalidate = 3600
-export const dynamicParams = true
 
 export default async function CityPage({ params }: PageProps) {
   const { city: citySlug } = await params
