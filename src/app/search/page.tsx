@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import SearchBar from '@/components/SearchBar'
@@ -38,7 +38,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
     area: areaSlug = '',
     sort = 'relevant',
   } = await searchParams
-  const supabase = createServiceClient()
 
   let query = supabase
     .from('businesses')

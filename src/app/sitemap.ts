@@ -1,10 +1,9 @@
-import { createServiceClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import type { MetadataRoute } from 'next'
 
 const BASE_URL = 'https://myhustle.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = createServiceClient()
 
   // Fetch all data in parallel - only businesses has updated_at
   const [citiesRes, areasRes, categoriesRes, businessesRes, landmarksRes] = await Promise.all([

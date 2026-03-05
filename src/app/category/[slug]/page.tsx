@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServiceClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
@@ -14,14 +14,12 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const supabase = createServiceClient()
   const { data: categories } = await supabase.from('categories').select('slug')
   return (categories || []).map((c) => ({ slug: c.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const supabase = createServiceClient()
   const { data: category } = await supabase
     .from('categories')
     .select('name, seo_title_template, seo_description_template')
@@ -62,7 +60,6 @@ export const revalidate = 3600
 
 export default async function CategoryPage({ params }: PageProps) {
   const { slug } = await params
-  const supabase = createServiceClient()
 
   // Fetch category
   const { data: category } = await supabase

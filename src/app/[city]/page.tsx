@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { createServiceClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
@@ -10,14 +10,12 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const supabase = createServiceClient()
   const { data: cities } = await supabase.from('cities').select('slug')
   return (cities || []).map((c) => ({ city: c.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city: citySlug } = await params
-  const supabase = createServiceClient()
   const { data: city } = await supabase
     .from('cities').select('name').eq('slug', citySlug).single()
 
@@ -41,7 +39,6 @@ export const revalidate = 3600
 
 export default async function CityPage({ params }: PageProps) {
   const { city: citySlug } = await params
-  const supabase = createServiceClient()
 
   const { data: city } = await supabase
     .from('cities').select('*').eq('slug', citySlug).single()

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createServiceClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import SearchBar from '@/components/SearchBar'
 import CategoryGrid from '@/components/CategoryGrid'
 import BusinessCard from '@/components/BusinessCard'
@@ -32,7 +32,6 @@ export const metadata: Metadata = {
 export const revalidate = 3600
 
 async function getHomePageData() {
-  const supabase = createServiceClient()
 
   // Get cities
   const { data: cities } = await supabase

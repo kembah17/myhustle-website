@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServiceClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
@@ -14,14 +14,12 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const supabase = createServiceClient()
   const { data: landmarks } = await supabase.from('landmarks').select('slug')
   return (landmarks || []).map((l) => ({ landmark: l.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { landmark: slug } = await params
-  const supabase = createServiceClient()
   const { data: landmark } = await supabase
     .from('landmarks').select('name, area:areas(city:cities(name))').eq('slug', slug).single()
 
@@ -45,7 +43,6 @@ export const revalidate = 3600
 
 export default async function LandmarkPage({ params }: PageProps) {
   const { landmark: slug } = await params
-  const supabase = createServiceClient()
 
   const { data: landmark } = await supabase
     .from('landmarks').select('*, area:areas(*, city:cities(*))').eq('slug', slug).single()

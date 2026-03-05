@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServiceClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import StarRating from '@/components/StarRating'
 import BookingForm from '@/components/BookingForm'
@@ -20,7 +20,6 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const supabase = createServiceClient()
   const { data: businesses } = await supabase
     .from('businesses').select('slug').eq('active', true)
   return (businesses || []).map((b) => ({ slug: b.slug }))
@@ -28,7 +27,6 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const supabase = createServiceClient()
   const { data: biz } = await supabase
     .from('businesses')
     .select('name, description, category:categories(name), area:areas(name, city:cities(name, slug))')
@@ -63,7 +61,6 @@ const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0] // Mon-Sun
 
 export default async function BusinessDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const supabase = createServiceClient()
 
   const { data: business } = await supabase
     .from('businesses')
