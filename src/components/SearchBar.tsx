@@ -124,7 +124,7 @@ export default function SearchBar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="What are you looking for?"
-            className="flex-1 px-6 py-4 rounded-lg text-hustle-dark text-lg focus:outline-none focus:ring-2 focus:ring-hustle-amber"
+            className="flex-1 px-6 py-4 rounded-lg text-hustle-dark text-lg bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60 placeholder-hustle-dark/40"
           />
           <button
             type="submit"
@@ -137,7 +137,7 @@ export default function SearchBar({
           <select
             value={categorySlug}
             onChange={(e) => setCategorySlug(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base focus:outline-none focus:ring-2 focus:ring-hustle-amber bg-white"
+            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -149,7 +149,7 @@ export default function SearchBar({
           <select
             value={areaSlug}
             onChange={(e) => setAreaSlug(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base focus:outline-none focus:ring-2 focus:ring-hustle-amber bg-white"
+            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60"
           >
             <option value="">All Areas</option>
             {areas.map((area) => (
@@ -161,7 +161,7 @@ export default function SearchBar({
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base focus:outline-none focus:ring-2 focus:ring-hustle-amber bg-white"
+            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60"
           >
             <option value="relevant">Most Relevant</option>
             <option value="rating">Highest Rated</option>
