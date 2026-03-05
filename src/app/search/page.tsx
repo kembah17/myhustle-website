@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 import SearchImpressionTracker from '@/components/analytics/SearchImpressionTracker'
+import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; category?: string; area?: string; sort?: string }>
@@ -283,6 +284,10 @@ export default async function SearchPage({ searchParams }: PageProps) {
                 </div>
               </div>
             )}
+
+            <div className="mt-8 max-w-md mx-auto">
+              <SuggestWhatsApp type="general" />
+            </div>
           </div>
         )}
       </div>

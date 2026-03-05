@@ -7,6 +7,7 @@ import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
+import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 
 export const dynamic = 'force-dynamic'
 
@@ -209,6 +210,10 @@ export default async function AreaPage({ params }: PageProps) {
             </div>
           </div>
         )}
+
+        <section className="mt-4 max-w-lg mx-auto">
+          <SuggestWhatsApp type="area" context={city.name} />
+        </section>
       </div>
     </div>
   )

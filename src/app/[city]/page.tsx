@@ -4,6 +4,7 @@ import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
+import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 
 export const dynamic = 'force-dynamic'
 
@@ -121,6 +122,10 @@ export default async function CityPage({ params }: PageProps) {
             </Link>
           ))}
         </div>
+
+        <section className="mt-12 max-w-lg mx-auto">
+          <SuggestWhatsApp type="area" context={city.name} />
+        </section>
       </div>
     </div>
   )

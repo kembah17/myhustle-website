@@ -8,6 +8,7 @@ import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Category, Business, Area, Review } from '@/lib/types'
+import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 
 export const dynamic = 'force-dynamic'
 
@@ -244,6 +245,10 @@ export default async function CategoryPage({ params }: PageProps) {
             </Link>
           </div>
         )}
+
+        <section className="mt-12 max-w-lg mx-auto">
+          <SuggestWhatsApp type="category" />
+        </section>
       </div>
     </div>
   )
