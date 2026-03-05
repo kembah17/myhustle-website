@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { getSupabase, createServiceClient } from '@/lib/supabase'
 
 // In-memory rate limiting (resets on server restart — fine for future-ready endpoint)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -116,8 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Store in Supabase
-    const supabase = createServiceClient()
-    const { error: dbError } = await supabase
+    const { error: dbError } = await getSupabase()
       .from('whatsapp_submissions')
       .insert(submissionData)
 

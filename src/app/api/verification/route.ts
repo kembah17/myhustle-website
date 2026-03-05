@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { getSupabase, createServiceClient } from '@/lib/supabase'
 
 // GET: Fetch verification status and requests for a business
 export async function GET(request: NextRequest) {
@@ -10,10 +10,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'business_id is required' }, { status: 400 })
   }
 
-  const supabase = createServiceClient()
-
   // Fetch business verification status
-  const { data: business, error: bizError } = await supabase
+  const { data: business, error: bizError } = await getSupabase()
     .from('businesses')
     .select('id, verification_tier, verification_phone, verification_date, verified')
     .eq('id', businessId)
@@ -24,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Fetch all verification requests for this business
-  const { data: requests, error: reqError } = await supabase
+  const { data: requests, error: reqError } = await getSupabase()
     .from('verification_requests')
     .select('*')
     .eq('business_id', businessId)
@@ -56,10 +54,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'business_id and requested_tier are required' }, { status: 400 })
     }
 
-    const supabase = createServiceClient()
-
     // Check business exists
-    const { data: business, error: bizError } = await supabase
+    const { data: business, error: bizError } = await getSupabase()
       .from('businesses')
       .select('id, verification_tier')
       .eq('id', business_id)
@@ -79,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for existing pending request at this tier
-    const { data: existingPending } = await supabase
+    const { data: existingPending } = await getSupabase()
       .from('verification_requests')
       .select('id')
       .eq('business_id', business_id)
@@ -113,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert verification request
-    const { data: newRequest, error: insertError } = await supabase
+    const { data: newRequest, error: insertError } = await getSupabase()
       .from('verification_requests')
       .insert(requestData)
       .select()

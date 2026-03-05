@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import SearchBar from '@/components/SearchBar'
 import CategoryGrid from '@/components/CategoryGrid'
 import BusinessCard from '@/components/BusinessCard'
@@ -34,26 +34,26 @@ export const revalidate = 3600
 async function getHomePageData() {
 
   // Get cities
-  const { data: cities } = await supabase
+  const { data: cities } = await getSupabase()
     .from('cities')
     .select('id, slug, name, state')
     .order('name')
 
   // Get parent categories
-  const { data: parentCategories } = await supabase
+  const { data: parentCategories } = await getSupabase()
     .from('categories')
     .select('*')
     .is('parent_id', null)
     .order('name')
 
   // Get all businesses to compute counts
-  const { data: allBusinesses } = await supabase
+  const { data: allBusinesses } = await getSupabase()
     .from('businesses')
     .select('id, category_id, area_id, city_id')
     .eq('active', true)
 
   // Get all categories (including children) for count mapping
-  const { data: allCategories } = await supabase
+  const { data: allCategories } = await getSupabase()
     .from('categories')
     .select('id, parent_id')
 
@@ -96,7 +96,7 @@ async function getHomePageData() {
   }))
 
   // Get featured/recent businesses with relations
-  const { data: featuredBusinesses } = await supabase
+  const { data: featuredBusinesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
     .eq('active', true)
@@ -104,7 +104,7 @@ async function getHomePageData() {
     .limit(6)
 
   // Get areas with business counts and city info
-  const { data: areas } = await supabase
+  const { data: areas } = await getSupabase()
     .from('areas')
     .select('id, slug, name, city:cities(slug, name)')
     .order('name')

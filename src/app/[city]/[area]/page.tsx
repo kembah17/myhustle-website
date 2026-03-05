@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import JsonLd from '@/components/JsonLd'
@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const { data: areas } = await supabase
+  const { data: areas } = await getSupabase()
     .from('areas')
     .select('slug, city:cities(slug)')
   return (areas || []).map((a) => ({
@@ -24,9 +24,9 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city: citySlug, area: areaSlug } = await params
-  const { data: city } = await supabase
+  const { data: city } = await getSupabase()
     .from('cities').select('name').eq('slug', citySlug).single()
-  const { data: area } = await supabase
+  const { data: area } = await getSupabase()
     .from('areas').select('name').eq('slug', areaSlug).single()
 
   if (!city || !area) return { title: 'Not Found' }
@@ -52,17 +52,17 @@ export default async function AreaPage({ params }: PageProps) {
   const { city: citySlug, area: areaSlug } = await params
 
   // Fetch city
-  const { data: city } = await supabase
+  const { data: city } = await getSupabase()
     .from('cities').select('*').eq('slug', citySlug).single()
   if (!city) notFound()
 
   // Fetch area
-  const { data: area } = await supabase
+  const { data: area } = await getSupabase()
     .from('areas').select('*').eq('slug', areaSlug).eq('city_id', city.id).single()
   if (!area) notFound()
 
   // Fetch businesses in this area with relations
-  const { data: businesses } = await supabase
+  const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
     .eq('area_id', area.id)
@@ -73,14 +73,14 @@ export default async function AreaPage({ params }: PageProps) {
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
   // Get categories with counts for this area
-  const { data: allCategories } = await supabase
+  const { data: allCategories } = await getSupabase()
     .from('categories')
     .select('id, slug, name, icon, parent_id')
     .is('parent_id', null)
     .order('name')
 
   const catCountMap: Record<string, number> = {}
-  const { data: allCats } = await supabase.from('categories').select('id, parent_id')
+  const { data: allCats } = await getSupabase().from('categories').select('id, parent_id')
   const childToParent: Record<string, string> = {}
   if (allCats) {
     for (const c of allCats) {
@@ -101,7 +101,7 @@ export default async function AreaPage({ params }: PageProps) {
   }))
 
   // Fetch landmarks in this area
-  const { data: landmarks } = await supabase
+  const { data: landmarks } = await getSupabase()
     .from('landmarks')
     .select('slug, name, type')
     .eq('area_id', area.id)

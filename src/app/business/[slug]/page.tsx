@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import StarRating from '@/components/StarRating'
 import BookingForm from '@/components/BookingForm'
@@ -20,14 +20,14 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const { data: businesses } = await supabase
+  const { data: businesses } = await getSupabase()
     .from('businesses').select('slug').eq('active', true)
   return (businesses || []).map((b) => ({ slug: b.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const { data: biz } = await supabase
+  const { data: biz } = await getSupabase()
     .from('businesses')
     .select('name, description, category:categories(name), area:areas(name, city:cities(name, slug))')
     .eq('slug', slug)
@@ -63,7 +63,7 @@ const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0] // Mon-Sun
 export default async function BusinessDetailPage({ params }: PageProps) {
   const { slug } = await params
 
-  const { data: business } = await supabase
+  const { data: business } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*, city:cities(*))')
     .eq('slug', slug)
@@ -74,7 +74,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   const biz = business as Business & { category: Category; area: Area }
 
   // Fetch reviews with responses
-  const { data: reviews } = await supabase
+  const { data: reviews } = await getSupabase()
     .from('reviews')
     .select('*')
     .eq('business_id', biz.id)
@@ -87,7 +87,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   const reviewIds = rawReviews.map(r => r.id)
   let responses: ReviewResponse[] = []
   if (reviewIds.length > 0) {
-    const { data: respData } = await supabase
+    const { data: respData } = await getSupabase()
       .from('review_responses')
       .select('*')
       .in('review_id', reviewIds)
@@ -106,7 +106,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     : 0
 
   // Fetch business hours
-  const { data: hours } = await supabase
+  const { data: hours } = await getSupabase()
     .from('business_hours')
     .select('*')
     .eq('business_id', biz.id)

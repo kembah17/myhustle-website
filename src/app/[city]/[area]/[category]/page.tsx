@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import JsonLd from '@/components/JsonLd'
@@ -13,8 +13,8 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const { data: areas } = await supabase.from('areas').select('slug, city:cities(slug)')
-  const { data: categories } = await supabase
+  const { data: areas } = await getSupabase().from('areas').select('slug, city:cities(slug)')
+  const { data: categories } = await getSupabase()
     .from('categories')
     .select('slug, parent_id')
     .is('parent_id', null)
@@ -35,11 +35,11 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city: citySlug, area: areaSlug, category: catSlug } = await params
 
-  const { data: city } = await supabase
+  const { data: city } = await getSupabase()
     .from('cities').select('name').eq('slug', citySlug).single()
-  const { data: area } = await supabase
+  const { data: area } = await getSupabase()
     .from('areas').select('name').eq('slug', areaSlug).single()
-  const { data: category } = await supabase
+  const { data: category } = await getSupabase()
     .from('categories').select('name').eq('slug', catSlug).single()
 
   if (!city || !area || !category) return { title: 'Not Found' }
@@ -65,14 +65,14 @@ export default async function AreaCategoryPage({ params }: PageProps) {
   const { city: citySlug, area: areaSlug, category: catSlug } = await params
 
   // Fetch city
-  const { data: city } = await supabase
+  const { data: city } = await getSupabase()
     .from('cities').select('*').eq('slug', citySlug).single()
   if (!city) notFound()
 
   // Fetch area and category
-  const { data: area } = await supabase
+  const { data: area } = await getSupabase()
     .from('areas').select('*').eq('slug', areaSlug).eq('city_id', city.id).single()
-  const { data: category } = await supabase
+  const { data: category } = await getSupabase()
     .from('categories').select('*').eq('slug', catSlug).single()
 
   if (!area || !category) notFound()
@@ -82,7 +82,7 @@ export default async function AreaCategoryPage({ params }: PageProps) {
   // Build category IDs (include children if parent)
   let categoryIds = [category.id]
   if (isParent) {
-    const { data: children } = await supabase
+    const { data: children } = await getSupabase()
       .from('categories')
       .select('id')
       .eq('parent_id', category.id)
@@ -90,7 +90,7 @@ export default async function AreaCategoryPage({ params }: PageProps) {
   }
 
   // Fetch businesses matching area + category
-  const { data: businesses } = await supabase
+  const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
     .eq('area_id', area.id)
@@ -104,7 +104,7 @@ export default async function AreaCategoryPage({ params }: PageProps) {
   // Get subcategories if parent
   let subcategories: Category[] = []
   if (isParent) {
-    const { data: subs } = await supabase
+    const { data: subs } = await getSupabase()
       .from('categories')
       .select('*')
       .eq('parent_id', category.id)

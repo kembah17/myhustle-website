@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
@@ -14,13 +14,13 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const { data: categories } = await supabase.from('categories').select('slug')
+  const { data: categories } = await getSupabase().from('categories').select('slug')
   return (categories || []).map((c) => ({ slug: c.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const { data: category } = await supabase
+  const { data: category } = await getSupabase()
     .from('categories')
     .select('name, seo_title_template, seo_description_template')
     .eq('slug', slug)
@@ -63,7 +63,7 @@ export default async function CategoryPage({ params }: PageProps) {
   const { slug } = await params
 
   // Fetch category
-  const { data: category } = await supabase
+  const { data: category } = await getSupabase()
     .from('categories')
     .select('*')
     .eq('slug', slug)
@@ -76,7 +76,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // If parent, fetch children
   let children: (Category & { business_count?: number })[] = []
   if (isParent) {
-    const { data: childCats } = await supabase
+    const { data: childCats } = await getSupabase()
       .from('categories')
       .select('*')
       .eq('parent_id', category.id)
@@ -87,7 +87,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // Fetch parent if subcategory
   let parentCategory: Category | null = null
   if (!isParent && category.parent_id) {
-    const { data: parent } = await supabase
+    const { data: parent } = await getSupabase()
       .from('categories')
       .select('*')
       .eq('id', category.parent_id)
@@ -101,7 +101,7 @@ export default async function CategoryPage({ params }: PageProps) {
     : [category.id]
 
   // Fetch businesses
-  const { data: businesses } = await supabase
+  const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)')
     .in('category_id', categoryIds)

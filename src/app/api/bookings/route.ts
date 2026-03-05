@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { getSupabase, createServiceClient } from '@/lib/supabase'
 
 // Simple in-memory rate limiter
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -83,10 +83,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert booking using service role client
-    const supabase = createServiceClient()
 
     // Verify business exists
-    const { data: business, error: bizError } = await supabase
+    const { data: business, error: bizError } = await getSupabase()
       .from('businesses')
       .select('id, name')
       .eq('id', business_id)
@@ -100,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert booking
-    const { data: booking, error: insertError } = await supabase
+    const { data: booking, error: insertError } = await getSupabase()
       .from('bookings')
       .insert({
         business_id,

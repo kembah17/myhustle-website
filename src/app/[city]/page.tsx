@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
@@ -10,13 +10,13 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const { data: cities } = await supabase.from('cities').select('slug')
+  const { data: cities } = await getSupabase().from('cities').select('slug')
   return (cities || []).map((c) => ({ city: c.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city: citySlug } = await params
-  const { data: city } = await supabase
+  const { data: city } = await getSupabase()
     .from('cities').select('name').eq('slug', citySlug).single()
 
   if (!city) return { title: 'City Not Found' }
@@ -41,17 +41,17 @@ export const dynamicParams = true
 export default async function CityPage({ params }: PageProps) {
   const { city: citySlug } = await params
 
-  const { data: city } = await supabase
+  const { data: city } = await getSupabase()
     .from('cities').select('*').eq('slug', citySlug).single()
 
   if (!city) notFound()
 
-  const { data: areas } = await supabase
+  const { data: areas } = await getSupabase()
     .from('areas').select('id, slug, name, description')
     .eq('city_id', city.id)
     .order('name')
 
-  const { data: businesses } = await supabase
+  const { data: businesses } = await getSupabase()
     .from('businesses').select('id, area_id')
     .eq('city_id', city.id)
     .eq('active', true)

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-browser'
 import type { Category, Area } from '@/lib/types'
 
 interface SearchBarProps {
@@ -29,6 +29,7 @@ export default function SearchBar({
   const [areas, setAreas] = useState<Area[]>([])
 
   useEffect(() => {
+      const supabase = createClient()
     async function loadFilters() {
       const [catRes, areaRes] = await Promise.all([
         supabase

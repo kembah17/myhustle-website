@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
@@ -14,13 +14,13 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const { data: landmarks } = await supabase.from('landmarks').select('slug')
+  const { data: landmarks } = await getSupabase().from('landmarks').select('slug')
   return (landmarks || []).map((l) => ({ landmark: l.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { landmark: slug } = await params
-  const { data: landmark } = await supabase
+  const { data: landmark } = await getSupabase()
     .from('landmarks').select('name, area:areas(city:cities(name))').eq('slug', slug).single()
 
   if (!landmark) return { title: 'Landmark Not Found' }
@@ -45,13 +45,13 @@ export const dynamicParams = true
 export default async function LandmarkPage({ params }: PageProps) {
   const { landmark: slug } = await params
 
-  const { data: landmark } = await supabase
+  const { data: landmark } = await getSupabase()
     .from('landmarks').select('*, area:areas(*, city:cities(*))').eq('slug', slug).single()
 
   if (!landmark) notFound()
 
   // Fetch businesses in the same area as the landmark
-  const { data: businesses } = await supabase
+  const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
     .eq('area_id', landmark.area_id)
@@ -62,7 +62,7 @@ export default async function LandmarkPage({ params }: PageProps) {
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
   // Get parent categories for filter links
-  const { data: parentCats } = await supabase
+  const { data: parentCats } = await getSupabase()
     .from('categories')
     .select('id, slug, name, icon, parent_id')
     .is('parent_id', null)

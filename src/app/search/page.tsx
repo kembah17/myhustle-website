@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import SearchBar from '@/components/SearchBar'
@@ -39,7 +39,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
     sort = 'relevant',
   } = await searchParams
 
-  let query = supabase
+  let query = getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
     .eq('active', true)
@@ -47,7 +47,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   // Filter by category
   let activeCategoryName = ''
   if (catSlug) {
-    const { data: cat } = await supabase
+    const { data: cat } = await getSupabase()
       .from('categories')
       .select('id, name, parent_id')
       .eq('slug', catSlug)
@@ -56,7 +56,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       activeCategoryName = cat.name
       const isParent = !cat.parent_id
       if (isParent) {
-        const { data: children } = await supabase
+        const { data: children } = await getSupabase()
           .from('categories')
           .select('id')
           .eq('parent_id', cat.id)
@@ -71,7 +71,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   // Filter by area
   let activeAreaName = ''
   if (areaSlug) {
-    const { data: areaRow } = await supabase
+    const { data: areaRow } = await getSupabase()
       .from('areas')
       .select('id, name')
       .eq('slug', areaSlug)
@@ -166,8 +166,8 @@ export default async function SearchPage({ searchParams }: PageProps) {
   let suggestedAreas: Area[] = []
   if (bizList.length === 0) {
     const [catRes, areaRes] = await Promise.all([
-      supabase.from('categories').select('*').is('parent_id', null).order('name').limit(6),
-      supabase.from('areas').select('*').order('name').limit(6),
+      getSupabase().from('categories').select('*').is('parent_id', null).order('name').limit(6),
+      getSupabase().from('areas').select('*').order('name').limit(6),
     ])
     suggestedCategories = catRes.data || []
     suggestedAreas = areaRes.data || []

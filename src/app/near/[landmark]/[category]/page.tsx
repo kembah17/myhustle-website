@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import JsonLd from '@/components/JsonLd'
@@ -13,8 +13,8 @@ interface PageProps {
 }
 
 export async function generateStaticParams() {
-  const { data: landmarks } = await supabase.from('landmarks').select('slug')
-  const { data: categories } = await supabase
+  const { data: landmarks } = await getSupabase().from('landmarks').select('slug')
+  const { data: categories } = await getSupabase()
     .from('categories').select('slug, parent_id').is('parent_id', null)
 
   const params: { landmark: string; category: string }[] = []
@@ -29,9 +29,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { landmark: lmSlug, category: catSlug } = await params
 
-  const { data: landmark } = await supabase
+  const { data: landmark } = await getSupabase()
     .from('landmarks').select('name').eq('slug', lmSlug).single()
-  const { data: category } = await supabase
+  const { data: category } = await getSupabase()
     .from('categories').select('name').eq('slug', catSlug).single()
 
   if (!landmark || !category) return { title: 'Not Found' }
@@ -55,9 +55,9 @@ export const dynamicParams = true
 export default async function LandmarkCategoryPage({ params }: PageProps) {
   const { landmark: lmSlug, category: catSlug } = await params
 
-  const { data: landmark } = await supabase
+  const { data: landmark } = await getSupabase()
     .from('landmarks').select('*, area:areas(*, city:cities(*))').eq('slug', lmSlug).single()
-  const { data: category } = await supabase
+  const { data: category } = await getSupabase()
     .from('categories').select('*').eq('slug', catSlug).single()
 
   if (!landmark || !category) notFound()
@@ -65,12 +65,12 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
   const isParent = !category.parent_id
   let categoryIds = [category.id]
   if (isParent) {
-    const { data: children } = await supabase
+    const { data: children } = await getSupabase()
       .from('categories').select('id').eq('parent_id', category.id)
     if (children) categoryIds = [category.id, ...children.map(c => c.id)]
   }
 
-  const { data: businesses } = await supabase
+  const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*, city:cities(*)), reviews(*)')
     .eq('area_id', landmark.area_id)

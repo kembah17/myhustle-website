@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { getSupabase, createServiceClient } from '@/lib/supabase'
 
 // Simple in-memory rate limiter
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
@@ -70,9 +70,8 @@ export async function POST(request: NextRequest) {
     const trimmedHistory = conversationHistory.slice(-10)
 
     // Fetch business data from Supabase
-    const supabase = createServiceClient()
 
-    const { data: business, error: bizError } = await supabase
+    const { data: business, error: bizError } = await getSupabase()
       .from('businesses')
       .select('*, category:categories(name), area:areas(name)')
       .eq('id', businessId)
@@ -86,13 +85,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch business hours
-    const { data: hours } = await supabase
+    const { data: hours } = await getSupabase()
       .from('business_hours')
       .select('*')
       .eq('business_id', businessId)
 
     // Fetch review stats
-    const { data: reviews } = await supabase
+    const { data: reviews } = await getSupabase()
       .from('reviews')
       .select('rating')
       .eq('business_id', businessId)

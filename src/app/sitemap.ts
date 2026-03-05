@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import type { MetadataRoute } from 'next'
 
 const BASE_URL = 'https://myhustle.com'
@@ -7,11 +7,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Fetch all data in parallel - only businesses has updated_at
   const [citiesRes, areasRes, categoriesRes, businessesRes, landmarksRes] = await Promise.all([
-    supabase.from('cities').select('slug'),
-    supabase.from('areas').select('slug, city_id, city:cities(slug)'),
-    supabase.from('categories').select('slug, parent_id'),
-    supabase.from('businesses').select('slug, updated_at').eq('active', true),
-    supabase.from('landmarks').select('slug'),
+    getSupabase().from('cities').select('slug'),
+    getSupabase().from('areas').select('slug, city_id, city:cities(slug)'),
+    getSupabase().from('categories').select('slug, parent_id'),
+    getSupabase().from('businesses').select('slug, updated_at').eq('active', true),
+    getSupabase().from('landmarks').select('slug'),
   ])
 
   // Log errors for debugging

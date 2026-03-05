@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { getSupabase, createServiceClient } from '@/lib/supabase'
 
 // POST: Verify OTP for tier 1 phone verification
 export async function POST(request: NextRequest) {
@@ -22,10 +22,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const supabase = createServiceClient()
-
     // Find the pending tier 1 verification request
-    const { data: verRequest, error: reqError } = await supabase
+    const { data: verRequest, error: reqError } = await getSupabase()
       .from('verification_requests')
       .select('*')
       .eq('business_id', business_id)
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the verification request to approved
-    const { error: updateReqError } = await supabase
+    const { error: updateReqError } = await getSupabase()
       .from('verification_requests')
       .update({
         status: 'approved',
@@ -61,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the business: set verification_tier to 1, verified to true, verification_date
-    const { error: updateBizError } = await supabase
+    const { error: updateBizError } = await getSupabase()
       .from('businesses')
       .update({
         verification_tier: 1,

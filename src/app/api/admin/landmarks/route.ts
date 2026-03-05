@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase'
+import { getSupabase, createServiceClient } from '@/lib/supabase'
 import { createServerClient } from '@supabase/ssr'
 
 async function getAuthUser(request: NextRequest) {
@@ -15,7 +15,7 @@ async function getAuthUser(request: NextRequest) {
       },
     }
   )
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await getSupabase().auth.getUser()
   return user
 }
 
