@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import ShareButtons from './ShareButtons'
 import StarRating from './StarRating'
 import VerificationBadge from './VerificationBadge'
 import type { Business, Category, Area, Review } from '@/lib/types'
@@ -105,6 +106,13 @@ export default function BusinessCard({ business }: BusinessCardProps) {
         >
           View Details
         </Link>
+        <ShareButtons
+          businessName={business.name}
+          businessSlug={business.slug}
+          categoryName={business.category?.name}
+          areaName={business.area?.name}
+          variant="compact"
+        />
       </div>
     </div>
   )

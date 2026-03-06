@@ -14,6 +14,7 @@ import PageViewTracker from '@/components/analytics/PageViewTracker'
 import VoiceReceptionist from '@/components/VoiceReceptionist'
 import ContactTracker from '@/components/analytics/ContactTracker'
 import type { Business, Category, Area, Review, ReviewResponse, BusinessHour } from '@/lib/types'
+import ShareButtons from '@/components/ShareButtons'
 
 export const dynamic = 'force-dynamic'
 
@@ -219,6 +220,13 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                     </div>
                   )}
                 </div>
+                <ShareButtons
+                  businessName={biz.name}
+                  businessSlug={biz.slug}
+                  categoryName={biz.category?.name}
+                  areaName={biz.area?.name}
+                  variant="header"
+                />
               </div>
             </div>
           </div>
