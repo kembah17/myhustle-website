@@ -190,6 +190,10 @@ Review weekly during beta, bi-weekly post-launch:
 | 3B Community Forum | Total registered users | 0 | 500 | ⏳ WAITING |
 | 3C Content Marketing | Organic search visits/month | 0 | 500 | ⏳ WAITING |
 | 3D Referral Program | Organic signups/week | 0 | 10 | ⏳ WAITING |
+| 4A Area Maps | Businesses per area (top 5 areas) | ~2 | 8 in 5+ areas | ⏳ WAITING |
+| 4B City Overview Map | Populated areas per city | ~10 | 10 with 5+ biz | ⏳ WAITING |
+| 4C Business Detail Map | Businesses with coordinates | 0% | 70% geocoded | ⏳ WAITING |
+| 4D Near Me Search | Total active businesses | 16 | 500 | ⏳ WAITING |
 
 ---
 
@@ -204,7 +208,11 @@ Expected activation sequence based on typical growth patterns:
 5. **2B Business Stories** — Fifth (needs engaged business owners)
 6. **3C Content Marketing** — Sixth (needs SEO traction)
 7. **3D Referral Program** — Seventh (needs proven value)
-8. **3B Community Forum** — Last (needs critical mass)
+8. **3B Community Forum** — Eighth (needs critical mass)
+9. **4A Area Maps** — Ninth (needs geographic density, ~200 listings)
+10. **4B City Overview Map** — Tenth (builds on 4A, needs 150+ per city)
+11. **4C Business Detail Map** — Eleventh (needs verified coordinates)
+12. **4D Near Me Search** — Last (needs 500+ listings with strong spread)
 
 ---
 
@@ -215,3 +223,117 @@ Expected activation sequence based on typical growth patterns:
 - All new features must maintain the "Street-Smart Friend" brand voice
 - Database migrations should be created alongside each feature
 - Commit to GitHub and verify Vercel deployment after each upgrade
+
+---
+
+## PRIORITY 4: Interactive Maps
+*Theme: Visual discovery layer — show businesses on a map for location-based browsing*
+
+### Why Maps Are Deferred
+
+Maps are a **UX enhancement, not an SEO asset**. Google cannot index JavaScript-rendered map content,
+and map libraries add significant bundle size (~40-80KB) that harms Core Web Vitals scores.
+With only 16 seed businesses across 3 cities, maps would show mostly empty space — damaging
+credibility worse than having no map at all.
+
+**Maps become valuable when:** There's enough geographic density that a user can zoom into
+an area and see multiple pins clustered together, making visual discovery faster than scrolling a list.
+
+### 4A. Area-Level Business Maps
+**What:** Interactive map on each area page showing all businesses in that area as pins. Clicking a pin shows business name, category, rating, and a link to the full listing.
+**Where:** Area pages (e.g., /lagos/lekki), lazy-loaded below the business listings and FAQ sections
+**Tech:** Leaflet.js + OpenStreetMap tiles (100% free, no API key required)
+**Why:** Helps customers visualize which businesses are nearby and plan visits
+
+| Trigger | Metric | Threshold |
+|---------|--------|-----------|
+| **Primary** | Businesses per area (in any single area) | ≥ 8 businesses in at least 5 areas |
+| **Secondary** | Businesses with valid lat/lng coordinates | ≥ 80% of active businesses geocoded |
+| **Tertiary** | User requests for map feature | ≥ 5 requests via WhatsApp or feedback |
+| **Validation** | Total active businesses across platform | ≥ 200 listings |
+
+**Implementation estimate:** 2-3 days
+**Dependencies:**
+- Businesses must have accurate latitude/longitude in database (schema already supports this)
+- Geocoding workflow needed for businesses that sign up without coordinates
+- Leaflet + react-leaflet npm packages (~45KB gzipped)
+**Performance safeguards:**
+- Lazy-load map component below the fold using `next/dynamic` with `ssr: false`
+- Only render map when user scrolls to it (Intersection Observer)
+- Keep map below FAQ section to preserve SEO content priority
+**Risk if built too early:** 2-3 pins on a map of an entire area looks empty and unprofessional
+
+---
+
+### 4B. City-Level Overview Map
+**What:** Interactive map on each city page showing all areas with business clusters. Areas appear as colored circles sized by business count. Clicking an area circle navigates to the area page.
+**Where:** City pages (e.g., /lagos), lazy-loaded below area listings
+**Tech:** Leaflet.js with custom cluster markers
+**Why:** Gives a bird's-eye view of where businesses are concentrated across the city
+
+| Trigger | Metric | Threshold |
+|---------|--------|-----------|
+| **Primary** | Areas with ≥5 businesses (in any single city) | ≥ 10 populated areas |
+| **Secondary** | Total businesses in that city | ≥ 150 listings |
+| **Validation** | 4A (Area Maps) already deployed and performing | Positive user feedback on area maps |
+
+**Implementation estimate:** 1-2 days (builds on 4A infrastructure)
+**Dependencies:** 4A must be deployed first; area center coordinates needed
+**Risk if built too early:** Sparse clusters across a city map highlight coverage gaps
+
+---
+
+### 4C. Business Detail Map
+**What:** Small map on each business detail page showing the exact business location with a pin, plus nearby businesses as secondary pins
+**Where:** Business detail pages, in the sidebar or below contact info
+**Tech:** Leaflet.js, single-pin focus with nearby business discovery
+**Why:** Helps customers find the business and discover others nearby
+
+| Trigger | Metric | Threshold |
+|---------|--------|-----------|
+| **Primary** | Businesses with verified addresses and coordinates | ≥ 70% of active businesses |
+| **Secondary** | "Get directions" FAQ clicks or WhatsApp direction requests | ≥ 20/week |
+| **Validation** | 4A (Area Maps) user engagement | Map interactions ≥ 15% of area page visitors |
+
+**Implementation estimate:** 1 day (reuses 4A map component)
+**Dependencies:** 4A deployed; accurate geocoding critical for individual business pins
+**Risk if built too early:** Wrong pin locations erode trust; unverified coordinates are worse than no map
+
+---
+
+### 4D. "Near Me" Geolocation Search
+**What:** Browser geolocation button that finds and displays businesses closest to the user's current location on a map, sorted by distance
+**Where:** Homepage search bar, search results page, mobile navigation
+**Tech:** Browser Geolocation API + Leaflet.js + PostGIS distance queries
+**Why:** The most natural way mobile users discover local businesses
+
+| Trigger | Metric | Threshold |
+|---------|--------|-----------|
+| **Primary** | Mobile traffic percentage | ≥ 60% of visitors on mobile |
+| **Secondary** | Total active businesses | ≥ 500 listings |
+| **Tertiary** | Geographic spread | ≥ 3 cities with ≥ 100 businesses each |
+| **Validation** | "near me" search queries in analytics | ≥ 30 searches/week containing location terms |
+
+**Implementation estimate:** 3-4 days (requires backend distance calculations)
+**Dependencies:** All previous map features deployed; PostGIS extension or Supabase geo queries; sufficient business density for meaningful results
+**Risk if built too early:** "3 businesses within 50km" is a terrible user experience
+
+---
+
+### Maps Implementation Order
+
+Expected activation sequence based on growth milestones:
+
+1. **4A Area Maps** — First (when 5+ areas have 8+ businesses each, ~200 total listings)
+2. **4B City Overview** — Second (when 10+ areas populated per city, ~150/city)
+3. **4C Business Detail Map** — Third (when 70%+ businesses have verified coordinates)
+4. **4D Near Me Search** — Last (when 500+ listings with strong geographic spread)
+
+### Maps Technical Notes
+
+- **Library choice:** Leaflet.js + OpenStreetMap = zero cost, no API keys, no usage limits
+- **Bundle impact:** ~45KB gzipped for react-leaflet; mitigated by lazy loading
+- **Geocoding:** Use free Nominatim API for address-to-coordinate conversion during business onboarding
+- **Database:** lat/lng columns already exist in businesses, cities, areas, and landmarks tables
+- **Mobile:** Touch-friendly zoom/pan; consider static map image fallback for very slow connections
+- **SEO protection:** Maps must ALWAYS render below text content; use `loading="lazy"` patterns
