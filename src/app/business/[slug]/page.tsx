@@ -343,9 +343,9 @@ export default async function BusinessDetailPage({ params }: PageProps) {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-4 lg:z-10">
             {/* Contact Card */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 sticky top-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
               <h3 className="font-heading text-lg font-semibold text-hustle-dark">Contact Info</h3>
 
               {biz.address && (
