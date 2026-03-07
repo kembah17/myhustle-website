@@ -16,6 +16,8 @@ import VoiceReceptionist from '@/components/VoiceReceptionist'
 import ContactTracker from '@/components/analytics/ContactTracker'
 import type { Business, Category, Area, Review, ReviewResponse, BusinessHour, BusinessPhoto } from '@/lib/types'
 import ShareButtons from '@/components/ShareButtons'
+import { generateBusinessFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,6 +128,27 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   const coverPhoto = biz.cover_photo_url || photoList.find(p => p.is_cover)?.url || null
 
   // Schema.org LocalBusiness
+  const DAY_NAMES_FOR_FAQ = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const bizFaqs = generateBusinessFAQs({
+    businessName: biz.name,
+    categoryName: biz.category?.name || '',
+    areaName: biz.area?.name || '',
+    cityName: (biz.area as any)?.city?.name || '',
+    hasBooking: true,
+    hasWhatsApp: !!biz.whatsapp,
+    hasPhone: !!biz.phone,
+    reviewCount: reviewList.length,
+    avgRating,
+    isVerified: biz.verified || biz.verification_tier > 0,
+    verificationTier: biz.verification_tier || 0,
+    hours: sortedHours.map(h => ({
+      day: DAY_NAMES_FOR_FAQ[h.day],
+      open: h.open_time || '',
+      close: h.close_time || '',
+      closed: h.closed,
+    })),
+  })
+
   const localBusinessJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -393,6 +416,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
             <BookingForm businessId={biz.id} businessName={biz.name} businessSlug={biz.slug} businessWhatsapp={biz.whatsapp} businessPhone={biz.phone} />
           </div>
         </div>
+
+        <FAQSection faqs={bizFaqs} />
       </div>
     </div>
   )

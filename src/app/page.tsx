@@ -7,6 +7,8 @@ import JsonLd from '@/components/JsonLd'
 import WhatsAppCTA from '@/components/WhatsAppCTA'
 import type { Category, Business, Area, Review } from '@/lib/types'
 import type { Metadata } from 'next'
+import { generateHomepageFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -166,6 +168,13 @@ export default async function HomePage() {
       availableLanguage: ['English'],
     },
   }
+
+  const homeFaqs = generateHomepageFAQs({
+    cityCount: cities.length,
+    categoryCount: categories.length,
+    businessCount: cities.reduce((sum, c) => sum + (c.business_count || 0), 0),
+    cityNames: cities.map(c => c.name),
+  })
 
   return (
     <div>
@@ -348,6 +357,9 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQSection faqs={homeFaqs} />
     </div>
   )
 }

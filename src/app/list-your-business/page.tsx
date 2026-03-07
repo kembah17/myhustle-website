@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import JsonLd from '@/components/JsonLd'
 import WhatsAppCTA from '@/components/WhatsAppCTA'
+import { generateListYourBusinessFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const metadata: Metadata = {
   title: 'List Your Business Free on MyHustle | Get Found by Customers Across Nigeria',
@@ -66,57 +68,12 @@ export default function ListYourBusinessPage() {
     },
   }
 
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'Is it really free to list my business?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes, 100% free. Your basic listing on MyHustle costs nothing. We also offer premium plans with extra features like booking, payments, and priority placement — but the listing itself is always free.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'How long does it take to get listed?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Via WhatsApp, most businesses are listed within 24 hours. If you use the web form, your listing goes live as soon as you complete the setup — usually under 10 minutes.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What information do I need to provide?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Just the basics: your business name, what you do, your city and area, and a phone number. Photos and extra details help customers find you, but they are optional to start.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Can I edit my listing after it goes live?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Absolutely. You get a dashboard where you can update your business details, photos, hours, and more at any time.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Do I need a website to list my business?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Not at all. Your MyHustle listing works like a mini website for your business. Customers can find you, see your services, read reviews, and contact you directly.',
-        },
-      },
-    ],
-  }
+
+  const listFaqs = generateListYourBusinessFAQs()
 
   return (
     <div>
       <JsonLd data={pageJsonLd} />
-      <JsonLd data={faqJsonLd} />
 
       {/* Hero Section */}
       <section className="bg-hustle-blue text-white py-16 md:py-24">
@@ -283,63 +240,7 @@ export default function ListYourBusinessPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-heading text-3xl font-bold text-center mb-12">
-            Common Questions
-          </h2>
-          <div className="space-y-6">
-            <div className="border-b border-gray-200 pb-6">
-              <h3 className="font-heading text-lg font-bold text-hustle-dark mb-2">
-                Is it really free to list my business?
-              </h3>
-              <p className="text-hustle-muted">
-                Yes, 100% free. Your basic listing on MyHustle costs nothing. We also offer premium plans with extra features like booking, payments, and priority placement — but the listing itself is always free.
-              </p>
-            </div>
-            <div className="border-b border-gray-200 pb-6">
-              <h3 className="font-heading text-lg font-bold text-hustle-dark mb-2">
-                How long does it take to get listed?
-              </h3>
-              <p className="text-hustle-muted">
-                Via WhatsApp, most businesses are listed within 24 hours. If you use the web form, your listing goes live as soon as you complete the setup — usually under 10 minutes.
-              </p>
-            </div>
-            <div className="border-b border-gray-200 pb-6">
-              <h3 className="font-heading text-lg font-bold text-hustle-dark mb-2">
-                What information do I need to provide?
-              </h3>
-              <p className="text-hustle-muted">
-                Just the basics: your business name, what you do, your city and area, and a phone number. Photos and extra details help customers find you, but they&apos;re optional to start.
-              </p>
-            </div>
-            <div className="border-b border-gray-200 pb-6">
-              <h3 className="font-heading text-lg font-bold text-hustle-dark mb-2">
-                Can I edit my listing after it goes live?
-              </h3>
-              <p className="text-hustle-muted">
-                Absolutely. You get a dashboard where you can update your business details, photos, hours, and more at any time.
-              </p>
-            </div>
-            <div className="border-b border-gray-200 pb-6">
-              <h3 className="font-heading text-lg font-bold text-hustle-dark mb-2">
-                Do I need a website to list my business?
-              </h3>
-              <p className="text-hustle-muted">
-                Not at all. Your MyHustle listing works like a mini website for your business. Customers can find you, see your services, read reviews, and contact you directly.
-              </p>
-            </div>
-            <div className="pb-6">
-              <h3 className="font-heading text-lg font-bold text-hustle-dark mb-2">
-                I&apos;m not tech-savvy. Can I still list my business?
-              </h3>
-              <p className="text-hustle-muted">
-                That&apos;s exactly why we built the WhatsApp option. If you can send a WhatsApp message, you can list your business. Our team does the heavy lifting for you.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <FAQSection faqs={listFaqs} title="Common Questions" />
 
       {/* Final CTA */}
       <section className="py-16 bg-hustle-sunset text-white">

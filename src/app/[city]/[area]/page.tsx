@@ -8,6 +8,8 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import { generateAreaFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -116,6 +118,14 @@ export default async function AreaPage({ params }: PageProps) {
 
     nearbyBusinesses = (nearby || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
   }
+
+  const areaFaqs = generateAreaFAQs({
+    areaName: area.name,
+    cityName: city.name,
+    businessCount: bizList.length,
+    categoryNames: categoriesWithCounts.filter(c => c.business_count > 0).slice(0, 6).map(c => c.name),
+    landmarkNames: (landmarks || []).map((l: any) => l.name),
+  })
 
   const isEmpty = bizList.length === 0
 
@@ -351,6 +361,8 @@ export default async function AreaPage({ params }: PageProps) {
             </section>
           </>
         )}
+
+        <FAQSection faqs={areaFaqs} />
       </div>
     </div>
   )

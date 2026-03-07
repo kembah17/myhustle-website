@@ -9,6 +9,8 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Category, Business, Area, Review } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import { generateCategoryFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -159,6 +161,18 @@ export default async function CategoryPage({ params }: PageProps) {
     { label: category.name },
   ]
 
+  const cityNamesSet = new Set<string>()
+  bizList.forEach(b => {
+    const cn = (b.area as any)?.city?.name
+    if (cn) cityNamesSet.add(cn)
+  })
+  const catFaqs = generateCategoryFAQs({
+    categoryName: category.name,
+    businessCount: bizList.length,
+    cityNames: Array.from(cityNamesSet),
+    subcategoryNames: children.map(c => c.name),
+  })
+
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
@@ -249,6 +263,8 @@ export default async function CategoryPage({ params }: PageProps) {
         <section className="mt-12 max-w-lg mx-auto">
           <SuggestWhatsApp type="category" />
         </section>
+
+        <FAQSection faqs={catFaqs} />
       </div>
     </div>
   )

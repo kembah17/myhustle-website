@@ -8,6 +8,8 @@ import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
+import { generateLandmarkFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,6 +88,14 @@ export default async function LandmarkPage({ params }: PageProps) {
     stadium: '🏟️', park: '🌳',
   }
 
+  const lmFaqs = generateLandmarkFAQs({
+    landmarkName: landmark.name,
+    cityName: (landmark.area as any)?.city?.name || '',
+    areaName: landmark.area?.name || '',
+    businessCount: bizList.length,
+    categoryNames: (parentCats || []).slice(0, 6).map((c: any) => c.name),
+  })
+
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
@@ -163,6 +173,8 @@ export default async function LandmarkPage({ params }: PageProps) {
             </Link>
           </div>
         )}
+
+        <FAQSection faqs={lmFaqs} />
       </div>
     </div>
   )

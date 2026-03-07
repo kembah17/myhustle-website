@@ -7,6 +7,8 @@ import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
+import { generateAreaCategoryFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,6 +113,14 @@ export default async function AreaCategoryPage({ params }: PageProps) {
     })),
   }
 
+  const areaCatFaqs = generateAreaCategoryFAQs({
+    areaName: area.name,
+    cityName: city.name,
+    categoryName: category.name,
+    businessCount: bizList.length,
+    businessNames: bizList.slice(0, 5).map(b => b.name),
+  })
+
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
@@ -197,6 +207,8 @@ export default async function AreaCategoryPage({ params }: PageProps) {
             </Link>
           </div>
         </div>
+
+        <FAQSection faqs={areaCatFaqs} />
       </div>
     </div>
   )

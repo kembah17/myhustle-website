@@ -5,6 +5,8 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import { generateCityFAQs } from '@/lib/faq-generator'
+import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,6 +68,14 @@ export default async function CityPage({ params }: PageProps) {
   // Only show areas that have at least 1 business
   const areasWithBusinesses = allAreasWithCounts.filter(a => a.business_count > 0)
   const totalAreas = allAreasWithCounts.length
+
+  const cityFaqs = generateCityFAQs({
+    cityName: city.name,
+    areaCount: allAreasWithCounts.length,
+    businessCount: (businesses || []).length,
+    areaNames: allAreasWithCounts.filter(a => a.business_count > 0).slice(0, 8).map(a => a.name),
+    topCategories: [],
+  })
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',
@@ -161,6 +171,8 @@ export default async function CityPage({ params }: PageProps) {
         <section className="mt-12 max-w-lg mx-auto">
           <SuggestWhatsApp type="area" context={city.name} />
         </section>
+
+        <FAQSection faqs={cityFaqs} />
       </div>
     </div>
   )
