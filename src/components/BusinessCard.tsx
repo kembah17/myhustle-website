@@ -20,9 +20,23 @@ export default function BusinessCard({ business }: BusinessCardProps) {
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+      {/* Cover Photo Thumbnail */}
+      {business.cover_photo_url && (
+        <Link href={`/business/${business.slug}`} className="block">
+          <div className="h-36 w-full overflow-hidden">
+            <img
+              src={business.cover_photo_url}
+              alt={`${business.name} cover`}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          </div>
+        </Link>
+      )}
+
       {/* Card Header */}
       <div className="p-5 flex-1">
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-1">
           <div className="flex-1 min-w-0">
             <Link href={`/business/${business.slug}`} className="group">
               <h3 className="font-heading font-semibold text-lg text-hustle-dark group-hover:text-hustle-blue transition-colors truncate">
@@ -34,6 +48,13 @@ export default function BusinessCard({ business }: BusinessCardProps) {
             <VerificationBadge tier={business.verification_tier || (business.verified ? 1 : 0)} variant="compact" />
           )}
         </div>
+
+        {/* Tagline */}
+        {business.tagline && (
+          <p className="text-hustle-amber text-sm italic mb-3 truncate">
+            {business.tagline}
+          </p>
+        )}
 
         {/* Category Badge */}
         {business.category && (

@@ -8,12 +8,13 @@ import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import ReviewSummary from '@/components/ReviewSummary'
 import ReviewForm from '@/components/ReviewForm'
+import PhotoGallery from '@/components/business/PhotoGallery'
 import type { Metadata } from 'next'
 import VerificationBadge from '@/components/VerificationBadge'
 import PageViewTracker from '@/components/analytics/PageViewTracker'
 import VoiceReceptionist from '@/components/VoiceReceptionist'
 import ContactTracker from '@/components/analytics/ContactTracker'
-import type { Business, Category, Area, Review, ReviewResponse, BusinessHour } from '@/lib/types'
+import type { Business, Category, Area, Review, ReviewResponse, BusinessHour, BusinessPhoto } from '@/lib/types'
 import ShareButtons from '@/components/ShareButtons'
 
 export const dynamic = 'force-dynamic'
@@ -36,10 +37,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const catName = (biz.category as unknown as Category)?.name || ''
   const areaName = (biz.area as unknown as Area)?.name || ''
   const cityName = (biz.area as any)?.city?.name || 'Nigeria'
-  const title = `${biz.name} — ${catName} in ${areaName}, ${cityName} | MyHustle`
+  const title = `${biz.name} \u2014 ${catName} in ${areaName}, ${cityName} | MyHustle`
   const description = biz.description
     ? biz.description.slice(0, 160)
-    : `${biz.name} — ${catName} in ${areaName}, ${cityName}. See services, read reviews, and book on MyHustle.`
+    : `${biz.name} \u2014 ${catName} in ${areaName}, ${cityName}. See services, read reviews, and book on MyHustle.`
 
   return {
     title,
@@ -68,6 +69,15 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   if (!business) notFound()
 
   const biz = business as Business & { category: Category; area: Area }
+
+  // Fetch business photos
+  const { data: photos } = await getSupabase()
+    .from('business_photos')
+    .select('*')
+    .eq('business_id', biz.id)
+    .order('position', { ascending: true })
+
+  const photoList = (photos || []) as BusinessPhoto[]
 
   // Fetch reviews with responses
   const { data: reviews } = await getSupabase()
@@ -112,6 +122,9 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     .map(dayNum => hoursList.find(h => h.day === dayNum))
     .filter(Boolean) as BusinessHour[]
 
+  // Determine cover photo
+  const coverPhoto = biz.cover_photo_url || photoList.find(p => p.is_cover)?.url || null
+
   // Schema.org LocalBusiness
   const localBusinessJsonLd = {
     '@context': 'https://schema.org',
@@ -122,6 +135,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     ...(biz.phone ? { telephone: biz.phone } : {}),
     ...(biz.email ? { email: biz.email } : {}),
     ...(biz.website ? { sameAs: biz.website } : {}),
+    ...(coverPhoto ? { image: coverPhoto } : {}),
     ...(biz.address ? {
       address: {
         '@type': 'PostalAddress',
@@ -173,65 +187,83 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       <PageViewTracker businessId={biz.id} />
       <VoiceReceptionist businessId={biz.id} businessName={biz.name} />
 
-      {/* Header */}
-      <section className="bg-hustle-blue text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Breadcrumbs
-            items={[
-              { label: 'Home', href: '/' },
-              ...(biz.category ? [{ label: biz.category.name, href: `/category/${biz.category.slug}` }] : []),
-              { label: biz.name },
-            ]}
-          />
-          <div className="mt-4">
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="font-heading text-3xl md:text-5xl font-bold">{biz.name}</h1>
-                  {(biz.verification_tier > 0 || biz.verified) && (
-                    <VerificationBadge tier={biz.verification_tier || (biz.verified ? 1 : 0)} variant="full" />
-                  )}
-                </div>
-                <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  {biz.category && (
-                    <Link
-                      href={`/category/${biz.category.slug}`}
-                      className="inline-flex items-center gap-1 bg-white/10 text-white text-sm px-3 py-1 rounded-full hover:bg-white/20 transition-colors"
-                    >
-                      {biz.category.icon && <span>{biz.category.icon}</span>}
-                      {biz.category.name}
-                    </Link>
-                  )}
-                  {biz.area && (
-                    <Link
-                      href={`/${(biz.area as any)?.city?.slug || 'lagos'}/${biz.area.slug}`}
-                      className="inline-flex items-center gap-1 text-blue-200 hover:text-white transition-colors text-sm"
-                    >
-                      <svg className="w-4 h-4" width="16" height="16" style={{width:"16px",height:"16px",maxWidth:"16px",maxHeight:"16px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {biz.area.name}{(biz.area as any)?.city?.name ? `, ${(biz.area as any).city.name}` : ''}
-                    </Link>
-                  )}
-                  {reviewList.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <StarRating rating={avgRating} count={reviewList.length} size="sm" />
-                    </div>
-                  )}
-                </div>
-                <ShareButtons
-                  businessName={biz.name}
-                  businessSlug={biz.slug}
-                  categoryName={biz.category?.name}
-                  areaName={biz.area?.name}
-                  variant="header"
-                />
+      {/* Cover Photo Banner */}
+      <div className="relative">
+        {coverPhoto ? (
+          <div className="relative h-[200px] md:h-[300px] w-full overflow-hidden">
+            <img
+              src={coverPhoto}
+              alt={`${biz.name} cover photo`}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-hustle-dark/80 via-hustle-dark/40 to-transparent" />
+          </div>
+        ) : (
+          <div className="relative h-[200px] md:h-[300px] w-full bg-gradient-to-br from-hustle-blue via-hustle-blue/90 to-hustle-dark" />
+        )}
+
+        {/* Business Info Overlay */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+            <Breadcrumbs
+              items={[
+                { label: 'Home', href: '/' },
+                ...(biz.category ? [{ label: biz.category.name, href: `/category/${biz.category.slug}` }] : []),
+                { label: biz.name },
+              ]}
+            />
+            <div className="mt-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="font-heading text-3xl md:text-5xl font-bold text-white drop-shadow-lg">{biz.name}</h1>
+                {(biz.verification_tier > 0 || biz.verified) && (
+                  <VerificationBadge tier={biz.verification_tier || (biz.verified ? 1 : 0)} variant="full" />
+                )}
               </div>
+              {/* Tagline */}
+              {biz.tagline && (
+                <p className="text-hustle-amber text-lg md:text-xl mt-1 italic font-medium drop-shadow">
+                  {biz.tagline}
+                </p>
+              )}
+              <div className="flex items-center gap-4 mt-2 flex-wrap">
+                {biz.category && (
+                  <Link
+                    href={`/category/${biz.category.slug}`}
+                    className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-sm text-white text-sm px-3 py-1 rounded-full hover:bg-white/25 transition-colors"
+                  >
+                    {biz.category.icon && <span>{biz.category.icon}</span>}
+                    {biz.category.name}
+                  </Link>
+                )}
+                {biz.area && (
+                  <Link
+                    href={`/${(biz.area as any)?.city?.slug || 'lagos'}/${biz.area.slug}`}
+                    className="inline-flex items-center gap-1 text-blue-200 hover:text-white transition-colors text-sm"
+                  >
+                    <svg className="w-4 h-4" width="16" height="16" style={{width:"16px",height:"16px",maxWidth:"16px",maxHeight:"16px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {biz.area.name}{(biz.area as any)?.city?.name ? `, ${(biz.area as any).city.name}` : ''}
+                  </Link>
+                )}
+                {reviewList.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <StarRating rating={avgRating} count={reviewList.length} size="sm" />
+                  </div>
+                )}
+              </div>
+              <ShareButtons
+                businessName={biz.name}
+                businessSlug={biz.slug}
+                categoryName={biz.category?.name}
+                areaName={biz.area?.name}
+                variant="header"
+              />
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -246,6 +278,9 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                 </div>
               </div>
             )}
+
+            {/* Photo Gallery - above business hours */}
+            <PhotoGallery photos={photoList} businessName={biz.name} />
 
             {/* Business Hours */}
             {sortedHours.length > 0 && (
@@ -271,7 +306,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                                 <span className="text-red-500 font-medium">Closed</span>
                               ) : (
                                 <span className="text-hustle-dark">
-                                  {h.open_time?.slice(0, 5)} — {h.close_time?.slice(0, 5)}
+                                  {h.open_time?.slice(0, 5)} \u2014 {h.close_time?.slice(0, 5)}
                                 </span>
                               )}
                             </td>

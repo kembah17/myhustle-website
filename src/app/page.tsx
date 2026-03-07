@@ -172,20 +172,26 @@ export default async function HomePage() {
       <JsonLd data={websiteJsonLd} />
       <JsonLd data={organizationJsonLd} />
 
-      {/* Hero Section */}
-      <section className="bg-hustle-blue text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-heading text-4xl md:text-6xl font-bold mb-6">
+      {/* Hero Section - optimized for mobile visibility */}
+      <section className="bg-hustle-blue text-white min-h-[60vh] md:min-h-[70vh] flex flex-col justify-center relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-12 md:py-20">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-6xl font-bold mb-4 md:mb-6">
             Find the Right Business in{' '}
             <span className="text-hustle-amber">Nigeria</span>
           </h1>
-          <p className="text-xl md:text-2xl text-blue-200 mb-8 max-w-3xl mx-auto">
+          <p className="text-lg md:text-2xl text-blue-200 mb-6 md:mb-8 max-w-3xl mx-auto">
             Get Found. Get Booked. Get Paid.
           </p>
           <SearchBar />
-          <div className="mt-8">
+          <div className="mt-6 md:mt-8">
             <WhatsAppCTA variant="hero" />
           </div>
+        </div>
+        {/* Scroll indicator - mobile only */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:hidden animate-bounce">
+          <svg className="w-6 h-6 text-blue-200/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
         </div>
       </section>
 

@@ -88,6 +88,8 @@ export interface Business {
   user_id: string | null
   created_at: string
   updated_at: string
+  tagline: string | null
+  cover_photo_url: string | null
   category?: Category
   city?: City
   area?: Area

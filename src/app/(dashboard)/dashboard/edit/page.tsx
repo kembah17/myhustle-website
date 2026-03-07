@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
@@ -32,12 +32,15 @@ export default function EditBusinessPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [savingHours, setSavingHours] = useState(false)
+  const [uploadingCover, setUploadingCover] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
   const supabase = createClient()
 
   const [form, setForm] = useState({
     name: '',
+    tagline: '',
     description: '',
     category_id: '',
     area_id: '',
@@ -46,6 +49,7 @@ export default function EditBusinessPage() {
     whatsapp: '',
     email: '',
     website: '',
+    cover_photo_url: '',
   })
 
   const fetchData = useCallback(async () => {
@@ -70,6 +74,7 @@ export default function EditBusinessPage() {
 
     setForm({
       name: biz.name || '',
+      tagline: biz.tagline || '',
       description: biz.description || '',
       category_id: biz.category_id || '',
       area_id: biz.area_id || '',
@@ -78,6 +83,7 @@ export default function EditBusinessPage() {
       whatsapp: biz.whatsapp || '',
       email: biz.email || '',
       website: biz.website || '',
+      cover_photo_url: biz.cover_photo_url || '',
     })
 
     // Fetch business hours
@@ -117,6 +123,46 @@ export default function EditBusinessPage() {
     ))
   }
 
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !business) return
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      setToast({ message: 'Please select an image file', type: 'error' })
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setToast({ message: 'Image must be under 5MB', type: 'error' })
+      return
+    }
+
+    setUploadingCover(true)
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const filePath = `covers/${business.id}/cover.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('business-assets')
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('business-assets')
+        .getPublicUrl(filePath)
+
+      const publicUrl = urlData.publicUrl
+      setForm(f => ({ ...f, cover_photo_url: publicUrl }))
+      setToast({ message: 'Cover photo uploaded! Click Save Details to apply.', type: 'success' })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to upload cover photo'
+      setToast({ message, type: 'error' })
+    } finally {
+      setUploadingCover(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!business) return
     setSaving(true)
@@ -125,6 +171,7 @@ export default function EditBusinessPage() {
       .from('businesses')
       .update({
         name: form.name,
+        tagline: form.tagline || null,
         description: form.description,
         category_id: form.category_id || null,
         area_id: form.area_id || null,
@@ -133,6 +180,7 @@ export default function EditBusinessPage() {
         whatsapp: form.whatsapp || null,
         email: form.email || null,
         website: form.website || null,
+        cover_photo_url: form.cover_photo_url || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', business.id)
@@ -194,7 +242,56 @@ export default function EditBusinessPage() {
       <div className="space-y-6">
         <div>
           <h1 className="font-heading text-2xl font-bold text-hustle-dark">Edit Business Profile</h1>
-          <p className="text-hustle-muted">Update your business information and hours</p>
+          <p className="text-hustle-muted">Update your business information, photos, and hours</p>
+        </div>
+
+        {/* Cover Photo Section */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="relative h-[200px] w-full">
+            {form.cover_photo_url ? (
+              <img
+                src={form.cover_photo_url}
+                alt="Cover photo"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-hustle-blue via-hustle-blue/90 to-hustle-dark flex items-center justify-center">
+                <div className="text-center text-white/70">
+                  <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+                  </svg>
+                  <p className="text-sm">No cover photo yet</p>
+                </div>
+              </div>
+            )}
+            <div className="absolute bottom-4 right-4">
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleCoverUpload}
+                className="hidden"
+              />
+              <button
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadingCover}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-white/90 backdrop-blur-sm text-hustle-dark hover:bg-white transition-colors shadow-md flex items-center gap-2"
+              >
+                {uploadingCover ? (
+                  <><LoadingSpinner size="sm" /> Uploading...</>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {form.cover_photo_url ? 'Change Cover Photo' : 'Upload Cover Photo'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-hustle-muted px-6 py-2">Recommended: 1200x400px, max 5MB. Shows on your business profile page.</p>
         </div>
 
         {/* Business Details Section */}
@@ -211,6 +308,31 @@ export default function EditBusinessPage() {
               onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
               className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
             />
+          </div>
+
+          {/* Tagline */}
+          <div>
+            <label className="block text-sm font-medium text-hustle-dark mb-1">
+              Tagline
+            </label>
+            <input
+              type="text"
+              value={form.tagline}
+              onChange={(e) => {
+                if (e.target.value.length <= 100) {
+                  setForm(f => ({ ...f, tagline: e.target.value }))
+                }
+              }}
+              maxLength={100}
+              placeholder="e.g. No.1 Screen Doctor in Lagos \ud83d\udcaf"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+            />
+            <div className="flex items-center justify-between mt-1">
+              <p className="text-xs text-hustle-muted">A short catchy slogan for your business. Emojis welcome!</p>
+              <p className={`text-xs ${form.tagline.length > 80 ? 'text-hustle-amber' : 'text-hustle-muted'} ${form.tagline.length >= 100 ? '!text-red-500' : ''}`}>
+                {form.tagline.length}/100
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
