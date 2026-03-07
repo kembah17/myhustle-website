@@ -131,7 +131,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     '@type': 'LocalBusiness',
     name: biz.name,
     url: `https://myhustle.com/business/${biz.slug}`,
-    ...(biz.description ? { description: biz.description } : {}),
+    ...(biz.description || biz.tagline ? { description: [biz.tagline, biz.description].filter(Boolean).join('. ') } : {}),
     ...(biz.phone ? { telephone: biz.phone } : {}),
     ...(biz.email ? { email: biz.email } : {}),
     ...(biz.website ? { sameAs: biz.website } : {}),

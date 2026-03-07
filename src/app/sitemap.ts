@@ -7,10 +7,10 @@ const BASE_URL = 'https://myhustle.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
-  // Fetch all data in parallel - only businesses has updated_at
+  // Fetch all data in parallel - areas now include business counts
   const [citiesRes, areasRes, categoriesRes, businessesRes, landmarksRes] = await Promise.all([
     getSupabase().from('cities').select('slug'),
-    getSupabase().from('areas').select('slug, city_id, city:cities(slug)'),
+    getSupabase().from('areas').select('slug, city_id, city:cities(slug), businesses(count)'),
     getSupabase().from('categories').select('slug, parent_id'),
     getSupabase().from('businesses').select('slug, updated_at').eq('active', true),
     getSupabase().from('landmarks').select('slug'),
@@ -52,15 +52,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
-  // Area pages: /[city]/[area]
+  // Area pages: /[city]/[area] - differentiate priority by business count
   for (const area of areas) {
     const citySlug = (area.city as any)?.slug
     if (!citySlug) continue
+
+    // Extract business count from the aggregated relation
+    const bizCount = (area.businesses as any)?.[0]?.count ?? 0
+    const hasBusinesses = bizCount > 0
+
     entries.push({
       url: `${BASE_URL}/${citySlug}/${area.slug}`,
       lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
+      changeFrequency: hasBusinesses ? 'weekly' : 'monthly',
+      priority: hasBusinesses ? 0.8 : 0.5,
     })
   }
 
@@ -75,9 +80,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // Area + Category combos: /[city]/[area]/[category]
+  // ONLY for areas that have businesses
   for (const area of areas) {
     const citySlug = (area.city as any)?.slug
     if (!citySlug) continue
+
+    const bizCount = (area.businesses as any)?.[0]?.count ?? 0
+    if (bizCount === 0) continue // Skip empty areas for category combos
+
     for (const cat of parentCategories) {
       entries.push({
         url: `${BASE_URL}/${citySlug}/${area.slug}/${cat.slug}`,
