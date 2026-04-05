@@ -74,7 +74,7 @@ export function generateHomepageFAQs(data: {
   if (categoryCount > 0) {
     faqs.push({
       question: `What categories of businesses are listed on MyHustle?`,
-      answer: `MyHustle features businesses across ${categoryCount} ${pluralize(categoryCount, 'category', 'categories')}, including services like restaurants, beauty salons, health clinics, fashion designers, auto mechanics, and many more. Whatever you need, you can find it on MyHustle.`,
+      answer: `MyHustle currently features businesses across ${categoryCount} ${pluralize(categoryCount, 'category', 'categories')} — and growing. Our categories include restaurants, beauty salons, health clinics, fashion designers, auto mechanics, and many more. Can't find your category? Suggest one via WhatsApp and we'll add it within 24 hours. Whatever you need, you can find it on MyHustle.`,
     })
   }
 
