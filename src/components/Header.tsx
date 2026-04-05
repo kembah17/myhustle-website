@@ -85,6 +85,9 @@ export default function Header() {
             <Link href="/near-me" className="text-sm font-medium hover:text-hustle-amber transition-colors">
               Nearby
             </Link>
+            <Link href="/help" className="text-sm font-medium hover:text-hustle-amber transition-colors">
+              Help
+            </Link>
             <Link
               href="/list-your-business"
               className="bg-hustle-amber text-hustle-dark px-4 py-2 rounded-lg text-sm font-bold hover:bg-hustle-sunset hover:text-white transition-colors"
@@ -119,6 +122,7 @@ export default function Header() {
             <hr className="border-white/20" />
             <Link href="/categories" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-1.5 text-sm hover:text-hustle-amber transition-colors">Categories</Link>
             <Link href="/near-me" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-1.5 text-sm hover:text-hustle-amber transition-colors">Nearby</Link>
+            <Link href="/help" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-1.5 text-sm hover:text-hustle-amber transition-colors">Help</Link>
             <Link
               href="/list-your-business"
               onClick={() => setMobileMenuOpen(false)}

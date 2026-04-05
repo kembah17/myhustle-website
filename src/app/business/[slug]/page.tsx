@@ -17,6 +17,8 @@ import ContactTracker from '@/components/analytics/ContactTracker'
 import type { Business, Category, Area, Review, ReviewResponse, BusinessHour, BusinessPhoto } from '@/lib/types'
 import ShareButtons from '@/components/ShareButtons'
 import { generateBusinessFAQs } from '@/lib/faq-generator'
+import ClaimBusinessButton from '@/components/ClaimBusinessButton'
+import ReportListingButton from '@/components/ReportListingButton'
 import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
@@ -216,8 +218,11 @@ export default async function BusinessDetailPage({ params }: PageProps) {
           <div className="relative h-[200px] md:h-[300px] w-full overflow-hidden">
             <img
               src={coverPhoto}
-              alt={`${biz.name} cover photo`}
+              alt={`${biz.name} — ${(biz.category as Category)?.name || ''} in ${(biz.area as Area)?.name || ''}, ${(biz.area as any)?.city?.name || 'Nigeria'}`}
               className="w-full h-full object-cover"
+              loading="eager"
+              width={1200}
+              height={300}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-hustle-dark/80 via-hustle-dark/40 to-transparent" />
           </div>
@@ -350,6 +355,10 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                   <span className="text-hustle-muted text-lg font-normal ml-2">({reviewList.length})</span>
                 )}
               </h2>
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-2">
+                <span className="text-green-600">✅</span>
+                <p className="text-sm text-green-800">Reviews are from verified customers who completed a booking through MyHustle</p>
+              </div>
               {reviewList.length === 0 ? (
                 <div className="bg-gray-50 rounded-xl p-8 text-center">
                   <p className="text-hustle-muted">No reviews yet. Be the first to review {biz.name}!</p>
@@ -412,8 +421,16 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               <ContactTracker businessId={biz.id} whatsapp={biz.whatsapp} phone={biz.phone} />
             </div>
 
+            {/* Claim Business Button - only show for unclaimed businesses */}
+            {!biz.user_id && (
+              <ClaimBusinessButton businessId={biz.id} businessName={biz.name} businessSlug={biz.slug} />
+            )}
+
             {/* Booking Form */}
             <BookingForm businessId={biz.id} businessName={biz.name} businessSlug={biz.slug} businessWhatsapp={biz.whatsapp} businessPhone={biz.phone} />
+
+            {/* Report Listing */}
+            <ReportListingButton businessId={biz.id} businessName={biz.name} />
           </div>
         </div>
 

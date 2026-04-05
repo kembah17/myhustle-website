@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 
 interface ReviewFormProps {
   businessId: string
   businessName: string
 }
+
+type AuthState = 'loading' | 'not_logged_in' | 'no_booking' | 'has_booking'
 
 function StarSelector({ rating, onSelect }: { rating: number; onSelect: (r: number) => void }) {
   const [hover, setHover] = useState(0)
@@ -84,6 +86,50 @@ export default function ReviewForm({ businessId, businessName }: ReviewFormProps
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Closed rating system state
+  const [authState, setAuthState] = useState<AuthState>('loading')
+  const [bookingId, setBookingId] = useState<string | null>(null)
+
+  // Check auth and booking status on mount
+  useEffect(() => {
+    checkAuthAndBooking()
+  }, [businessId])
+
+  async function checkAuthAndBooking() {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setAuthState('not_logged_in')
+        return
+      }
+
+      // Check for completed booking with this business
+      // Match by customer_email (from auth) and status = completed
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('business_id', businessId)
+        .eq('customer_email', user.email)
+        .eq('status', 'completed')
+        .limit(1)
+        .maybeSingle()
+
+      if (booking) {
+        setBookingId(booking.id)
+        setAuthState('has_booking')
+        // Pre-fill reviewer name from user metadata if available
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || ''
+        if (fullName) setReviewerName(fullName)
+      } else {
+        setAuthState('no_booking')
+      }
+    } catch {
+      setAuthState('not_logged_in')
+    }
+  }
+
   const addPhotos = useCallback((files: FileList | File[]) => {
     const fileArray = Array.from(files)
     const imageFiles = fileArray.filter((f) =>
@@ -143,29 +189,12 @@ export default function ReviewForm({ businessId, businessName }: ReviewFormProps
               .getPublicUrl(fileName)
             if (urlData?.publicUrl) photoUrls.push(urlData.publicUrl)
           }
-          // If upload fails, continue without photo (graceful degradation)
         } catch {
           // Storage might not be configured - continue without photos
         }
       }
 
-      // Check if user has a booking for this business
-      let isVerifiedBooking = false
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const { data: booking } = await supabase
-            .from('bookings')
-            .select('id')
-            .eq('business_id', businessId)
-            .eq('customer_email', user.email)
-            .limit(1)
-            .maybeSingle()
-          if (booking) isVerifiedBooking = true
-        }
-      } catch {
-        // Not logged in or no booking - that's fine
-      }
+      const isVerifiedBooking = !!bookingId
 
       const reviewId = crypto.randomUUID()
       const { error: insertError } = await supabase.from('reviews').insert({
@@ -175,6 +204,7 @@ export default function ReviewForm({ businessId, businessName }: ReviewFormProps
         text: text.trim(),
         reviewer_name: reviewerName.trim(),
         photos: photoUrls,
+        booking_id: bookingId || null,
         is_verified_booking: isVerifiedBooking,
         verified_booking: isVerifiedBooking,
         status: 'published',
@@ -191,7 +221,6 @@ export default function ReviewForm({ businessId, businessName }: ReviewFormProps
       setPhotos([])
       setIsOpen(false)
 
-      // Auto-dismiss success after 5s
       setTimeout(() => setSuccess(false), 5000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit review. Please try again.')
@@ -200,6 +229,52 @@ export default function ReviewForm({ businessId, businessName }: ReviewFormProps
     }
   }
 
+  // Loading state
+  if (authState === 'loading') {
+    return (
+      <div className="bg-gray-50 rounded-xl p-6 text-center">
+        <div className="flex items-center justify-center gap-2 text-hustle-muted">
+          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span className="text-sm">Checking review eligibility...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Not logged in
+  if (authState === 'not_logged_in') {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+        <p className="text-hustle-muted text-sm">
+          <a href="/login" className="text-hustle-blue font-semibold hover:underline">Log in</a>
+          {' '}to leave a review for {businessName}.
+        </p>
+      </div>
+    )
+  }
+
+  // No completed booking
+  if (authState === 'no_booking') {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-6">
+        <div className="flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">📋</span>
+          <div>
+            <p className="text-sm font-medium text-amber-900">Reviews are from verified customers only</p>
+            <p className="text-sm text-amber-800 mt-1">
+              Reviews are from verified customers who completed a booking through MyHustle.
+              Book this business first, then leave a review after your appointment.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Success state
   if (success) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
@@ -216,6 +291,7 @@ export default function ReviewForm({ businessId, businessName }: ReviewFormProps
     )
   }
 
+  // Has booking - show review button / form
   if (!isOpen) {
     return (
       <button
@@ -241,6 +317,13 @@ export default function ReviewForm({ businessId, businessName }: ReviewFormProps
           Cancel
         </button>
       </div>
+
+      {bookingId && (
+        <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-4 flex items-center gap-2">
+          <span className="text-green-600 text-sm">✅</span>
+          <p className="text-xs text-green-800">Verified booking — your review will be marked as verified</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Star Rating */}

@@ -108,6 +108,8 @@ export default function OnboardingPage() {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showPhotoTips, setShowPhotoTips] = useState(false)
+  const [photoError, setPhotoError] = useState('')
   const { user } = useAuth()
   const router = useRouter()
   const supabase = createClient()
@@ -251,7 +253,17 @@ export default function OnboardingPage() {
     const remaining = MAX_PHOTOS - photos.length
     const newFiles = Array.from(files).slice(0, remaining)
 
-    const newPhotos: PhotoEntry[] = newFiles.map((file, i) => ({
+    // File size validation - reject files > 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+    const oversizedFiles = newFiles.filter(f => f.size > MAX_FILE_SIZE)
+    const validFiles = newFiles.filter(f => f.size <= MAX_FILE_SIZE)
+
+    if (oversizedFiles.length > 0) {
+      setPhotoError(`${oversizedFiles.length} photo(s) exceeded the 5MB limit and were not added.`)
+      setTimeout(() => setPhotoError(''), 5000)
+    }
+
+    const newPhotos: PhotoEntry[] = validFiles.map((file, i) => ({
       file,
       preview: URL.createObjectURL(file),
       isCover: photos.length === 0 && i === 0,
@@ -328,6 +340,9 @@ export default function OnboardingPage() {
         await supabase.from('business_hours').insert(hoursData)
 
         // Upload photos
+        // TODO: Add WebP conversion using sharp library for optimised image delivery
+        // This would reduce image sizes by 25-35% while maintaining quality
+        // Implementation: sharp(buffer).webp({ quality: 80 }).toBuffer()
         if (photos.length > 0) {
           setUploadingPhotos(true)
           for (let i = 0; i < photos.length; i++) {
@@ -347,11 +362,18 @@ export default function OnboardingPage() {
                 .from('business-photos')
                 .getPublicUrl(filePath)
 
+
+              // Auto-generate SEO alt text from business details
+              const categoryName = categories.find(c => c.id === formData.category_id)?.name || ''
+              const areaName = areas.find(a => a.id === formData.area_id)?.name || ''
+              const cityName = areas.find(a => a.id === formData.area_id)?.city?.name || ''
+
               await supabase.from('business_photos').insert({
                 business_id: business.id,
                 url: urlData.publicUrl,
                 is_cover: photo.isCover,
                 position: i,
+                alt_text: `${formData.name} - ${categoryName} in ${areaName}, ${cityName}`,
               })
             }
           }
@@ -664,10 +686,72 @@ export default function OnboardingPage() {
           {/* Step 5: Photos */}
           {step === 5 && (
             <div className="space-y-4">
-              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Photos</h2>
+              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Business Photos</h2>
+
+              {/* Collapsible Photo & Video Tips */}
+              <div className="bg-hustle-light rounded-lg border border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowPhotoTips(!showPhotoTips)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-hustle-dark hover:bg-gray-50 transition-colors rounded-lg"
+                >
+                  <span>📸 Photo & Video Tips</span>
+                  <svg
+                    className={`w-5 h-5 text-hustle-muted transition-transform duration-200 ${showPhotoTips ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showPhotoTips && (
+                  <div className="px-4 pb-4 space-y-3 text-sm text-hustle-muted">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="bg-white rounded-md p-2.5 border border-gray-100">
+                        <p className="font-medium text-hustle-dark text-xs mb-1">Accepted Formats</p>
+                        <p className="text-xs">JPG, PNG, WebP</p>
+                      </div>
+                      <div className="bg-white rounded-md p-2.5 border border-gray-100">
+                        <p className="font-medium text-hustle-dark text-xs mb-1">Maximum Size</p>
+                        <p className="text-xs">5MB per photo</p>
+                      </div>
+                      <div className="bg-white rounded-md p-2.5 border border-gray-100">
+                        <p className="font-medium text-hustle-dark text-xs mb-1">Recommended</p>
+                        <p className="text-xs">1200×800px min, landscape</p>
+                      </div>
+                    </div>
+                    <div className="bg-hustle-amber/10 rounded-md p-3 border border-hustle-amber/20">
+                      <p className="text-xs text-hustle-dark">⭐ <strong>Cover photo tip:</strong> Choose your best photo — it appears in search results and is the first thing customers see.</p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-hustle-dark text-xs mb-1.5">Tips for great photos:</p>
+                      <ul className="space-y-1 text-xs">
+                        <li className="flex items-start gap-1.5">☀️ Use good natural lighting</li>
+                        <li className="flex items-start gap-1.5">🏠 Show your shopfront or entrance</li>
+                        <li className="flex items-start gap-1.5">📷 Photograph your products or services</li>
+                        <li className="flex items-start gap-1.5">👥 Include your team (with their permission)</li>
+                        <li className="flex items-start gap-1.5">✨ Keep backgrounds clean and uncluttered</li>
+                      </ul>
+                    </div>
+                    <div className="bg-gray-100 rounded-md p-2.5 border border-gray-200">
+                      <p className="text-xs text-hustle-muted">🎥 <strong>Video (coming soon):</strong> MP4 format, max 30MB, under 60 seconds</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <p className="text-sm text-hustle-muted">
                 Add up to {MAX_PHOTOS} photos of your business. The cover photo will be shown in search results.
               </p>
+
+              {/* Photo error message */}
+              {photoError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                  <span className="text-red-500">⚠️</span>
+                  <p className="text-sm text-red-700">{photoError}</p>
+                </div>
+              )}
 
               {/* Photo grid */}
               {photos.length > 0 && (

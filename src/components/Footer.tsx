@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-hustle-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-8">
           <div>
             <Link href="/" className="inline-block mb-4">
               <Image
@@ -51,7 +51,17 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-hustle-muted">
               <li><Link href="/about" className="hover:text-hustle-amber transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-hustle-amber transition-colors">Contact</Link></li>
-              <li><Link href="/privacy" className="hover:text-hustle-amber transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/help" className="hover:text-hustle-amber transition-colors">Help &amp; FAQ</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-heading font-semibold mb-4">Legal</h4>
+            <ul className="space-y-2 text-sm text-hustle-muted">
+              <li><Link href="/legal/privacy-policy" className="hover:text-hustle-amber transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/legal/terms-of-service" className="hover:text-hustle-amber transition-colors">Terms of Service</Link></li>
+              <li><Link href="/legal/cookie-policy" className="hover:text-hustle-amber transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/legal/disclaimer" className="hover:text-hustle-amber transition-colors">Disclaimer</Link></li>
+              <li><Link href="/legal/acceptable-use" className="hover:text-hustle-amber transition-colors">Acceptable Use</Link></li>
             </ul>
           </div>
         </div>
