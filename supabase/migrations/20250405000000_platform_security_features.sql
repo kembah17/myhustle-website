@@ -12,23 +12,6 @@
 -- ============================================================
 
 -- ============================================================
--- HELPER: is_admin() function
--- Returns true if the current authenticated user has admin or
--- moderator role in user_roles table. Used by RLS policies.
--- ============================================================
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS boolean
-LANGUAGE sql
-SECURITY DEFINER
-STABLE
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid()::text
-    AND role IN ('admin', 'moderator')
-  );
-$$;
-
 -- ============================================================
 -- 1. USER_ROLES TABLE
 -- Admin role management. Created first because is_admin()
@@ -47,6 +30,26 @@ CREATE TABLE IF NOT EXISTS user_roles (
 
 COMMENT ON TABLE user_roles IS 'Stores user role assignments for admin/moderator access control';
 COMMENT ON COLUMN user_roles.role IS 'user=default, admin=full access, moderator=content moderation';
+
+
+-- ============================================================
+-- HELPER: is_admin() function
+-- Returns true if the current authenticated user has admin or
+-- moderator role in user_roles table. Used by RLS policies.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid()::text
+    AND role IN ('admin', 'moderator')
+  );
+$$;
+
 
 -- ============================================================
 -- 2. LISTING_FLAGS TABLE
