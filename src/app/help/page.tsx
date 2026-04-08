@@ -40,7 +40,7 @@ const FAQ_STRUCTURED_DATA = {
       name: 'How do I claim my business listing on MyHustle?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Find your business on MyHustle using the search bar, then click the "Claim this Business" button on your listing page. You\'ll need to verify ownership either by matching the phone number on file or by uploading a verification document (such as your CAC certificate). Once verified, you\'ll have full control over your listing.',
+        text: 'Find your business on MyHustle using the search bar, then click the "Claim this Business" button on your listing page. Verify ownership by confirming the phone number on file — it takes less than 2 minutes. No documents or registration required. Once verified, you\'ll have full control over your listing. Formally registered businesses can optionally upload their CAC certificate for a Gold badge.',
       },
     },
     {
@@ -48,7 +48,7 @@ const FAQ_STRUCTURED_DATA = {
       name: 'What are the MyHustle verification tiers?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'MyHustle has three verification tiers: Tier 1 is Phone Verification (free) for a basic verification badge. Tier 2 is Document Verification where you upload your CAC certificate for enhanced credibility. Tier 3 is Physical Verification with a site visit to confirm your business location. Higher tiers receive better visibility in search results.',
+        text: 'MyHustle has three verification levels. The main one is Verified Owner (Blue badge) — just verify your phone number and you\'re set. No documents needed, no registration required. For formally registered businesses, there\'s an optional Gold badge (Registered Business) available after 6 months with good reviews and CAC/NIN verification. Every verified business gets full access to bookings, reviews, and all platform features regardless of badge level.',
       },
     },
     {
