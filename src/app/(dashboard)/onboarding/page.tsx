@@ -1,17 +1,19 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import ProgressSteps from '@/components/ui/ProgressSteps'
 import Toast from '@/components/ui/Toast'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
+import SearchableSelect from '@/components/ui/SearchableSelect'
+import type { SelectOption } from '@/components/ui/SearchableSelect'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { Category, Area } from '@/lib/types'
 
-const STEPS = ['Basics', 'Location', 'Contact', 'Hours', 'Description', 'Photos', 'Review']
+const STEPS = ['Basics', 'Location & Contact', 'About', 'Photos', 'Review']
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const MAX_PHOTOS = 5
 const OTHER_CATEGORY_VALUE = '__other__'
@@ -80,12 +82,12 @@ function isValidNigerianPhone(value: string): boolean {
 }
 
 function isValidEmail(value: string): boolean {
-  if (!value) return true // optional
+  if (!value) return true
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
 function isValidUrl(value: string): boolean {
-  if (!value) return true // optional
+  if (!value) return true
   try {
     new URL(value)
     return true
@@ -114,10 +116,11 @@ export default function OnboardingPage() {
   const [showPhotoTips, setShowPhotoTips] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const [categorySuggestionSent, setCategorySuggestionSent] = useState(false)
+  const [showHours, setShowHours] = useState(false)
+  const [showOptionalContact, setShowOptionalContact] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
   const supabase = createClient()
-
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -181,7 +184,54 @@ export default function OnboardingPage() {
     }
   }, [formData.category_id, supabase])
 
-  // Validate fields
+  const categoryOptions: SelectOption[] = useMemo(() => {
+    const opts: SelectOption[] = categories
+      .filter(c => c.slug !== 'other')
+      .map(c => ({
+        value: c.id,
+        label: `${c.icon || ''} ${c.name}`.trim(),
+        searchTerms: c.name,
+      }))
+    opts.push({
+      value: OTHER_CATEGORY_VALUE,
+      label: '📦 Other / My category isn’t listed',
+      searchTerms: 'other not listed custom',
+    })
+    return opts
+  }, [categories])
+
+  const subcategoryOptions: SelectOption[] = useMemo(() => {
+    return subcategories.map(c => ({
+      value: c.id,
+      label: c.name,
+      searchTerms: c.name,
+    }))
+  }, [subcategories])
+
+  const areaOptions: SelectOption[] = useMemo(() => {
+    return areas
+      .sort((a, b) => {
+        const stateA = a.city?.state || ''
+        const stateB = b.city?.state || ''
+        if (stateA !== stateB) return stateA.localeCompare(stateB)
+        const cityA = a.city?.name || ''
+        const cityB = b.city?.name || ''
+        if (cityA !== cityB) return cityA.localeCompare(cityB)
+        return a.name.localeCompare(b.name)
+      })
+      .map(a => {
+        const cityName = a.city?.name || ''
+        const stateName = a.city?.state || ''
+        const groupLabel = stateName ? `${stateName} — ${cityName}` : cityName || 'Other'
+        return {
+          value: a.id,
+          label: `${a.name}${cityName ? `, ${cityName}` : ''}${stateName ? ` (${stateName})` : ''}`,
+          group: groupLabel,
+          searchTerms: `${a.name} ${cityName} ${stateName}`,
+        }
+      })
+  }, [areas])
+
   const validate = useCallback((data: FormData): FieldErrors => {
     const errs: FieldErrors = {}
     if (!data.name.trim()) errs.name = 'Business name is required'
@@ -235,28 +285,26 @@ export default function OnboardingPage() {
         }
         return hasName && !!(formData.category_id && !errors.category_id)
       }
-      case 1: return !!(formData.area_id && !errors.area_id)
-      case 2: return !!(formData.phone && !errors.phone && !errors.whatsapp && !errors.email && !errors.website)
-      case 3: return true
-      case 4: return !!(formData.description && formData.description.length >= 20 && !errors.description)
-      case 5: return true // photos optional
-      default: return true
+      case 1:
+        return !!(formData.area_id && !errors.area_id && formData.phone && !errors.phone && !errors.whatsapp && !errors.email && !errors.website)
+      case 2:
+        return !!(formData.description && formData.description.length >= 20 && !errors.description)
+      case 3:
+        return true
+      default:
+        return true
     }
   }
 
   const handleNext = () => {
-    // Mark all fields in current step as touched
     switch (step) {
       case 0:
         setTouched(prev => ({ ...prev, name: true, category_id: true, customCategory: true }))
         break
       case 1:
-        setTouched(prev => ({ ...prev, area_id: true }))
+        setTouched(prev => ({ ...prev, area_id: true, phone: true, whatsapp: true, email: true, website: true }))
         break
       case 2:
-        setTouched(prev => ({ ...prev, phone: true, whatsapp: true, email: true, website: true }))
-        break
-      case 4:
         setTouched(prev => ({ ...prev, description: true }))
         break
     }
@@ -265,30 +313,23 @@ export default function OnboardingPage() {
     }
   }
 
-  // Photo handling
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
-
     const remaining = MAX_PHOTOS - photos.length
     const newFiles = Array.from(files).slice(0, remaining)
-
-    // File size validation - reject files > 5MB
-    const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024
     const oversizedFiles = newFiles.filter(f => f.size > MAX_FILE_SIZE)
     const validFiles = newFiles.filter(f => f.size <= MAX_FILE_SIZE)
-
     if (oversizedFiles.length > 0) {
       setPhotoError(`${oversizedFiles.length} photo(s) exceeded the 5MB limit and were not added.`)
       setTimeout(() => setPhotoError(''), 5000)
     }
-
     const newPhotos: PhotoEntry[] = validFiles.map((file, i) => ({
       file,
       preview: URL.createObjectURL(file),
       isCover: photos.length === 0 && i === 0,
     }))
-
     setPhotos(prev => [...prev, ...newPhotos])
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -297,7 +338,6 @@ export default function OnboardingPage() {
     const removed = photos[index]
     URL.revokeObjectURL(removed.preview)
     const updated = photos.filter((_, i) => i !== index)
-    // If removed was cover, make first remaining the cover
     if (removed.isCover && updated.length > 0) {
       updated[0].isCover = true
     }
@@ -322,12 +362,10 @@ export default function OnboardingPage() {
 
       if (existing) slug = `${slug}-${Date.now().toString(36)}`
 
-      // Handle "Other" category: find the actual 'other' category in DB
       let resolvedCategoryId = formData.subcategory_id || formData.category_id
       const isOther = formData.category_id === OTHER_CATEGORY_VALUE
 
       if (isOther) {
-        // Look up the 'other' category by slug
         const { data: otherCat } = await supabase
           .from('categories')
           .select('id')
@@ -338,11 +376,9 @@ export default function OnboardingPage() {
         if (otherCat) {
           resolvedCategoryId = otherCat.id
         } else {
-          // Fallback: use first available category
           resolvedCategoryId = categories[0]?.id || ''
         }
 
-        // Submit category suggestion
         const area = areas.find(a => a.id === formData.area_id)
         const suggesterName = user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'Unknown'
 
@@ -380,10 +416,17 @@ export default function OnboardingPage() {
         .select()
         .single()
 
-      if (bizError) throw bizError
+      if (bizError) {
+        console.error('Business creation error:', bizError)
+        throw new Error(`Could not create listing: ${bizError.message}`)
+      }
 
-      if (business) {
-        // Insert hours
+      if (!business) {
+        throw new Error('Business was not created. Please try again.')
+      }
+
+      // Insert hours (independent of photos)
+      try {
         const hoursData = formData.hours.map(h => ({
           business_id: business.id,
           day: h.day,
@@ -392,14 +435,16 @@ export default function OnboardingPage() {
           closed: h.closed,
         }))
         await supabase.from('business_hours').insert(hoursData)
+      } catch (hoursErr) {
+        console.error('Hours save error (non-fatal):', hoursErr)
+      }
 
-        // Upload photos
-        // TODO: Add WebP conversion using sharp library for optimised image delivery
-        // This would reduce image sizes by 25-35% while maintaining quality
-        // Implementation: sharp(buffer).webp({ quality: 80 }).toBuffer()
-        if (photos.length > 0) {
-          setUploadingPhotos(true)
-          for (let i = 0; i < photos.length; i++) {
+      // Upload photos (independent - business already created)
+      if (photos.length > 0) {
+        setUploadingPhotos(true)
+        let photoErrors = 0
+        for (let i = 0; i < photos.length; i++) {
+          try {
             const photo = photos[i]
             const ext = photo.file.name.split('.').pop() || 'jpg'
             const filePath = `businesses/${business.id}/${Date.now()}-${i}.${ext}`
@@ -411,49 +456,64 @@ export default function OnboardingPage() {
                 upsert: false,
               })
 
-            if (!uploadError) {
-              const { data: urlData } = supabase.storage
-                .from('business-photos')
-                .getPublicUrl(filePath)
-
-
-              // Auto-generate SEO alt text from business details
-              const categoryName = isOther
-                ? formData.customCategory
-                : (categories.find(c => c.id === formData.category_id)?.name || '')
-              const areaName = areas.find(a => a.id === formData.area_id)?.name || ''
-              const cityName = areas.find(a => a.id === formData.area_id)?.city?.name || ''
-
-              await supabase.from('business_photos').insert({
-                business_id: business.id,
-                url: urlData.publicUrl,
-                is_cover: photo.isCover,
-                position: i,
-                alt_text: `${formData.name} - ${categoryName} in ${areaName}, ${cityName}`,
-              })
+            if (uploadError) {
+              console.error(`Photo ${i + 1} upload error:`, uploadError)
+              photoErrors++
+              continue
             }
+
+            const { data: urlData } = supabase.storage
+              .from('business-photos')
+              .getPublicUrl(filePath)
+
+            const categoryName = isOther
+              ? formData.customCategory
+              : (categories.find(c => c.id === formData.category_id)?.name || '')
+            const areaName = areas.find(a => a.id === formData.area_id)?.name || ''
+            const cityName = areas.find(a => a.id === formData.area_id)?.city?.name || ''
+
+            await supabase.from('business_photos').insert({
+              business_id: business.id,
+              url: urlData.publicUrl,
+              is_cover: photo.isCover,
+              position: i,
+              alt_text: `${formData.name} - ${categoryName} in ${areaName}, ${cityName}`,
+            })
+          } catch (photoErr) {
+            console.error(`Photo ${i + 1} error:`, photoErr)
+            photoErrors++
           }
-          setUploadingPhotos(false)
+        }
+        setUploadingPhotos(false)
+
+        if (photoErrors > 0 && photoErrors < photos.length) {
+          setToast({ message: `Listing created! ${photoErrors} photo(s) could not be uploaded — you can add them later from your dashboard.`, type: 'success' })
+          setTimeout(() => router.push('/dashboard'), 3000)
+          return
+        } else if (photoErrors === photos.length) {
+          setToast({ message: 'Listing created! Photos could not be uploaded — you can add them later from your dashboard.', type: 'success' })
+          setTimeout(() => router.push('/dashboard'), 3000)
+          return
         }
       }
 
       const successMsg = isOther
-        ? 'Business listed successfully! Thanks for suggesting a new category \u2014 we\u2019ll review it and may create it soon. Redirecting...'
+        ? 'Business listed successfully! Thanks for suggesting a new category — we’ll review it soon. Redirecting...'
         : 'Business listed successfully! Redirecting...'
       setToast({ message: successMsg, type: 'success' })
       setTimeout(() => router.push('/dashboard'), 2500)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to create listing'
+      console.error('Submission error:', err)
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
       setToast({ message, type: 'error' })
     } finally {
       setLoading(false)
     }
   }
 
-  // Inline error component
   const FieldError = ({ field }: { field: keyof FieldErrors }) => {
     if (!touched[field] || !errors[field]) return null
-    return <p className="text-xs text-red-500 mt-1 flex items-center gap-1">\u26a0\ufe0f {errors[field]}</p>
+    return <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠️ {errors[field]}</p>
   }
 
   if (dataLoading) {
@@ -494,6 +554,7 @@ export default function OnboardingPage() {
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
+
           {/* Step 0: Basics */}
           {step === 0 && (
             <div className="space-y-4">
@@ -518,34 +579,24 @@ export default function OnboardingPage() {
                 <label className="block text-sm font-medium text-hustle-dark mb-1">
                   Category <span className="text-red-500">*</span>
                 </label>
-                <select
+                <SearchableSelect
+                  options={categoryOptions}
                   value={formData.category_id}
-                  onChange={(e) => {
-                    updateField('category_id', e.target.value)
+                  onChange={(val) => {
+                    updateField('category_id', val)
                     updateField('subcategory_id', '')
-                    if (e.target.value !== OTHER_CATEGORY_VALUE) {
+                    if (val !== OTHER_CATEGORY_VALUE) {
                       updateField('customCategory', '')
                     }
                     markTouched('category_id')
                   }}
                   onBlur={() => markTouched('category_id')}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
-                    touched.category_id && errors.category_id ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                >
-                  <option value="">Select a category</option>
-                  {categories
-                    .filter(c => c.slug !== 'other')
-                    .map(c => (
-                      <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                    ))}
-                  <option disabled>\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500</option>
-                  <option value={OTHER_CATEGORY_VALUE}>\ud83d\udce6 Other / My category isn&apos;t listed</option>
-                </select>
+                  placeholder="Search for a category..."
+                  error={!!(touched.category_id && errors.category_id)}
+                />
                 <FieldError field="category_id" />
               </div>
 
-              {/* Custom category input - shown when "Other" is selected */}
               {formData.category_id === OTHER_CATEGORY_VALUE && (
                 <div className="bg-hustle-light rounded-lg p-4 space-y-3">
                   <div>
@@ -565,7 +616,7 @@ export default function OnboardingPage() {
                     <FieldError field="customCategory" />
                   </div>
                   <p className="text-xs text-hustle-muted flex items-center gap-1">
-                    \ud83d\udca1 We\u2019ll review your suggestion and may add it as an official category soon!
+                    💡 We’ll review your suggestion and may add it as an official category soon!
                   </p>
                 </div>
               )}
@@ -573,432 +624,434 @@ export default function OnboardingPage() {
               {subcategories.length > 0 && formData.category_id !== OTHER_CATEGORY_VALUE && (
                 <div>
                   <label className="block text-sm font-medium text-hustle-dark mb-1">Subcategory</label>
-                  <select
+                  <SearchableSelect
+                    options={subcategoryOptions}
                     value={formData.subcategory_id}
-                    onChange={(e) => updateField('subcategory_id', e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
-                  >
-                    <option value="">Select a subcategory (optional)</option>
-                    {subcategories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => updateField('subcategory_id', val)}
+                    placeholder="Search for a subcategory (optional)..."
+                  />
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 1: Location */}
+          {/* Step 1: Location & Contact */}
           {step === 1 && (
-            <div className="space-y-4">
-              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Location</h2>
-              <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">
-                  Area <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.area_id}
-                  onChange={(e) => {
-                    updateField('area_id', e.target.value)
-                    markTouched('area_id')
-                  }}
-                  onBlur={() => markTouched('area_id')}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
-                    touched.area_id && errors.area_id ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                >
-                  <option value="">Select your area</option>
-                  {areas.map(a => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}{a.city ? ` - ${a.city.name}` : ''}
-                    </option>
-                  ))}
-                </select>
-                <FieldError field="area_id" />
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="font-heading text-xl font-semibold text-hustle-dark">Location</h2>
+                <div>
+                  <label className="block text-sm font-medium text-hustle-dark mb-1">
+                    Area <span className="text-red-500">*</span>
+                  </label>
+                  <SearchableSelect
+                    options={areaOptions}
+                    value={formData.area_id}
+                    onChange={(val) => {
+                      updateField('area_id', val)
+                      markTouched('area_id')
+                    }}
+                    onBlur={() => markTouched('area_id')}
+                    placeholder="Search by area, city, or state..."
+                    error={!!(touched.area_id && errors.area_id)}
+                    grouped
+                  />
+                  <FieldError field="area_id" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-hustle-dark mb-1">Street Address</label>
+                  <input
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => updateField('address', e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                    placeholder="e.g. 15 Admiralty Way, Lekki Phase 1"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">Street Address</label>
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => updateField('address', e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
-                  placeholder="e.g. 15 Admiralty Way, Lekki Phase 1"
-                />
-              </div>
-            </div>
-          )}
 
-          {/* Step 2: Contact */}
-          {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Contact Information</h2>
-              <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">
-                  Phone Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => updateField('phone', e.target.value)}
-                  onBlur={() => markTouched('phone')}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
-                    touched.phone && errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                  placeholder="08012345678"
-                />
-                <FieldError field="phone" />
-                {formData.phone && !errors.phone && (
-                  <p className="text-xs text-green-600 mt-1">\u2713 Will be saved as: {formatNigerianPhone(formData.phone)}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">WhatsApp Number</label>
-                <input
-                  type="tel"
-                  value={formData.whatsapp}
-                  onChange={(e) => updateField('whatsapp', e.target.value)}
-                  onBlur={() => markTouched('whatsapp')}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
-                    touched.whatsapp && errors.whatsapp ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                  placeholder="08012345678 (auto-formats to +234)"
-                />
-                <FieldError field="whatsapp" />
-                {formData.whatsapp && !errors.whatsapp && (
-                  <p className="text-xs text-green-600 mt-1">\u2713 Will be saved as: {formatNigerianPhone(formData.whatsapp)}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => updateField('email', e.target.value)}
-                  onBlur={() => markTouched('email')}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
-                    touched.email && errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                  placeholder="business@example.com"
-                />
-                <FieldError field="email" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">Website</label>
-                <input
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => updateField('website', e.target.value)}
-                  onBlur={() => markTouched('website')}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
-                    touched.website && errors.website ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                  placeholder="https://www.example.com"
-                />
-                <FieldError field="website" />
-              </div>
-            </div>
-          )}
+              <div className="border-t border-gray-200" />
 
-          {/* Step 3: Hours */}
-          {step === 3 && (
-            <div className="space-y-4">
-              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Business Hours</h2>
-              <p className="text-sm text-hustle-muted">Set your opening hours for each day of the week.</p>
-              <div className="space-y-3">
-                {DAYS.map((day, i) => (
-                  <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-hustle-light">
-                    <div className="w-24 text-sm font-medium text-hustle-dark">{day}</div>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={!formData.hours[i].closed}
-                        onChange={(e) => updateHour(i, 'closed', !e.target.checked)}
-                        className="rounded border-gray-300 text-hustle-blue focus:ring-hustle-blue"
-                      />
-                      <span className="text-sm text-hustle-muted">Open</span>
-                    </label>
-                    {!formData.hours[i].closed && (
-                      <div className="flex items-center gap-2">
+              <div className="space-y-4">
+                <h2 className="font-heading text-xl font-semibold text-hustle-dark">Contact</h2>
+                <div>
+                  <label className="block text-sm font-medium text-hustle-dark mb-1">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => updateField('phone', e.target.value)}
+                    onBlur={() => markTouched('phone')}
+                    className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                      touched.phone && errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                    placeholder="08012345678"
+                  />
+                  <FieldError field="phone" />
+                  {formData.phone && !errors.phone && (
+                    <p className="text-xs text-green-600 mt-1">✓ Phone number accepted</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-hustle-dark mb-1">WhatsApp Number</label>
+                  <input
+                    type="tel"
+                    value={formData.whatsapp}
+                    onChange={(e) => updateField('whatsapp', e.target.value)}
+                    onBlur={() => markTouched('whatsapp')}
+                    className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                      touched.whatsapp && errors.whatsapp ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                    placeholder="08012345678"
+                  />
+                  <FieldError field="whatsapp" />
+                  {formData.whatsapp && !errors.whatsapp && (
+                    <p className="text-xs text-green-600 mt-1">✓ WhatsApp number accepted</p>
+                  )}
+                </div>
+
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowOptionalContact(!showOptionalContact)}
+                    className="text-sm text-hustle-blue hover:text-hustle-blue/80 font-medium flex items-center gap-1 transition-colors"
+                  >
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 ${showOptionalContact ? 'rotate-180' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    {showOptionalContact ? 'Hide' : 'Add'} email & website (optional)
+                  </button>
+
+                  {showOptionalContact && (
+                    <div className="mt-3 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-hustle-dark mb-1">Email</label>
                         <input
-                          type="time"
-                          value={formData.hours[i].open_time}
-                          onChange={(e) => updateHour(i, 'open_time', e.target.value)}
-                          className="px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => updateField('email', e.target.value)}
+                          onBlur={() => markTouched('email')}
+                          className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                            touched.email && errors.email ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                          }`}
+                          placeholder="business@example.com"
                         />
-                        <span className="text-hustle-muted">to</span>
-                        <input
-                          type="time"
-                          value={formData.hours[i].close_time}
-                          onChange={(e) => updateHour(i, 'close_time', e.target.value)}
-                          className="px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
-                        />
+                        <FieldError field="email" />
                       </div>
-                    )}
-                    {formData.hours[i].closed && (
-                      <span className="text-sm text-red-500 font-medium">Closed</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Description */}
-          {step === 4 && (
-            <div className="space-y-4">
-              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Description</h2>
-              <div>
-                <label className="block text-sm font-medium text-hustle-dark mb-1">
-                  Business Description <span className="text-red-500">*</span>
-                  <span className="text-hustle-muted font-normal"> (min. 20 characters)</span>
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => updateField('description', e.target.value)}
-                  onBlur={() => markTouched('description')}
-                  rows={5}
-                  className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent resize-none ${
-                    touched.description && errors.description ? 'border-red-300 bg-red-50' : 'border-gray-200'
-                  }`}
-                  placeholder="Tell customers about your business, services, and what makes you special..."
-                />
-                <div className="flex items-center justify-between mt-1">
-                  <FieldError field="description" />
-                  <p className={`text-xs ${
-                    formData.description.length >= 20 ? 'text-green-600' : 'text-hustle-muted'
-                  }`}>
-                    {formData.description.length}/20 min
-                  </p>
+                      <div>
+                        <label className="block text-sm font-medium text-hustle-dark mb-1">Website</label>
+                        <input
+                          type="url"
+                          value={formData.website}
+                          onChange={(e) => updateField('website', e.target.value)}
+                          onBlur={() => markTouched('website')}
+                          className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                            touched.website && errors.website ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                          }`}
+                          placeholder="https://www.example.com"
+                        />
+                        <FieldError field="website" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Step 5: Photos */}
-          {step === 5 && (
-            <div className="space-y-4">
-              <h2 className="font-heading text-xl font-semibold text-hustle-dark">Business Photos</h2>
+          {/* Step 2: About */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h2 className="font-heading text-xl font-semibold text-hustle-dark">About Your Business</h2>
+                <div>
+                  <label className="block text-sm font-medium text-hustle-dark mb-1">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => updateField('description', e.target.value)}
+                    onBlur={() => markTouched('description')}
+                    rows={5}
+                    className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent resize-none ${
+                      touched.description && errors.description ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                    placeholder="Tell customers what makes your business special. What services do you offer? What sets you apart?"
+                  />
+                  <div className="flex justify-between mt-1">
+                    <FieldError field="description" />
+                    <span className={`text-xs ${formData.description.length < 20 ? 'text-hustle-muted' : 'text-green-600'}`}>
+                      {formData.description.length}/20 min
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-              {/* Collapsible Photo & Video Tips */}
-              <div className="bg-hustle-light rounded-lg border border-gray-200">
+              <div className="border-t border-gray-200" />
+
+              <div>
                 <button
                   type="button"
-                  onClick={() => setShowPhotoTips(!showPhotoTips)}
-                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-hustle-dark hover:bg-gray-50 transition-colors rounded-lg"
+                  onClick={() => setShowHours(!showHours)}
+                  className="text-sm text-hustle-blue hover:text-hustle-blue/80 font-medium flex items-center gap-1 transition-colors"
                 >
-                  <span>\ud83d\udcf8 Photo & Video Tips</span>
                   <svg
-                    className={`w-5 h-5 text-hustle-muted transition-transform duration-200 ${showPhotoTips ? 'rotate-180' : ''}`}
+                    className={`w-4 h-4 transition-transform duration-200 ${showHours ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
+                  {showHours ? 'Hide' : 'Set'} business hours (optional)
                 </button>
-                {showPhotoTips && (
-                  <div className="px-4 pb-4 space-y-3 text-sm text-hustle-muted">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      <div className="bg-white rounded-md p-2.5 border border-gray-100">
-                        <p className="font-medium text-hustle-dark text-xs mb-1">Accepted Formats</p>
-                        <p className="text-xs">JPG, PNG, WebP</p>
+
+                {showHours && (
+                  <div className="mt-4 space-y-3">
+                    {formData.hours.map((hour, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="w-24 text-sm font-medium text-hustle-dark">{DAYS[i]}</span>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={hour.closed}
+                            onChange={(e) => updateHour(i, 'closed', e.target.checked)}
+                            className="rounded border-gray-300 text-hustle-blue focus:ring-hustle-blue"
+                          />
+                          <span className="text-sm text-hustle-muted">Closed</span>
+                        </label>
+                        {!hour.closed && (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="time"
+                              value={hour.open_time}
+                              onChange={(e) => updateHour(i, 'open_time', e.target.value)}
+                              className="px-2 py-1 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
+                            />
+                            <span className="text-hustle-muted">—</span>
+                            <input
+                              type="time"
+                              value={hour.close_time}
+                              onChange={(e) => updateHour(i, 'close_time', e.target.value)}
+                              className="px-2 py-1 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
+                            />
+                          </div>
+                        )}
                       </div>
-                      <div className="bg-white rounded-md p-2.5 border border-gray-100">
-                        <p className="font-medium text-hustle-dark text-xs mb-1">Maximum Size</p>
-                        <p className="text-xs">5MB per photo</p>
-                      </div>
-                      <div className="bg-white rounded-md p-2.5 border border-gray-100">
-                        <p className="font-medium text-hustle-dark text-xs mb-1">Recommended</p>
-                        <p className="text-xs">1200\u00d7800px min, landscape</p>
-                      </div>
-                    </div>
-                    <div className="bg-hustle-amber/10 rounded-md p-3 border border-hustle-amber/20">
-                      <p className="text-xs text-hustle-dark">\u2b50 <strong>Cover photo tip:</strong> Choose your best photo \u2014 it appears in search results and is the first thing customers see.</p>
-                    </div>
-                    <div>
-                      <p className="font-medium text-hustle-dark text-xs mb-1.5">Tips for great photos:</p>
-                      <ul className="space-y-1 text-xs">
-                        <li className="flex items-start gap-1.5">\u2600\ufe0f Use good natural lighting</li>
-                        <li className="flex items-start gap-1.5">\ud83c\udfe0 Show your shopfront or entrance</li>
-                        <li className="flex items-start gap-1.5">\ud83d\udcf7 Photograph your products or services</li>
-                        <li className="flex items-start gap-1.5">\ud83d\udc65 Include your team (with their permission)</li>
-                        <li className="flex items-start gap-1.5">\u2728 Keep backgrounds clean and uncluttered</li>
-                      </ul>
-                    </div>
-                    <div className="bg-gray-100 rounded-md p-2.5 border border-gray-200">
-                      <p className="text-xs text-hustle-muted">\ud83c\udfa5 <strong>Video (coming soon):</strong> MP4 format, max 30MB, under 60 seconds</p>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
+            </div>
+          )}
 
+          {/* Step 3: Photos */}
+          {step === 3 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-heading text-xl font-semibold text-hustle-dark">📸 Photos</h2>
+                <span className="text-sm text-hustle-muted">Optional</span>
+              </div>
               <p className="text-sm text-hustle-muted">
-                Add up to {MAX_PHOTOS} photos of your business. The cover photo will be shown in search results.
+                Add photos to help customers find and trust your business. You can always add more later.
               </p>
 
-              {/* Photo error message */}
               {photoError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
-                  <span className="text-red-500">\u26a0\ufe0f</span>
-                  <p className="text-sm text-red-700">{photoError}</p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">⚠️ {photoError}</div>
+              )}
+
+              {photos.length < MAX_PHOTOS && (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-hustle-blue hover:bg-hustle-light/50 transition-colors"
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoSelect}
+                    className="hidden"
+                  />
+                  <div className="text-4xl mb-2">📷</div>
+                  <p className="text-hustle-dark font-medium">Click to upload photos</p>
+                  <p className="text-sm text-hustle-muted mt-1">
+                    JPG, PNG up to 5MB each. {MAX_PHOTOS - photos.length} of {MAX_PHOTOS} remaining.
+                  </p>
                 </div>
               )}
 
-              {/* Photo grid */}
               {photos.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {photos.map((photo, i) => (
-                    <div key={i} className="relative group rounded-lg overflow-hidden border-2 border-gray-200 aspect-square">
+                    <div key={i} className="relative group rounded-lg overflow-hidden border border-gray-200">
                       <Image
                         src={photo.preview}
                         alt={`Photo ${i + 1}`}
-                        fill
-                        className="object-cover"
+                        width={300}
+                        height={200}
+                        className="w-full h-32 object-cover"
                       />
-                      {photo.isCover && (
-                        <div className="absolute top-2 left-2 bg-hustle-amber text-hustle-dark text-xs font-bold px-2 py-1 rounded">
-                          Cover
-                        </div>
-                      )}
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                         {!photo.isCover && (
                           <button
+                            type="button"
                             onClick={() => setCoverPhoto(i)}
-                            className="px-3 py-1.5 rounded bg-white text-hustle-dark text-xs font-medium hover:bg-hustle-amber transition-colors"
+                            className="bg-white text-hustle-dark text-xs px-2 py-1 rounded-md hover:bg-gray-100"
                           >
-                            Set Cover
+                            ⭐ Cover
                           </button>
                         )}
                         <button
+                          type="button"
                           onClick={() => removePhoto(i)}
-                          className="px-3 py-1.5 rounded bg-red-500 text-white text-xs font-medium hover:bg-red-600 transition-colors"
+                          className="bg-red-500 text-white text-xs px-2 py-1 rounded-md hover:bg-red-600"
                         >
-                          Remove
+                          × Remove
                         </button>
                       </div>
+                      {photo.isCover && (
+                        <div className="absolute top-1 left-1 bg-hustle-amber text-white text-xs px-2 py-0.5 rounded-full">⭐ Cover</div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Upload area */}
-              {photos.length < MAX_PHOTOS && (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-hustle-blue hover:bg-hustle-light/50 transition-colors"
+              <button
+                type="button"
+                onClick={() => setShowPhotoTips(!showPhotoTips)}
+                className="text-sm text-hustle-blue hover:text-hustle-blue/80 font-medium flex items-center gap-1 transition-colors"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${showPhotoTips ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <p className="text-3xl mb-2">\ud83d\udcf7</p>
-                  <p className="text-sm font-medium text-hustle-dark">Click to upload photos</p>
-                  <p className="text-xs text-hustle-muted mt-1">
-                    {photos.length}/{MAX_PHOTOS} photos added &bull; JPG, PNG up to 5MB each
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    onChange={handlePhotoSelect}
-                    className="hidden"
-                  />
-                </div>
-              )}
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+                {showPhotoTips ? 'Hide' : 'Show'} photo tips
+              </button>
 
-              {photos.length === 0 && (
-                <div className="bg-hustle-light rounded-lg p-4">
-                  <p className="text-sm text-hustle-muted text-center">
-                    \ud83d\udcf8 Photos are optional but businesses with photos get 3x more views!
-                    You can also add photos later from your dashboard.
-                  </p>
+              {showPhotoTips && (
+                <div className="bg-hustle-light rounded-lg p-4 space-y-2 text-sm text-hustle-muted">
+                  <p className="font-medium text-hustle-dark">💡 Tips for great photos:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>☀️ Use natural lighting when possible</li>
+                    <li>🏠 Show your storefront or workspace</li>
+                    <li>👥 Include photos of your team at work</li>
+                    <li>✨ Showcase your best products or results</li>
+                    <li>🎥 Keep images clear and well-framed</li>
+                  </ul>
                 </div>
               )}
             </div>
           )}
 
-          {/* Step 6: Review */}
-          {step === 6 && (
-            <div className="space-y-4">
+          {/* Step 4: Review */}
+          {step === 4 && (
+            <div className="space-y-6">
               <h2 className="font-heading text-xl font-semibold text-hustle-dark">Review Your Listing</h2>
-              <p className="text-sm text-hustle-muted">Please review your details before submitting.</p>
+              <p className="text-sm text-hustle-muted">Please review your information before submitting.</p>
 
-              <div className="space-y-3">
-                <div className="p-4 bg-hustle-light rounded-lg">
-                  <h3 className="text-sm font-medium text-hustle-muted mb-1">Business Name</h3>
-                  <p className="text-hustle-dark font-medium">{formData.name}</p>
-                  <p className="text-xs text-hustle-muted">URL: myhustle.com/business/{generateSlug(formData.name)}</p>
-                </div>
-
-                <div className="p-4 bg-hustle-light rounded-lg">
-                  <h3 className="text-sm font-medium text-hustle-muted mb-1">Category</h3>
-                  <p className="text-hustle-dark">
-                    {formData.category_id === OTHER_CATEGORY_VALUE ? (
-                      <>
-                        <span className="inline-flex items-center gap-1">
-                          \ud83d\udce6 Other: {formData.customCategory}
-                        </span>
-                        <span className="block text-xs text-hustle-muted mt-1">
-                          \ud83d\udca1 We\u2019ll review this and may create an official category for it.
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        {categories.find(c => c.id === formData.category_id)?.name || 'N/A'}
-                        {formData.subcategory_id && subcategories.find(c => c.id === formData.subcategory_id) && (
-                          <span> &rarr; {subcategories.find(c => c.id === formData.subcategory_id)?.name}</span>
-                        )}
-                      </>
-                    )}
-                  </p>
-                </div>
-
-                <div className="p-4 bg-hustle-light rounded-lg">
-                  <h3 className="text-sm font-medium text-hustle-muted mb-1">Location</h3>
-                  <p className="text-hustle-dark">
-                    {areas.find(a => a.id === formData.area_id)?.name || 'N/A'}
-                    {formData.address && <span> &bull; {formData.address}</span>}
-                  </p>
-                </div>
-
-                <div className="p-4 bg-hustle-light rounded-lg">
-                  <h3 className="text-sm font-medium text-hustle-muted mb-1">Contact</h3>
-                  <p className="text-hustle-dark">Phone: {formatNigerianPhone(formData.phone)}</p>
-                  {formData.whatsapp && <p className="text-hustle-dark">WhatsApp: {formatNigerianPhone(formData.whatsapp)}</p>}
-                  {formData.email && <p className="text-hustle-dark">Email: {formData.email}</p>}
-                  {formData.website && <p className="text-hustle-dark">Web: {formData.website}</p>}
-                </div>
-
-                <div className="p-4 bg-hustle-light rounded-lg">
-                  <h3 className="text-sm font-medium text-hustle-muted mb-1">Hours</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-sm">
-                    {DAYS.map((day, i) => (
-                      <div key={day} className="flex justify-between">
-                        <span className="text-hustle-muted">{day}:</span>
-                        <span className="text-hustle-dark">
-                          {formData.hours[i].closed
-                            ? 'Closed'
-                            : `${formData.hours[i].open_time} - ${formData.hours[i].close_time}`}
-                        </span>
+              <div className="space-y-4">
+                <div className="bg-hustle-light rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-hustle-dark mb-2">Business Basics</h3>
+                  <dl className="space-y-1 text-sm">
+                    <div className="flex">
+                      <dt className="w-32 text-hustle-muted">Name</dt>
+                      <dd className="text-hustle-dark font-medium">{formData.name}</dd>
+                    </div>
+                    <div className="flex">
+                      <dt className="w-32 text-hustle-muted">Category</dt>
+                      <dd className="text-hustle-dark">
+                        {formData.category_id === OTHER_CATEGORY_VALUE
+                          ? `${formData.customCategory} (suggested)`
+                          : categories.find(c => c.id === formData.category_id)?.name || ''}
+                      </dd>
+                    </div>
+                    {formData.subcategory_id && (
+                      <div className="flex">
+                        <dt className="w-32 text-hustle-muted">Subcategory</dt>
+                        <dd className="text-hustle-dark">
+                          {subcategories.find(c => c.id === formData.subcategory_id)?.name || ''}
+                        </dd>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </dl>
                 </div>
 
-                <div className="p-4 bg-hustle-light rounded-lg">
-                  <h3 className="text-sm font-medium text-hustle-muted mb-1">Description</h3>
-                  <p className="text-hustle-dark text-sm">{formData.description}</p>
+                <div className="bg-hustle-light rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-hustle-dark mb-2">Location & Contact</h3>
+                  <dl className="space-y-1 text-sm">
+                    <div className="flex">
+                      <dt className="w-32 text-hustle-muted">Area</dt>
+                      <dd className="text-hustle-dark">
+                        {(() => {
+                          const area = areas.find(a => a.id === formData.area_id)
+                          if (!area) return ''
+                          return `${area.name}${area.city ? `, ${area.city.name} (${area.city.state})` : ''}`
+                        })()}
+                      </dd>
+                    </div>
+                    {formData.address && (
+                      <div className="flex">
+                        <dt className="w-32 text-hustle-muted">Address</dt>
+                        <dd className="text-hustle-dark">{formData.address}</dd>
+                      </div>
+                    )}
+                    <div className="flex">
+                      <dt className="w-32 text-hustle-muted">Phone</dt>
+                      <dd className="text-hustle-dark">{formData.phone}</dd>
+                    </div>
+                    {formData.whatsapp && (
+                      <div className="flex">
+                        <dt className="w-32 text-hustle-muted">WhatsApp</dt>
+                        <dd className="text-hustle-dark">{formData.whatsapp}</dd>
+                      </div>
+                    )}
+                    {formData.email && (
+                      <div className="flex">
+                        <dt className="w-32 text-hustle-muted">Email</dt>
+                        <dd className="text-hustle-dark">{formData.email}</dd>
+                      </div>
+                    )}
+                    {formData.website && (
+                      <div className="flex">
+                        <dt className="w-32 text-hustle-muted">Website</dt>
+                        <dd className="text-hustle-dark">{formData.website}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+
+                <div className="bg-hustle-light rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-hustle-dark mb-2">About</h3>
+                  <p className="text-sm text-hustle-dark whitespace-pre-wrap">{formData.description}</p>
                 </div>
 
                 {photos.length > 0 && (
-                  <div className="p-4 bg-hustle-light rounded-lg">
-                    <h3 className="text-sm font-medium text-hustle-muted mb-2">Photos ({photos.length})</h3>
-                    <div className="flex gap-2 overflow-x-auto">
+                  <div className="bg-hustle-light rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-hustle-dark mb-2">Photos ({photos.length})</h3>
+                    <div className="grid grid-cols-3 gap-2">
                       {photos.map((photo, i) => (
-                        <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
-                          <Image src={photo.preview} alt={`Photo ${i + 1}`} fill className="object-cover" />
+                        <div key={i} className="relative rounded overflow-hidden">
+                          <Image
+                            src={photo.preview}
+                            alt={`Photo ${i + 1}`}
+                            width={200}
+                            height={150}
+                            className="w-full h-20 object-cover"
+                          />
                           {photo.isCover && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-hustle-amber text-hustle-dark text-[10px] font-bold text-center py-0.5">
-                              Cover
-                            </div>
+                            <div className="absolute top-0.5 left-0.5 bg-hustle-amber text-white text-[10px] px-1 rounded">⭐ Cover</div>
                           )}
                         </div>
                       ))}
@@ -1009,41 +1062,47 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Navigation buttons */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
+          <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={() => setStep(s => s - 1)}
               disabled={step === 0}
-              className="px-6 py-2.5 rounded-lg text-sm font-medium text-hustle-muted hover:text-hustle-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 rounded-lg border border-gray-200 text-hustle-dark font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              &larr; Back
+              Back
             </button>
 
             {step < STEPS.length - 1 ? (
               <button
                 type="button"
                 onClick={handleNext}
-                disabled={!canProceed()}
-                className="px-6 py-2.5 rounded-lg text-sm font-bold bg-hustle-blue text-white hover:bg-hustle-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-6 py-2.5 rounded-lg font-medium transition-colors ${
+                  canProceed()
+                    ? 'bg-hustle-blue text-white hover:bg-hustle-blue/90'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
               >
-                Next &rarr;
+                {step === 3 && photos.length === 0 ? 'Skip Photos' : 'Next'}
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading || uploadingPhotos}
-                className="px-8 py-2.5 rounded-lg text-sm font-bold bg-hustle-amber text-hustle-dark hover:bg-hustle-sunset hover:text-white transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="px-8 py-2.5 rounded-lg bg-hustle-amber text-white font-semibold hover:bg-hustle-amber/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
                 {loading || uploadingPhotos ? (
-                  <><LoadingSpinner size="sm" /> {uploadingPhotos ? 'Uploading photos...' : 'Submitting...'}</>
+                  <>
+                    <LoadingSpinner size="sm" />
+                    {uploadingPhotos ? 'Uploading photos...' : 'Creating listing...'}
+                  </>
                 ) : (
-                  'Submit Listing'
+                  <>✨ Create My Listing</>
                 )}
               </button>
             )}
           </div>
+
         </div>
       </div>
     </div>
