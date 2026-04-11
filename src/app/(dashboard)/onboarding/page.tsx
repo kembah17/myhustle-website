@@ -815,31 +815,33 @@ export default function OnboardingPage() {
                 {showHours && (
                   <div className="mt-4 space-y-3">
                     {formData.hours.map((hour, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="w-24 text-sm font-medium text-hustle-dark">{DAYS[i]}</span>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={hour.closed}
-                            onChange={(e) => updateHour(i, 'closed', e.target.checked)}
-                            className="rounded border-gray-300 text-hustle-blue focus:ring-hustle-blue"
-                          />
-                          <span className="text-sm text-hustle-muted">Closed</span>
-                        </label>
+                      <div key={i} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 p-2 rounded-lg bg-gray-50">
+                        <div className="flex items-center justify-between sm:justify-start gap-3">
+                          <span className="w-20 sm:w-24 text-sm font-medium text-hustle-dark">{DAYS[i]}</span>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={hour.closed}
+                              onChange={(e) => updateHour(i, 'closed', e.target.checked)}
+                              className="rounded border-gray-300 text-hustle-blue focus:ring-hustle-blue"
+                            />
+                            <span className="text-sm text-hustle-muted">Closed</span>
+                          </label>
+                        </div>
                         {!hour.closed && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 pl-0 sm:pl-0">
                             <input
                               type="time"
                               value={hour.open_time}
                               onChange={(e) => updateHour(i, 'open_time', e.target.value)}
-                              className="px-2 py-1 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
+                              className="flex-1 sm:flex-none sm:w-auto px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
                             />
-                            <span className="text-hustle-muted">—</span>
+                            <span className="text-hustle-muted text-sm">to</span>
                             <input
                               type="time"
                               value={hour.close_time}
                               onChange={(e) => updateHour(i, 'close_time', e.target.value)}
-                              className="px-2 py-1 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
+                              className="flex-1 sm:flex-none sm:w-auto px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
                             />
                           </div>
                         )}

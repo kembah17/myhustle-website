@@ -136,11 +136,11 @@ export default function HoursPage() {
           <p className="text-hustle-muted">Set when your business is open</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 overflow-hidden">
           <div className="space-y-3">
             {DAYS.map((day, i) => (
               <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-hustle-light">
-                <div className="w-28 text-sm font-medium text-hustle-dark">{day}</div>
+                <div className="w-20 sm:w-28 text-sm font-medium text-hustle-dark">{day}</div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -151,19 +151,19 @@ export default function HoursPage() {
                   <span className="text-sm text-hustle-muted">Open</span>
                 </label>
                 {hours[i] && !hours[i].closed ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <input
                       type="time"
                       value={hours[i].open_time}
                       onChange={(e) => updateHour(i, 'open_time', e.target.value)}
-                      className="px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
+                      className="flex-1 min-w-0 px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
                     />
-                    <span className="text-hustle-muted text-sm">to</span>
+                    <span className="text-hustle-muted text-sm shrink-0">to</span>
                     <input
                       type="time"
                       value={hours[i].close_time}
                       onChange={(e) => updateHour(i, 'close_time', e.target.value)}
-                      className="px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
+                      className="flex-1 min-w-0 px-2 py-1.5 rounded border border-gray-200 text-sm text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue"
                     />
                   </div>
                 ) : (
