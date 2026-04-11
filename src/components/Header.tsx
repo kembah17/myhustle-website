@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase-browser'
+import type { User } from '@supabase/supabase-js'
 
 interface CityLink {
   slug: string
@@ -21,13 +22,16 @@ let cachedCities: CityLink[] | null = null
 export default function Header() {
   const [cities, setCities] = useState<CityLink[]>(cachedCities || FALLBACK_CITIES)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const fetchedRef = useRef(false)
+  const supabase = createClient()
 
+  // Fetch cities
   useEffect(() => {
     if (cachedCities || fetchedRef.current) return
     fetchedRef.current = true
 
-    const supabase = createClient()
     supabase
       .from('cities')
       .select('slug, name')
@@ -43,6 +47,27 @@ export default function Header() {
         }
       })
   }, [])
+
+  // Auth state
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+      setAuthLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setAuthLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setMobileMenuOpen(false)
+  }
 
   return (
     <header className="bg-hustle-blue text-white">
@@ -94,6 +119,52 @@ export default function Header() {
             >
               List Your Business
             </Link>
+
+            {/* Auth buttons */}
+            {!authLoading && (
+              user ? (
+                <div className="relative group">
+                  <button className="flex items-center gap-2 text-sm font-medium hover:text-hustle-amber transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-hustle-amber/20 flex items-center justify-center text-hustle-amber font-bold text-xs">
+                      {user.user_metadata?.owner_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <svg className="w-4 h-4" width="16" height="16" style={{width:'16px',height:'16px',maxWidth:'16px',maxHeight:'16px',flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <div className="absolute top-full right-0 bg-white shadow-lg rounded-lg py-2 min-w-[180px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-hustle-dark truncate">{user.user_metadata?.owner_name || 'My Account'}</p>
+                      <p className="text-xs text-hustle-muted truncate">{user.email}</p>
+                    </div>
+                    <Link href="/dashboard" className="block px-4 py-2 text-hustle-dark hover:bg-gray-50 text-sm">
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <Link
+                    href="/login"
+                    className="text-sm font-medium hover:text-hustle-amber transition-colors"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="bg-white text-hustle-blue px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )
+            )}
           </nav>
           <button
             className="md:hidden text-white"
@@ -130,6 +201,49 @@ export default function Header() {
             >
               List Your Business
             </Link>
+
+            {/* Mobile auth */}
+            <hr className="border-white/20" />
+            {!authLoading && (
+              user ? (
+                <>
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium text-hustle-amber">{user.user_metadata?.owner_name || 'My Account'}</p>
+                    <p className="text-xs text-white/60">{user.email}</p>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-2 py-1.5 text-sm hover:text-hustle-amber transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleSignOut}
+                    className="block w-full text-left px-2 py-1.5 text-sm text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-3 pt-2">
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center border border-white/30 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-white/10 transition-colors"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center bg-white text-hustle-blue px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )
+            )}
           </div>
         )}
       </div>
