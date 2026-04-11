@@ -14,6 +14,7 @@ import type { Category, Area } from '@/lib/types'
 const STEPS = ['Basics', 'Location', 'Contact', 'Hours', 'Description', 'Photos', 'Review']
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const MAX_PHOTOS = 5
+const OTHER_CATEGORY_VALUE = '__other__'
 
 interface HourEntry {
   day: number
@@ -32,6 +33,7 @@ interface FormData {
   name: string
   category_id: string
   subcategory_id: string
+  customCategory: string
   area_id: string
   address: string
   phone: string
@@ -45,6 +47,7 @@ interface FormData {
 interface FieldErrors {
   name?: string
   category_id?: string
+  customCategory?: string
   area_id?: string
   phone?: string
   whatsapp?: string
@@ -110,14 +113,17 @@ export default function OnboardingPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showPhotoTips, setShowPhotoTips] = useState(false)
   const [photoError, setPhotoError] = useState('')
+  const [categorySuggestionSent, setCategorySuggestionSent] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
   const supabase = createClient()
+
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
     category_id: '',
     subcategory_id: '',
+    customCategory: '',
     area_id: '',
     address: '',
     phone: '',
@@ -161,7 +167,7 @@ export default function OnboardingPage() {
   useEffect(() => { fetchData() }, [fetchData])
 
   useEffect(() => {
-    if (formData.category_id) {
+    if (formData.category_id && formData.category_id !== OTHER_CATEGORY_VALUE) {
       supabase
         .from('categories')
         .select('*')
@@ -180,7 +186,15 @@ export default function OnboardingPage() {
     const errs: FieldErrors = {}
     if (!data.name.trim()) errs.name = 'Business name is required'
     else if (data.name.trim().length < 2) errs.name = 'Name must be at least 2 characters'
-    if (!data.category_id) errs.category_id = 'Please select a category'
+    if (!data.category_id) {
+      errs.category_id = 'Please select a category'
+    } else if (data.category_id === OTHER_CATEGORY_VALUE) {
+      if (!data.customCategory.trim()) {
+        errs.customCategory = 'Please describe your business category'
+      } else if (data.customCategory.trim().length < 3) {
+        errs.customCategory = 'Category name must be at least 3 characters'
+      }
+    }
     if (!data.area_id) errs.area_id = 'Please select an area'
     if (!data.phone) errs.phone = 'Phone number is required'
     else if (!isValidNigerianPhone(data.phone)) errs.phone = 'Enter a valid Nigerian phone number (e.g. 08012345678 or +2348012345678)'
@@ -214,7 +228,13 @@ export default function OnboardingPage() {
 
   const canProceed = (): boolean => {
     switch (step) {
-      case 0: return !!(formData.name.trim() && formData.category_id && !errors.name && !errors.category_id)
+      case 0: {
+        const hasName = !!(formData.name.trim() && !errors.name)
+        if (formData.category_id === OTHER_CATEGORY_VALUE) {
+          return hasName && !!(formData.customCategory.trim().length >= 3 && !errors.customCategory)
+        }
+        return hasName && !!(formData.category_id && !errors.category_id)
+      }
       case 1: return !!(formData.area_id && !errors.area_id)
       case 2: return !!(formData.phone && !errors.phone && !errors.whatsapp && !errors.email && !errors.website)
       case 3: return true
@@ -228,7 +248,7 @@ export default function OnboardingPage() {
     // Mark all fields in current step as touched
     switch (step) {
       case 0:
-        setTouched(prev => ({ ...prev, name: true, category_id: true }))
+        setTouched(prev => ({ ...prev, name: true, category_id: true, customCategory: true }))
         break
       case 1:
         setTouched(prev => ({ ...prev, area_id: true }))
@@ -302,7 +322,41 @@ export default function OnboardingPage() {
 
       if (existing) slug = `${slug}-${Date.now().toString(36)}`
 
-      const categoryId = formData.subcategory_id || formData.category_id
+      // Handle "Other" category: find the actual 'other' category in DB
+      let resolvedCategoryId = formData.subcategory_id || formData.category_id
+      const isOther = formData.category_id === OTHER_CATEGORY_VALUE
+
+      if (isOther) {
+        // Look up the 'other' category by slug
+        const { data: otherCat } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('slug', 'other')
+          .is('parent_id', null)
+          .maybeSingle()
+
+        if (otherCat) {
+          resolvedCategoryId = otherCat.id
+        } else {
+          // Fallback: use first available category
+          resolvedCategoryId = categories[0]?.id || ''
+        }
+
+        // Submit category suggestion
+        const area = areas.find(a => a.id === formData.area_id)
+        const suggesterName = user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'Unknown'
+
+        await supabase.from('business_suggestions').insert({
+          business_name: formData.name,
+          category: formData.customCategory.trim(),
+          area: area?.name || '',
+          city: area?.city?.name || 'Lagos',
+          suggester_name: suggesterName,
+        })
+
+        setCategorySuggestionSent(true)
+      }
+
       const area = areas.find(a => a.id === formData.area_id)
 
       const { data: business, error: bizError } = await supabase
@@ -311,7 +365,7 @@ export default function OnboardingPage() {
           name: formData.name,
           slug,
           description: formData.description,
-          category_id: categoryId,
+          category_id: resolvedCategoryId,
           area_id: formData.area_id,
           city_id: area?.city_id || null,
           phone: formatNigerianPhone(formData.phone),
@@ -364,7 +418,9 @@ export default function OnboardingPage() {
 
 
               // Auto-generate SEO alt text from business details
-              const categoryName = categories.find(c => c.id === formData.category_id)?.name || ''
+              const categoryName = isOther
+                ? formData.customCategory
+                : (categories.find(c => c.id === formData.category_id)?.name || '')
               const areaName = areas.find(a => a.id === formData.area_id)?.name || ''
               const cityName = areas.find(a => a.id === formData.area_id)?.city?.name || ''
 
@@ -381,8 +437,11 @@ export default function OnboardingPage() {
         }
       }
 
-      setToast({ message: 'Business listed successfully! Redirecting...', type: 'success' })
-      setTimeout(() => router.push('/dashboard'), 2000)
+      const successMsg = isOther
+        ? 'Business listed successfully! Thanks for suggesting a new category \u2014 we\u2019ll review it and may create it soon. Redirecting...'
+        : 'Business listed successfully! Redirecting...'
+      setToast({ message: successMsg, type: 'success' })
+      setTimeout(() => router.push('/dashboard'), 2500)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to create listing'
       setToast({ message, type: 'error' })
@@ -394,7 +453,7 @@ export default function OnboardingPage() {
   // Inline error component
   const FieldError = ({ field }: { field: keyof FieldErrors }) => {
     if (!touched[field] || !errors[field]) return null
-    return <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠️ {errors[field]}</p>
+    return <p className="text-xs text-red-500 mt-1 flex items-center gap-1">\u26a0\ufe0f {errors[field]}</p>
   }
 
   if (dataLoading) {
@@ -464,6 +523,9 @@ export default function OnboardingPage() {
                   onChange={(e) => {
                     updateField('category_id', e.target.value)
                     updateField('subcategory_id', '')
+                    if (e.target.value !== OTHER_CATEGORY_VALUE) {
+                      updateField('customCategory', '')
+                    }
                     markTouched('category_id')
                   }}
                   onBlur={() => markTouched('category_id')}
@@ -472,13 +534,43 @@ export default function OnboardingPage() {
                   }`}
                 >
                   <option value="">Select a category</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-                  ))}
+                  {categories
+                    .filter(c => c.slug !== 'other')
+                    .map(c => (
+                      <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                    ))}
+                  <option disabled>\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500</option>
+                  <option value={OTHER_CATEGORY_VALUE}>\ud83d\udce6 Other / My category isn&apos;t listed</option>
                 </select>
                 <FieldError field="category_id" />
               </div>
-              {subcategories.length > 0 && (
+
+              {/* Custom category input - shown when "Other" is selected */}
+              {formData.category_id === OTHER_CATEGORY_VALUE && (
+                <div className="bg-hustle-light rounded-lg p-4 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-hustle-dark mb-1">
+                      What type of business is this? <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.customCategory}
+                      onChange={(e) => updateField('customCategory', e.target.value)}
+                      onBlur={() => markTouched('customCategory')}
+                      className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                        touched.customCategory && errors.customCategory ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                      }`}
+                      placeholder="e.g. Pet Grooming, Solar Installation, Travel Agency..."
+                    />
+                    <FieldError field="customCategory" />
+                  </div>
+                  <p className="text-xs text-hustle-muted flex items-center gap-1">
+                    \ud83d\udca1 We\u2019ll review your suggestion and may add it as an official category soon!
+                  </p>
+                </div>
+              )}
+
+              {subcategories.length > 0 && formData.category_id !== OTHER_CATEGORY_VALUE && (
                 <div>
                   <label className="block text-sm font-medium text-hustle-dark mb-1">Subcategory</label>
                   <select
@@ -557,7 +649,7 @@ export default function OnboardingPage() {
                 />
                 <FieldError field="phone" />
                 {formData.phone && !errors.phone && (
-                  <p className="text-xs text-green-600 mt-1">✓ Will be saved as: {formatNigerianPhone(formData.phone)}</p>
+                  <p className="text-xs text-green-600 mt-1">\u2713 Will be saved as: {formatNigerianPhone(formData.phone)}</p>
                 )}
               </div>
               <div>
@@ -574,7 +666,7 @@ export default function OnboardingPage() {
                 />
                 <FieldError field="whatsapp" />
                 {formData.whatsapp && !errors.whatsapp && (
-                  <p className="text-xs text-green-600 mt-1">✓ Will be saved as: {formatNigerianPhone(formData.whatsapp)}</p>
+                  <p className="text-xs text-green-600 mt-1">\u2713 Will be saved as: {formatNigerianPhone(formData.whatsapp)}</p>
                 )}
               </div>
               <div>
@@ -695,7 +787,7 @@ export default function OnboardingPage() {
                   onClick={() => setShowPhotoTips(!showPhotoTips)}
                   className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-hustle-dark hover:bg-gray-50 transition-colors rounded-lg"
                 >
-                  <span>📸 Photo & Video Tips</span>
+                  <span>\ud83d\udcf8 Photo & Video Tips</span>
                   <svg
                     className={`w-5 h-5 text-hustle-muted transition-transform duration-200 ${showPhotoTips ? 'rotate-180' : ''}`}
                     fill="none"
@@ -718,24 +810,24 @@ export default function OnboardingPage() {
                       </div>
                       <div className="bg-white rounded-md p-2.5 border border-gray-100">
                         <p className="font-medium text-hustle-dark text-xs mb-1">Recommended</p>
-                        <p className="text-xs">1200×800px min, landscape</p>
+                        <p className="text-xs">1200\u00d7800px min, landscape</p>
                       </div>
                     </div>
                     <div className="bg-hustle-amber/10 rounded-md p-3 border border-hustle-amber/20">
-                      <p className="text-xs text-hustle-dark">⭐ <strong>Cover photo tip:</strong> Choose your best photo — it appears in search results and is the first thing customers see.</p>
+                      <p className="text-xs text-hustle-dark">\u2b50 <strong>Cover photo tip:</strong> Choose your best photo \u2014 it appears in search results and is the first thing customers see.</p>
                     </div>
                     <div>
                       <p className="font-medium text-hustle-dark text-xs mb-1.5">Tips for great photos:</p>
                       <ul className="space-y-1 text-xs">
-                        <li className="flex items-start gap-1.5">☀️ Use good natural lighting</li>
-                        <li className="flex items-start gap-1.5">🏠 Show your shopfront or entrance</li>
-                        <li className="flex items-start gap-1.5">📷 Photograph your products or services</li>
-                        <li className="flex items-start gap-1.5">👥 Include your team (with their permission)</li>
-                        <li className="flex items-start gap-1.5">✨ Keep backgrounds clean and uncluttered</li>
+                        <li className="flex items-start gap-1.5">\u2600\ufe0f Use good natural lighting</li>
+                        <li className="flex items-start gap-1.5">\ud83c\udfe0 Show your shopfront or entrance</li>
+                        <li className="flex items-start gap-1.5">\ud83d\udcf7 Photograph your products or services</li>
+                        <li className="flex items-start gap-1.5">\ud83d\udc65 Include your team (with their permission)</li>
+                        <li className="flex items-start gap-1.5">\u2728 Keep backgrounds clean and uncluttered</li>
                       </ul>
                     </div>
                     <div className="bg-gray-100 rounded-md p-2.5 border border-gray-200">
-                      <p className="text-xs text-hustle-muted">🎥 <strong>Video (coming soon):</strong> MP4 format, max 30MB, under 60 seconds</p>
+                      <p className="text-xs text-hustle-muted">\ud83c\udfa5 <strong>Video (coming soon):</strong> MP4 format, max 30MB, under 60 seconds</p>
                     </div>
                   </div>
                 )}
@@ -748,7 +840,7 @@ export default function OnboardingPage() {
               {/* Photo error message */}
               {photoError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
-                  <span className="text-red-500">⚠️</span>
+                  <span className="text-red-500">\u26a0\ufe0f</span>
                   <p className="text-sm text-red-700">{photoError}</p>
                 </div>
               )}
@@ -796,7 +888,7 @@ export default function OnboardingPage() {
                   onClick={() => fileInputRef.current?.click()}
                   className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-hustle-blue hover:bg-hustle-light/50 transition-colors"
                 >
-                  <p className="text-3xl mb-2">📷</p>
+                  <p className="text-3xl mb-2">\ud83d\udcf7</p>
                   <p className="text-sm font-medium text-hustle-dark">Click to upload photos</p>
                   <p className="text-xs text-hustle-muted mt-1">
                     {photos.length}/{MAX_PHOTOS} photos added &bull; JPG, PNG up to 5MB each
@@ -815,7 +907,7 @@ export default function OnboardingPage() {
               {photos.length === 0 && (
                 <div className="bg-hustle-light rounded-lg p-4">
                   <p className="text-sm text-hustle-muted text-center">
-                    📸 Photos are optional but businesses with photos get 3x more views!
+                    \ud83d\udcf8 Photos are optional but businesses with photos get 3x more views!
                     You can also add photos later from your dashboard.
                   </p>
                 </div>
@@ -839,9 +931,22 @@ export default function OnboardingPage() {
                 <div className="p-4 bg-hustle-light rounded-lg">
                   <h3 className="text-sm font-medium text-hustle-muted mb-1">Category</h3>
                   <p className="text-hustle-dark">
-                    {categories.find(c => c.id === formData.category_id)?.name || 'N/A'}
-                    {formData.subcategory_id && subcategories.find(c => c.id === formData.subcategory_id) && (
-                      <span> &rarr; {subcategories.find(c => c.id === formData.subcategory_id)?.name}</span>
+                    {formData.category_id === OTHER_CATEGORY_VALUE ? (
+                      <>
+                        <span className="inline-flex items-center gap-1">
+                          \ud83d\udce6 Other: {formData.customCategory}
+                        </span>
+                        <span className="block text-xs text-hustle-muted mt-1">
+                          \ud83d\udca1 We\u2019ll review this and may create an official category for it.
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        {categories.find(c => c.id === formData.category_id)?.name || 'N/A'}
+                        {formData.subcategory_id && subcategories.find(c => c.id === formData.subcategory_id) && (
+                          <span> &rarr; {subcategories.find(c => c.id === formData.subcategory_id)?.name}</span>
+                        )}
+                      </>
                     )}
                   </p>
                 </div>
