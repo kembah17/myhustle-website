@@ -70,7 +70,7 @@ export default function SignupPage() {
             </span>
           </Link>
           <h1 className="mt-4 font-heading text-2xl font-bold text-hustle-dark">
-            List Your Business
+            List Your Business / Hustle
           </h1>
           <p className="mt-2 text-hustle-muted">
             Get found by thousands of customers across Nigeria

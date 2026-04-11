@@ -38,7 +38,7 @@ export default function WhatsAppCTA({ variant = 'inline', className = '' }: What
           className="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#1da851] text-white px-8 py-4 rounded-xl text-lg font-bold transition-colors shadow-lg hover:shadow-xl"
         >
           <WhatsAppIcon className="w-7 h-7" />
-          List Your Business Free
+          List Your Business / Hustle Free
         </Link>
       </div>
     )
@@ -70,7 +70,7 @@ export default function WhatsAppCTA({ variant = 'inline', className = '' }: What
       className={`inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-white px-6 py-3 rounded-lg font-bold transition-colors shadow-md hover:shadow-lg ${className}`}
     >
       <WhatsAppIcon className="w-5 h-5" />
-      List Your Business Free
+      List Your Business / Hustle Free
     </Link>
   )
 }

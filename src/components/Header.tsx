@@ -117,7 +117,7 @@ export default function Header() {
               href="/list-your-business"
               className="bg-hustle-amber text-hustle-dark px-4 py-2 rounded-lg text-sm font-bold hover:bg-hustle-sunset hover:text-white transition-colors"
             >
-              List Your Business
+              List Your Business / Hustle
             </Link>
 
             {/* Auth buttons */}
@@ -199,7 +199,7 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
               className="block bg-hustle-amber text-hustle-dark px-4 py-2 rounded-lg text-sm font-bold text-center mt-2"
             >
-              List Your Business
+              List Your Business / Hustle
             </Link>
 
             {/* Mobile auth */}

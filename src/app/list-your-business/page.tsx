@@ -80,7 +80,7 @@ export default function ListYourBusinessPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              List Your Business on{' '}
+              List Your Business / Hustle on{' '}
               <span className="text-hustle-amber">MyHustle</span>
             </h1>
             <p className="text-xl md:text-2xl text-blue-200 mb-10">

@@ -10,7 +10,7 @@ interface EmptyStateProps {
 export default function EmptyState({
   title = 'Nothing here yet',
   message = 'This spot is waiting for its first business. Could be yours!',
-  actionLabel = 'List Your Business',
+  actionLabel = 'List Your Business / Hustle',
   actionHref = '/list-your-business',
 }: EmptyStateProps) {
   return (

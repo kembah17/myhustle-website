@@ -195,22 +195,7 @@ export default async function HomePage() {
           <div className="mt-6 md:mt-8">
             <WhatsAppCTA variant="hero" />
           </div>
-          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a
-              href="/signup"
-              className="bg-hustle-amber text-hustle-dark px-8 py-3 rounded-lg text-lg font-bold hover:bg-hustle-sunset hover:text-white transition-colors shadow-lg"
-            >
-              List Your Business / Hustle
-            </a>
-            <a
-              href="/login"
-              className="border-2 border-white/40 text-white px-8 py-3 rounded-lg text-lg font-medium hover:bg-white/10 transition-colors"
-            >
-              Sign In
-            </a>
-          </div>
         </div>
-        {/* Scroll indicator - mobile only */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:hidden animate-bounce">
           <svg className="w-6 h-6 text-blue-200/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -239,7 +224,7 @@ export default async function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="font-heading text-3xl font-bold text-center mb-4">
-            List Your Business in 3 Easy Steps
+            List Your Business / Hustle in 3 Easy Steps
           </h2>
           <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
             No forms, no stress. Just send us a WhatsApp message and we handle the rest.
