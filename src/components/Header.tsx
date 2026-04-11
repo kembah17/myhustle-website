@@ -166,15 +166,42 @@ export default function Header() {
               )
             )}
           </nav>
-          <button
-            className="md:hidden text-white"
-            aria-label="Menu"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            <svg className="w-6 h-6" width="24" height="24" style={{width:"24px",height:"24px",maxWidth:"24px",maxHeight:"24px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          {/* Mobile: auth buttons + hamburger */}
+          <div className="md:hidden flex items-center gap-2">
+            {!authLoading && !user && (
+              <>
+                <Link
+                  href="/login"
+                  className="text-xs font-medium text-white/90 hover:text-hustle-amber transition-colors px-2 py-1"
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="bg-white text-hustle-blue px-3 py-1.5 rounded-md text-xs font-bold hover:bg-gray-100 transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+            {!authLoading && user && (
+              <Link
+                href="/dashboard"
+                className="w-7 h-7 rounded-full bg-hustle-amber/20 flex items-center justify-center text-hustle-amber font-bold text-xs"
+              >
+                {user.user_metadata?.owner_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
+              </Link>
+            )}
+            <button
+              className="text-white"
+              aria-label="Menu"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <svg className="w-6 h-6" width="24" height="24" style={{width:"24px",height:"24px",maxWidth:"24px",maxHeight:"24px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
         </div>
         {/* Mobile menu */}
         {mobileMenuOpen && (
