@@ -6,6 +6,11 @@ import DashboardShell from '@/components/dashboard/DashboardShell'
 
 const adminNav = [
   { href: '/dashboard/admin', label: 'Overview', icon: '📊' },
+  { href: '/dashboard/admin/businesses', label: 'Businesses', icon: '🏢' },
+  { href: '/dashboard/admin/claims', label: 'Claims', icon: '📋' },
+  { href: '/dashboard/admin/flags', label: 'Flags', icon: '🚩' },
+  { href: '/dashboard/admin/users', label: 'Users', icon: '👥' },
+  { href: '/dashboard/admin/suggestions', label: 'Suggestions', icon: '💡' },
   { href: '/dashboard/admin/states', label: 'States', icon: '🗺️' },
   { href: '/dashboard/admin/cities', label: 'Cities', icon: '🏙️' },
   { href: '/dashboard/admin/areas', label: 'Areas', icon: '📍' },

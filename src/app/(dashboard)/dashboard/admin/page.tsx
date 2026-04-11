@@ -11,10 +11,17 @@ interface Counts {
   landmarks: number
   categories: number
   businesses: number
+  pendingClaims: number
+  openFlags: number
+  users: number
+  pendingSuggestions: number
 }
 
 export default function AdminOverview() {
-  const [counts, setCounts] = useState<Counts>({ states: 0, cities: 0, areas: 0, landmarks: 0, categories: 0, businesses: 0 })
+  const [counts, setCounts] = useState<Counts>({
+    states: 0, cities: 0, areas: 0, landmarks: 0, categories: 0,
+    businesses: 0, pendingClaims: 0, openFlags: 0, users: 0, pendingSuggestions: 0,
+  })
   const [loading, setLoading] = useState(true)
   const [revalidating, setRevalidating] = useState(false)
   const [revalMsg, setRevalMsg] = useState('')
@@ -28,7 +35,10 @@ export default function AdminOverview() {
       supabase.from('landmarks').select('id', { count: 'exact', head: true }),
       supabase.from('categories').select('id', { count: 'exact', head: true }),
       supabase.from('businesses').select('id', { count: 'exact', head: true }),
-    ]).then(([s, c, a, l, cat, b]) => {
+      supabase.from('claim_attempts').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('listing_flags').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+      supabase.from('business_suggestions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    ]).then(([s, c, a, l, cat, b, claims, flags, suggestions]) => {
       setCounts({
         states: s.count || 0,
         cities: c.count || 0,
@@ -36,9 +46,23 @@ export default function AdminOverview() {
         landmarks: l.count || 0,
         categories: cat.count || 0,
         businesses: b.count || 0,
+        pendingClaims: claims.count || 0,
+        openFlags: flags.count || 0,
+        users: 0, // fetched separately via API
+        pendingSuggestions: suggestions.count || 0,
       })
       setLoading(false)
     })
+
+    // Fetch user count from admin API
+    fetch('/api/admin/users').then(res => {
+      if (res.ok) return res.json()
+      return null
+    }).then(json => {
+      if (json?.count) {
+        setCounts(prev => ({ ...prev, users: json.count }))
+      }
+    }).catch(() => {})
   }, [])
 
   const handleRevalidate = async () => {
@@ -59,17 +83,21 @@ export default function AdminOverview() {
   }
 
   const cards = [
+    { label: 'Businesses', count: counts.businesses, href: '/dashboard/admin/businesses', icon: '🏢' },
+    { label: 'Pending Claims', count: counts.pendingClaims, href: '/dashboard/admin/claims', icon: '📋', badge: true, badgeColor: 'bg-amber-100 text-amber-700' },
+    { label: 'Open Flags', count: counts.openFlags, href: '/dashboard/admin/flags', icon: '🚩', badge: true, badgeColor: 'bg-red-100 text-red-700' },
+    { label: 'Users', count: counts.users, href: '/dashboard/admin/users', icon: '👥' },
+    { label: 'Suggestions', count: counts.pendingSuggestions, href: '/dashboard/admin/suggestions', icon: '💡', badge: true, badgeColor: 'bg-amber-100 text-amber-700' },
     { label: 'States', count: counts.states, href: '/dashboard/admin/states', icon: '🗺️' },
     { label: 'Cities', count: counts.cities, href: '/dashboard/admin/cities', icon: '🏙️' },
     { label: 'Areas', count: counts.areas, href: '/dashboard/admin/areas', icon: '📍' },
     { label: 'Landmarks', count: counts.landmarks, href: '/dashboard/admin/landmarks', icon: '🏛️' },
     { label: 'Categories', count: counts.categories, href: '/dashboard/admin/categories', icon: '📂' },
-    { label: 'Businesses', count: counts.businesses, href: '#', icon: '🏢' },
   ]
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {cards.map((card) => (
           <Link
             key={card.label}
@@ -80,7 +108,14 @@ export default function AdminOverview() {
             <div className="text-2xl font-bold text-hustle-dark">
               {loading ? '...' : card.count}
             </div>
-            <div className="text-sm text-hustle-muted">{card.label}</div>
+            <div className="text-sm text-hustle-muted flex items-center gap-2">
+              {card.label}
+              {card.badge && !loading && card.count > 0 && (
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${card.badgeColor}`}>
+                  {card.count}
+                </span>
+              )}
+            </div>
           </Link>
         ))}
       </div>
