@@ -1,6 +1,6 @@
--- Migration: Upgrade Category Taxonomy (FIXED v4 - handles existing slugs)
+-- Migration: Upgrade Category Taxonomy (FIXED v5 - proper PL/pgSQL variable handling)
 -- Date: 2026-04-22
--- Approach: UPSERT parent categories, remap businesses, delete old, insert subcategories
+-- Fix: Individual INSERT statements so PL/pgSQL resolves variables correctly
 
 DO $$
 DECLARE
@@ -29,7 +29,7 @@ DECLARE
 BEGIN
 
   -- =============================================================
-  -- STEP 1: Upsert parent categories (existing slugs get updated)
+  -- STEP 1: Upsert parent categories (existing slugs get reused)
   -- =============================================================
   -- Agriculture & Farming
   SELECT id INTO agricultureandfarming_id FROM categories WHERE slug = 'agricultureandfarming' AND parent_id IS NULL;
@@ -248,28 +248,27 @@ BEGIN
 
   IF biz_count > 0 THEN
     CREATE TEMP TABLE _cat_map (old_slug TEXT, new_id TEXT);
-    INSERT INTO _cat_map (old_slug, new_id) VALUES
-      ('agriculture-farming', agriculture_and_farming_id),
-      ('auto-services', auto_services_and_motoring_id),
-      ('childcare-parenting', education_and_training_id),
-      ('education-training', education_and_training_id),
-      ('entertainment-leisure', entertainment_and_leisure_id),
-      ('events', events_and_weddings_id),
-      ('fashion-tailoring', fashion_and_beauty_id),
-      ('food-dining', food_and_dining_id),
-      ('hair-beauty', fashion_and_beauty_id),
-      ('health-wellness', health_and_medical_id),
-      ('home-services', home_services_id),
-      ('laundry-dry-cleaning', home_services_id),
-      ('legal-finance', finance_and_insurance_id),
-      ('logistics-transport', logistics_and_transport_id),
-      ('photography', events_and_weddings_id),
-      ('printing-branding', business_services_id),
-      ('real-estate', property_and_real_estate_id),
-      ('religious-spiritual', religious_and_community_id),
-      ('supermarkets-retail', shopping_and_retail_id),
-      ('technology-it', computers_and_technology_id),
-      ('other', other_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('agriculture-farming', agriculture_and_farming_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('auto-services', auto_services_and_motoring_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('childcare-parenting', education_and_training_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('education-training', education_and_training_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('entertainment-leisure', entertainment_and_leisure_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('events', events_and_weddings_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('fashion-tailoring', fashion_and_beauty_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('food-dining', food_and_dining_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('hair-beauty', fashion_and_beauty_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('health-wellness', health_and_medical_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('home-services', home_services_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('laundry-dry-cleaning', home_services_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('legal-finance', finance_and_insurance_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('logistics-transport', logistics_and_transport_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('photography', events_and_weddings_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('printing-branding', business_services_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('real-estate', property_and_real_estate_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('religious-spiritual', religious_and_community_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('supermarkets-retail', shopping_and_retail_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('technology-it', computers_and_technology_id);
+    INSERT INTO _cat_map (old_slug, new_id) VALUES ('other', other_id);
 
     -- Update businesses pointing to old parent categories
     UPDATE businesses b
@@ -299,12 +298,10 @@ BEGIN
   -- =============================================================
   -- STEP 3: Delete OLD subcategories and orphaned parent categories
   -- =============================================================
-  -- Delete old subcategories (those whose parent is NOT one of our new parents)
   DELETE FROM categories WHERE parent_id IS NOT NULL AND parent_id NOT IN (
     agricultureandfarming_id, auto_ervice_andmotoring_id, bu_ine_ervice_id, computer_andtechnology_id, con_tructionandtrade_men_id, educationandtraining_id, entertainmentandlei_ure_id, event_andwedding_id, fa_hionandbeauty_id, financeandin_urance_id, foodanddining_id, healthandmedical_id, home_ervice_id, legal_ervice_id, logi_tic_andtran_port_id, manufacturingandindu_try_id, propertyandreale_tate_id, religiou_andcommunity_id, hoppingandretail_id, touri_mandho_pitality_id, other_id
   );
 
-  -- Delete old parent categories that are NOT in our new set
   DELETE FROM categories WHERE parent_id IS NULL AND id NOT IN (
     agricultureandfarming_id, auto_ervice_andmotoring_id, bu_ine_ervice_id, computer_andtechnology_id, con_tructionandtrade_men_id, educationandtraining_id, entertainmentandlei_ure_id, event_andwedding_id, fa_hionandbeauty_id, financeandin_urance_id, foodanddining_id, healthandmedical_id, home_ervice_id, legal_ervice_id, logi_tic_andtran_port_id, manufacturingandindu_try_id, propertyandreale_tate_id, religiou_andcommunity_id, hoppingandretail_id, touri_mandho_pitality_id, other_id
   );
