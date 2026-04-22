@@ -1,5 +1,6 @@
 'use client'
 
+import { WHATSAPP_NUMBER } from '@/components/WhatsAppCTA'
 import { useState, useMemo } from 'react'
 
 interface FAQItem {
@@ -247,7 +248,7 @@ export default function FAQClient() {
             Email Support
           </a>
           <a
-            href="https://wa.me/2348000000000?text=Hi%2C%20I%20need%20help%20with%20MyHustle"
+            href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hi%2C%20I%20need%20help%20with%20MyHustle`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
