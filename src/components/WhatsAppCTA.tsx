@@ -2,7 +2,25 @@ import Link from 'next/link'
 
 const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '2349000000000'
 const WHATSAPP_MESSAGE = encodeURIComponent(
-  'Hi! I want to list my business on MyHustle. My business name is: '
+  `Hi! I want to list my business on MyHustle 🎉
+
+📋 *BUSINESS DETAILS*
+🏪 Business Name: 
+📂 What I Do (category): 
+📝 Brief Description: 
+
+📍 *LOCATION*
+🏙️ City: 
+📌 Area: 
+🏠 Address: 
+
+📞 *CONTACT INFO*
+📱 Phone: 
+💬 WhatsApp: 
+📧 Email: 
+🌐 Website (if any): 
+
+Please set up my listing! 🙏`
 )
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`
 
@@ -29,7 +47,7 @@ export default function WhatsAppCTA({ variant = 'inline', className = '' }: What
     return (
       <div className={`${className}`}>
         <p className="text-blue-200 mb-4 text-lg">
-          Prefer WhatsApp? List your business in 2 minutes
+          Send us your business details via WhatsApp and we&apos;ll set up your listing within 24 hours
         </p>
         <Link
           href={WHATSAPP_URL}
