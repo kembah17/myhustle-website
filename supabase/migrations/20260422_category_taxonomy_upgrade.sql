@@ -1,102 +1,248 @@
--- Migration: Upgrade Category Taxonomy (FIXED v3)
+-- Migration: Upgrade Category Taxonomy (FIXED v4 - handles existing slugs)
 -- Date: 2026-04-22
--- Schema: categories(id, slug, name, description, parent_id, icon, seo_title_template, seo_description_template)
--- NO created_at/updated_at columns exist in this table.
+-- Approach: UPSERT parent categories, remap businesses, delete old, insert subcategories
 
 DO $$
 DECLARE
-  agriculture_and_farming_id TEXT := gen_random_uuid()::text;
-  auto_services_and_motoring_id TEXT := gen_random_uuid()::text;
-  business_services_id TEXT := gen_random_uuid()::text;
-  computers_and_technology_id TEXT := gen_random_uuid()::text;
-  construction_and_tradesmen_id TEXT := gen_random_uuid()::text;
-  education_and_training_id TEXT := gen_random_uuid()::text;
-  entertainment_and_leisure_id TEXT := gen_random_uuid()::text;
-  events_and_weddings_id TEXT := gen_random_uuid()::text;
-  fashion_and_beauty_id TEXT := gen_random_uuid()::text;
-  finance_and_insurance_id TEXT := gen_random_uuid()::text;
-  food_and_dining_id TEXT := gen_random_uuid()::text;
-  health_and_medical_id TEXT := gen_random_uuid()::text;
-  home_services_id TEXT := gen_random_uuid()::text;
-  legal_services_id TEXT := gen_random_uuid()::text;
-  logistics_and_transport_id TEXT := gen_random_uuid()::text;
-  manufacturing_and_industry_id TEXT := gen_random_uuid()::text;
-  property_and_real_estate_id TEXT := gen_random_uuid()::text;
-  religious_and_community_id TEXT := gen_random_uuid()::text;
-  shopping_and_retail_id TEXT := gen_random_uuid()::text;
-  tourism_and_hospitality_id TEXT := gen_random_uuid()::text;
-  other_id TEXT := gen_random_uuid()::text;
+  agricultureandfarming_id TEXT;
+  auto_ervice_andmotoring_id TEXT;
+  bu_ine_ervice_id TEXT;
+  computer_andtechnology_id TEXT;
+  con_tructionandtrade_men_id TEXT;
+  educationandtraining_id TEXT;
+  entertainmentandlei_ure_id TEXT;
+  event_andwedding_id TEXT;
+  fa_hionandbeauty_id TEXT;
+  financeandin_urance_id TEXT;
+  foodanddining_id TEXT;
+  healthandmedical_id TEXT;
+  home_ervice_id TEXT;
+  legal_ervice_id TEXT;
+  logi_tic_andtran_port_id TEXT;
+  manufacturingandindu_try_id TEXT;
+  propertyandreale_tate_id TEXT;
+  religiou_andcommunity_id TEXT;
+  hoppingandretail_id TEXT;
+  touri_mandho_pitality_id TEXT;
+  other_id TEXT;
   biz_count INTEGER;
 BEGIN
 
   -- =============================================================
-  -- STEP 1: Insert NEW parent categories
+  -- STEP 1: Upsert parent categories (existing slugs get updated)
   -- =============================================================
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (agriculture_and_farming_id, 'Agriculture & Farming', 'agriculture-and-farming', NULL);
+  -- Agriculture & Farming
+  SELECT id INTO agricultureandfarming_id FROM categories WHERE slug = 'agricultureandfarming' AND parent_id IS NULL;
+  IF agricultureandfarming_id IS NULL THEN
+    agricultureandfarming_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (agricultureandfarming_id, 'Agriculture & Farming', 'agricultureandfarming', NULL);
+  ELSE
+    UPDATE categories SET name = 'Agriculture & Farming' WHERE id = agricultureandfarming_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (auto_services_and_motoring_id, 'Auto Services & Motoring', 'auto-services-and-motoring', NULL);
+  -- Auto Services & Motoring
+  SELECT id INTO auto_ervice_andmotoring_id FROM categories WHERE slug = 'auto-ervice-andmotoring' AND parent_id IS NULL;
+  IF auto_ervice_andmotoring_id IS NULL THEN
+    auto_ervice_andmotoring_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (auto_ervice_andmotoring_id, 'Auto Services & Motoring', 'auto-ervice-andmotoring', NULL);
+  ELSE
+    UPDATE categories SET name = 'Auto Services & Motoring' WHERE id = auto_ervice_andmotoring_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (business_services_id, 'Business Services', 'business-services', NULL);
+  -- Business Services
+  SELECT id INTO bu_ine_ervice_id FROM categories WHERE slug = 'bu-ine-ervice' AND parent_id IS NULL;
+  IF bu_ine_ervice_id IS NULL THEN
+    bu_ine_ervice_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (bu_ine_ervice_id, 'Business Services', 'bu-ine-ervice', NULL);
+  ELSE
+    UPDATE categories SET name = 'Business Services' WHERE id = bu_ine_ervice_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (computers_and_technology_id, 'Computers & Technology', 'computers-and-technology', NULL);
+  -- Computers & Technology
+  SELECT id INTO computer_andtechnology_id FROM categories WHERE slug = 'computer-andtechnology' AND parent_id IS NULL;
+  IF computer_andtechnology_id IS NULL THEN
+    computer_andtechnology_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (computer_andtechnology_id, 'Computers & Technology', 'computer-andtechnology', NULL);
+  ELSE
+    UPDATE categories SET name = 'Computers & Technology' WHERE id = computer_andtechnology_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (construction_and_tradesmen_id, 'Construction & Tradesmen', 'construction-and-tradesmen', NULL);
+  -- Construction & Tradesmen
+  SELECT id INTO con_tructionandtrade_men_id FROM categories WHERE slug = 'con-tructionandtrade-men' AND parent_id IS NULL;
+  IF con_tructionandtrade_men_id IS NULL THEN
+    con_tructionandtrade_men_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (con_tructionandtrade_men_id, 'Construction & Tradesmen', 'con-tructionandtrade-men', NULL);
+  ELSE
+    UPDATE categories SET name = 'Construction & Tradesmen' WHERE id = con_tructionandtrade_men_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (education_and_training_id, 'Education & Training', 'education-and-training', NULL);
+  -- Education & Training
+  SELECT id INTO educationandtraining_id FROM categories WHERE slug = 'educationandtraining' AND parent_id IS NULL;
+  IF educationandtraining_id IS NULL THEN
+    educationandtraining_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (educationandtraining_id, 'Education & Training', 'educationandtraining', NULL);
+  ELSE
+    UPDATE categories SET name = 'Education & Training' WHERE id = educationandtraining_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (entertainment_and_leisure_id, 'Entertainment & Leisure', 'entertainment-and-leisure', NULL);
+  -- Entertainment & Leisure
+  SELECT id INTO entertainmentandlei_ure_id FROM categories WHERE slug = 'entertainmentandlei-ure' AND parent_id IS NULL;
+  IF entertainmentandlei_ure_id IS NULL THEN
+    entertainmentandlei_ure_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (entertainmentandlei_ure_id, 'Entertainment & Leisure', 'entertainmentandlei-ure', NULL);
+  ELSE
+    UPDATE categories SET name = 'Entertainment & Leisure' WHERE id = entertainmentandlei_ure_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (events_and_weddings_id, 'Events & Weddings', 'events-and-weddings', NULL);
+  -- Events & Weddings
+  SELECT id INTO event_andwedding_id FROM categories WHERE slug = 'event-andwedding' AND parent_id IS NULL;
+  IF event_andwedding_id IS NULL THEN
+    event_andwedding_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (event_andwedding_id, 'Events & Weddings', 'event-andwedding', NULL);
+  ELSE
+    UPDATE categories SET name = 'Events & Weddings' WHERE id = event_andwedding_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (fashion_and_beauty_id, 'Fashion & Beauty', 'fashion-and-beauty', NULL);
+  -- Fashion & Beauty
+  SELECT id INTO fa_hionandbeauty_id FROM categories WHERE slug = 'fa-hionandbeauty' AND parent_id IS NULL;
+  IF fa_hionandbeauty_id IS NULL THEN
+    fa_hionandbeauty_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (fa_hionandbeauty_id, 'Fashion & Beauty', 'fa-hionandbeauty', NULL);
+  ELSE
+    UPDATE categories SET name = 'Fashion & Beauty' WHERE id = fa_hionandbeauty_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (finance_and_insurance_id, 'Finance & Insurance', 'finance-and-insurance', NULL);
+  -- Finance & Insurance
+  SELECT id INTO financeandin_urance_id FROM categories WHERE slug = 'financeandin-urance' AND parent_id IS NULL;
+  IF financeandin_urance_id IS NULL THEN
+    financeandin_urance_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (financeandin_urance_id, 'Finance & Insurance', 'financeandin-urance', NULL);
+  ELSE
+    UPDATE categories SET name = 'Finance & Insurance' WHERE id = financeandin_urance_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (food_and_dining_id, 'Food & Dining', 'food-and-dining', NULL);
+  -- Food & Dining
+  SELECT id INTO foodanddining_id FROM categories WHERE slug = 'foodanddining' AND parent_id IS NULL;
+  IF foodanddining_id IS NULL THEN
+    foodanddining_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (foodanddining_id, 'Food & Dining', 'foodanddining', NULL);
+  ELSE
+    UPDATE categories SET name = 'Food & Dining' WHERE id = foodanddining_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (health_and_medical_id, 'Health & Medical', 'health-and-medical', NULL);
+  -- Health & Medical
+  SELECT id INTO healthandmedical_id FROM categories WHERE slug = 'healthandmedical' AND parent_id IS NULL;
+  IF healthandmedical_id IS NULL THEN
+    healthandmedical_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (healthandmedical_id, 'Health & Medical', 'healthandmedical', NULL);
+  ELSE
+    UPDATE categories SET name = 'Health & Medical' WHERE id = healthandmedical_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (home_services_id, 'Home Services', 'home-services', NULL);
+  -- Home Services
+  SELECT id INTO home_ervice_id FROM categories WHERE slug = 'home-ervice' AND parent_id IS NULL;
+  IF home_ervice_id IS NULL THEN
+    home_ervice_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (home_ervice_id, 'Home Services', 'home-ervice', NULL);
+  ELSE
+    UPDATE categories SET name = 'Home Services' WHERE id = home_ervice_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (legal_services_id, 'Legal Services', 'legal-services', NULL);
+  -- Legal Services
+  SELECT id INTO legal_ervice_id FROM categories WHERE slug = 'legal-ervice' AND parent_id IS NULL;
+  IF legal_ervice_id IS NULL THEN
+    legal_ervice_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (legal_ervice_id, 'Legal Services', 'legal-ervice', NULL);
+  ELSE
+    UPDATE categories SET name = 'Legal Services' WHERE id = legal_ervice_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (logistics_and_transport_id, 'Logistics & Transport', 'logistics-and-transport', NULL);
+  -- Logistics & Transport
+  SELECT id INTO logi_tic_andtran_port_id FROM categories WHERE slug = 'logi-tic-andtran-port' AND parent_id IS NULL;
+  IF logi_tic_andtran_port_id IS NULL THEN
+    logi_tic_andtran_port_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (logi_tic_andtran_port_id, 'Logistics & Transport', 'logi-tic-andtran-port', NULL);
+  ELSE
+    UPDATE categories SET name = 'Logistics & Transport' WHERE id = logi_tic_andtran_port_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (manufacturing_and_industry_id, 'Manufacturing & Industry', 'manufacturing-and-industry', NULL);
+  -- Manufacturing & Industry
+  SELECT id INTO manufacturingandindu_try_id FROM categories WHERE slug = 'manufacturingandindu-try' AND parent_id IS NULL;
+  IF manufacturingandindu_try_id IS NULL THEN
+    manufacturingandindu_try_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (manufacturingandindu_try_id, 'Manufacturing & Industry', 'manufacturingandindu-try', NULL);
+  ELSE
+    UPDATE categories SET name = 'Manufacturing & Industry' WHERE id = manufacturingandindu_try_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (property_and_real_estate_id, 'Property & Real Estate', 'property-and-real-estate', NULL);
+  -- Property & Real Estate
+  SELECT id INTO propertyandreale_tate_id FROM categories WHERE slug = 'propertyandreale-tate' AND parent_id IS NULL;
+  IF propertyandreale_tate_id IS NULL THEN
+    propertyandreale_tate_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (propertyandreale_tate_id, 'Property & Real Estate', 'propertyandreale-tate', NULL);
+  ELSE
+    UPDATE categories SET name = 'Property & Real Estate' WHERE id = propertyandreale_tate_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (religious_and_community_id, 'Religious & Community', 'religious-and-community', NULL);
+  -- Religious & Community
+  SELECT id INTO religiou_andcommunity_id FROM categories WHERE slug = 'religiou-andcommunity' AND parent_id IS NULL;
+  IF religiou_andcommunity_id IS NULL THEN
+    religiou_andcommunity_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (religiou_andcommunity_id, 'Religious & Community', 'religiou-andcommunity', NULL);
+  ELSE
+    UPDATE categories SET name = 'Religious & Community' WHERE id = religiou_andcommunity_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (shopping_and_retail_id, 'Shopping & Retail', 'shopping-and-retail', NULL);
+  -- Shopping & Retail
+  SELECT id INTO hoppingandretail_id FROM categories WHERE slug = 'hoppingandretail' AND parent_id IS NULL;
+  IF hoppingandretail_id IS NULL THEN
+    hoppingandretail_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (hoppingandretail_id, 'Shopping & Retail', 'hoppingandretail', NULL);
+  ELSE
+    UPDATE categories SET name = 'Shopping & Retail' WHERE id = hoppingandretail_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (tourism_and_hospitality_id, 'Tourism & Hospitality', 'tourism-and-hospitality', NULL);
+  -- Tourism & Hospitality
+  SELECT id INTO touri_mandho_pitality_id FROM categories WHERE slug = 'touri-mandho-pitality' AND parent_id IS NULL;
+  IF touri_mandho_pitality_id IS NULL THEN
+    touri_mandho_pitality_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (touri_mandho_pitality_id, 'Tourism & Hospitality', 'touri-mandho-pitality', NULL);
+  ELSE
+    UPDATE categories SET name = 'Tourism & Hospitality' WHERE id = touri_mandho_pitality_id;
+  END IF;
 
-  INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (other_id, 'Other', 'other', NULL);
+  -- Other
+  SELECT id INTO other_id FROM categories WHERE slug = 'other' AND parent_id IS NULL;
+  IF other_id IS NULL THEN
+    other_id := gen_random_uuid()::text;
+    INSERT INTO categories (id, name, slug, parent_id)
+    VALUES (other_id, 'Other', 'other', NULL);
+  ELSE
+    UPDATE categories SET name = 'Other' WHERE id = other_id;
+  END IF;
 
   -- =============================================================
-  -- STEP 2: Remap existing businesses to new categories
+  -- STEP 2: Remap existing businesses to new parent categories
   -- =============================================================
   SELECT COUNT(*) INTO biz_count FROM businesses;
 
@@ -144,23 +290,23 @@ BEGIN
     UPDATE businesses
     SET category_id = other_id
     WHERE category_id NOT IN (
-      agriculture_and_farming_id, auto_services_and_motoring_id, business_services_id, computers_and_technology_id, construction_and_tradesmen_id, education_and_training_id, entertainment_and_leisure_id, events_and_weddings_id, fashion_and_beauty_id, finance_and_insurance_id, food_and_dining_id, health_and_medical_id, home_services_id, legal_services_id, logistics_and_transport_id, manufacturing_and_industry_id, property_and_real_estate_id, religious_and_community_id, shopping_and_retail_id, tourism_and_hospitality_id, other_id
+      agricultureandfarming_id, auto_ervice_andmotoring_id, bu_ine_ervice_id, computer_andtechnology_id, con_tructionandtrade_men_id, educationandtraining_id, entertainmentandlei_ure_id, event_andwedding_id, fa_hionandbeauty_id, financeandin_urance_id, foodanddining_id, healthandmedical_id, home_ervice_id, legal_ervice_id, logi_tic_andtran_port_id, manufacturingandindu_try_id, propertyandreale_tate_id, religiou_andcommunity_id, hoppingandretail_id, touri_mandho_pitality_id, other_id
     );
 
     DROP TABLE _cat_map;
   END IF;
 
   -- =============================================================
-  -- STEP 3: Delete OLD categories
+  -- STEP 3: Delete OLD subcategories and orphaned parent categories
   -- =============================================================
-  -- Delete old subcategories first
+  -- Delete old subcategories (those whose parent is NOT one of our new parents)
   DELETE FROM categories WHERE parent_id IS NOT NULL AND parent_id NOT IN (
-    agriculture_and_farming_id, auto_services_and_motoring_id, business_services_id, computers_and_technology_id, construction_and_tradesmen_id, education_and_training_id, entertainment_and_leisure_id, events_and_weddings_id, fashion_and_beauty_id, finance_and_insurance_id, food_and_dining_id, health_and_medical_id, home_services_id, legal_services_id, logistics_and_transport_id, manufacturing_and_industry_id, property_and_real_estate_id, religious_and_community_id, shopping_and_retail_id, tourism_and_hospitality_id, other_id
+    agricultureandfarming_id, auto_ervice_andmotoring_id, bu_ine_ervice_id, computer_andtechnology_id, con_tructionandtrade_men_id, educationandtraining_id, entertainmentandlei_ure_id, event_andwedding_id, fa_hionandbeauty_id, financeandin_urance_id, foodanddining_id, healthandmedical_id, home_ervice_id, legal_ervice_id, logi_tic_andtran_port_id, manufacturingandindu_try_id, propertyandreale_tate_id, religiou_andcommunity_id, hoppingandretail_id, touri_mandho_pitality_id, other_id
   );
 
-  -- Delete old parent categories
+  -- Delete old parent categories that are NOT in our new set
   DELETE FROM categories WHERE parent_id IS NULL AND id NOT IN (
-    agriculture_and_farming_id, auto_services_and_motoring_id, business_services_id, computers_and_technology_id, construction_and_tradesmen_id, education_and_training_id, entertainment_and_leisure_id, events_and_weddings_id, fashion_and_beauty_id, finance_and_insurance_id, food_and_dining_id, health_and_medical_id, home_services_id, legal_services_id, logistics_and_transport_id, manufacturing_and_industry_id, property_and_real_estate_id, religious_and_community_id, shopping_and_retail_id, tourism_and_hospitality_id, other_id
+    agricultureandfarming_id, auto_ervice_andmotoring_id, bu_ine_ervice_id, computer_andtechnology_id, con_tructionandtrade_men_id, educationandtraining_id, entertainmentandlei_ure_id, event_andwedding_id, fa_hionandbeauty_id, financeandin_urance_id, foodanddining_id, healthandmedical_id, home_ervice_id, legal_ervice_id, logi_tic_andtran_port_id, manufacturingandindu_try_id, propertyandreale_tate_id, religiou_andcommunity_id, hoppingandretail_id, touri_mandho_pitality_id, other_id
   );
 
   -- =============================================================
@@ -168,428 +314,622 @@ BEGIN
   -- =============================================================
   -- Agriculture & Farming
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Agro-chemicals', 'agro-chemicals', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Agro-chemicals', 'agro-chemical', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Crop Farming', 'crop-farming', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Crop Farming', 'cropfarming', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Farm Equipment', 'farm-equipment', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Farm Equipment', 'farmequipment', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Farm Produce', 'farm-produce', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Farm Produce', 'farmproduce', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Fish Farming', 'fish-farming', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Fish Farming', 'fi-hfarming', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Fisheries', 'fisheries', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Fisheries', 'fi-herie', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Livestock', 'livestock', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Livestock', 'live-tock', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Poultry', 'poultry', agriculture_and_farming_id);
+  VALUES (gen_random_uuid()::text, 'Poultry', 'poultry', agricultureandfarming_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Auto Services & Motoring
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Auto Electricians', 'auto-electricians', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Auto Electricians', 'autoelectrician', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Auto Parts & Accessories', 'auto-parts-and-accessories', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Auto Parts & Accessories', 'autopart-andacce-orie', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Car Rental', 'car-rental', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Car Rental', 'carrental', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Car Wash', 'car-wash', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Car Wash', 'carwa-h', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Driving Schools', 'auto-driving-schools', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Driving Schools', 'auto-driving-chool', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Mechanics', 'mechanics', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Mechanics', 'mechanic', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Panel Beaters', 'panel-beaters', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Panel Beaters', 'panelbeater', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Petrol Stations', 'petrol-stations', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Petrol Stations', 'petrol-tation', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Towing Services', 'towing-services', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Towing Services', 'towing-ervice', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Tyre Dealers', 'tyre-dealers', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Tyre Dealers', 'tyredealer', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Vehicle Sales', 'vehicle-sales', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Vehicle Sales', 'vehicle-ale', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Vulcanizers', 'vulcanizers', auto_services_and_motoring_id);
+  VALUES (gen_random_uuid()::text, 'Vulcanizers', 'vulcanizer', auto_ervice_andmotoring_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Business Services
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Advertising & Marketing', 'advertising-and-marketing', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Advertising & Marketing', 'adverti-ingandmarketing', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Consultants', 'consultants', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Consultants', 'con-ultant', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Courier & Delivery', 'courier-and-delivery', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Courier & Delivery', 'courieranddelivery', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Dispatch Riders', 'business-dispatch-riders', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Dispatch Riders', 'bu-di-patchrider', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Human Resources', 'human-resources', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Human Resources', 'humanre-ource', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Office Services', 'office-services', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Office Services', 'office-ervice', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Printing & Branding', 'printing-and-branding', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Printing & Branding', 'printingandbranding', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Public Relations', 'public-relations', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Public Relations', 'publicrelation', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Signage & Banners', 'signage-and-banners', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Signage & Banners', 'ignageandbanner', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Training & Development', 'training-and-development', business_services_id);
+  VALUES (gen_random_uuid()::text, 'Training & Development', 'traininganddevelopment', bu_ine_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Computers & Technology
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Apps & Software', 'apps-and-software', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Apps & Software', 'app-and-oftware', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'CCTV & Security Systems', 'cctv-and-security-systems', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'CCTV & Security Systems', 'cctvand-ecurity-y-tem', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Cloud & Hosting', 'cloud-and-hosting', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Cloud & Hosting', 'cloudandho-ting', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Computer Repair', 'computer-repair', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Computer Repair', 'computerrepair', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Computer Training', 'computers-computer-training', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Computer Training', 'computer-computertraining', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Cyber Security', 'cyber-security', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Cyber Security', 'cyber-ecurity', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'FinTech', 'fintech', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'FinTech', 'fintech', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Internet Service Providers', 'internet-service-providers', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Internet Service Providers', 'internet-erviceprovider', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Networking', 'networking', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Networking', 'networking', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Phone Repair', 'phone-repair', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Phone Repair', 'phonerepair', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'POS Services', 'pos-services', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'POS Services', 'po-ervice', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Web Design & Development', 'web-design-and-development', computers_and_technology_id);
+  VALUES (gen_random_uuid()::text, 'Web Design & Development', 'webde-ignanddevelopment', computer_andtechnology_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Construction & Tradesmen
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Aluminium & Glass', 'aluminium-and-glass', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Aluminium & Glass', 'aluminiumandgla', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Architectural Services', 'architectural-services', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Architectural Services', 'architectural-ervice', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Block & Bricks', 'block-and-bricks', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Block & Bricks', 'blockandbrick', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Building Materials', 'building-materials', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Building Materials', 'buildingmaterial', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Carpentry', 'carpentry', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Carpentry', 'carpentry', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Concrete & Paving', 'concrete-and-paving', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Concrete & Paving', 'concreteandpaving', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Contractors', 'contractors', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Contractors', 'contractor', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Decorators & Painters', 'decorators-and-painters', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Decorators & Painters', 'decorator-andpainter', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Electrical Installation', 'electrical-installation', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Electrical Installation', 'electricalin-tallation', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Plumbers', 'construction-plumbers', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Plumbers', 'con-plumber', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Roofing', 'roofing', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Roofing', 'roofing', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Tiling', 'tiling', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Tiling', 'tiling', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Welding & Fabrication', 'welding-and-fabrication', construction_and_tradesmen_id);
+  VALUES (gen_random_uuid()::text, 'Welding & Fabrication', 'weldingandfabrication', con_tructionandtrade_men_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Education & Training
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'After School Programs', 'after-school-programs', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'After School Programs', 'after-choolprogram', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Computer Training', 'education-computer-training', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Computer Training', 'educationandtraining-computertraining', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Crèches & Daycare', 'creches-and-daycare', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Crèches & Daycare', 'creche-anddaycare', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Driving Schools', 'education-driving-schools', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Driving Schools', 'educationandtraining-driving-chool', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Language Schools', 'language-schools', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Language Schools', 'language-chool', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Lesson Teachers & Tutoring', 'lesson-teachers-and-tutoring', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Lesson Teachers & Tutoring', 'le-onteacher-andtutoring', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Schools & Colleges', 'schools-and-colleges', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Schools & Colleges', 'chool-andcollege', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Universities', 'universities', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Universities', 'univer-itie', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Vocational Training', 'vocational-training', education_and_training_id);
+  VALUES (gen_random_uuid()::text, 'Vocational Training', 'vocationaltraining', educationandtraining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Entertainment & Leisure
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Amusement & Game Centres', 'amusement-and-game-centres', entertainment_and_leisure_id);
+  VALUES (gen_random_uuid()::text, 'Amusement & Game Centres', 'amu-ementandgamecentre', entertainmentandlei_ure_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Arts & Crafts', 'arts-and-crafts', entertainment_and_leisure_id);
+  VALUES (gen_random_uuid()::text, 'Arts & Crafts', 'art-andcraft', entertainmentandlei_ure_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Cinemas', 'cinemas', entertainment_and_leisure_id);
+  VALUES (gen_random_uuid()::text, 'Cinemas', 'cinema', entertainmentandlei_ure_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Clubs & Lounges', 'clubs-and-lounges', entertainment_and_leisure_id);
+  VALUES (gen_random_uuid()::text, 'Clubs & Lounges', 'club-andlounge', entertainmentandlei_ure_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Music & DJs', 'music-and-djs', entertainment_and_leisure_id);
+  VALUES (gen_random_uuid()::text, 'Music & DJs', 'mu-icanddj', entertainmentandlei_ure_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Recreation & Sports', 'recreation-and-sports', entertainment_and_leisure_id);
+  VALUES (gen_random_uuid()::text, 'Recreation & Sports', 'recreationand-port', entertainmentandlei_ure_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Streaming & Content', 'streaming-and-content', entertainment_and_leisure_id);
+  VALUES (gen_random_uuid()::text, 'Streaming & Content', 'treamingandcontent', entertainmentandlei_ure_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Events & Weddings
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Caterers', 'caterers', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Caterers', 'caterer', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Decorators', 'decorators', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Decorators', 'decorator', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'DJs & MCs', 'djs-and-mcs', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'DJs & MCs', 'dj-andmc', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Event Equipment Rental', 'event-equipment-rental', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Event Equipment Rental', 'eventequipmentrental', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Event Planners', 'event-planners', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Event Planners', 'eventplanner', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Photographers', 'photographers', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Photographers', 'photographer', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Venues & Event Halls', 'venues-and-event-halls', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Venues & Event Halls', 'venue-andeventhall', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Videographers', 'videographers', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Videographers', 'videographer', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Wedding Services', 'wedding-services', events_and_weddings_id);
+  VALUES (gen_random_uuid()::text, 'Wedding Services', 'wedding-ervice', event_andwedding_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Fashion & Beauty
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Barber Shops', 'barber-shops', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Barber Shops', 'barber-hop', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Beauty Products', 'beauty-products', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Beauty Products', 'beautyproduct', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Cosmetics', 'cosmetics', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Cosmetics', 'co-metic', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Fabric Stores', 'fabric-stores', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Fabric Stores', 'fabric-tore', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Fashion Designers', 'fashion-designers', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Fashion Designers', 'fa-hionde-igner', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Hair Salons', 'hair-salons', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Hair Salons', 'hair-alon', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Jewellery', 'jewellery', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Jewellery', 'jewellery', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Makeup Artists', 'makeup-artists', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Makeup Artists', 'makeuparti-t', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Nail Studios', 'nail-studios', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Nail Studios', 'nail-tudio', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Shoe Makers', 'shoe-makers', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Shoe Makers', 'hoemaker', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Tailors & Alterations', 'tailors-and-alterations', fashion_and_beauty_id);
+  VALUES (gen_random_uuid()::text, 'Tailors & Alterations', 'tailor-andalteration', fa_hionandbeauty_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Finance & Insurance
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Accountants & Auditors', 'accountants-and-auditors', finance_and_insurance_id);
+  VALUES (gen_random_uuid()::text, 'Accountants & Auditors', 'accountant-andauditor', financeandin_urance_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Banks & Microfinance', 'banks-and-microfinance', finance_and_insurance_id);
+  VALUES (gen_random_uuid()::text, 'Banks & Microfinance', 'bank-andmicrofinance', financeandin_urance_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Crowdfunding & Investment', 'crowdfunding-and-investment', finance_and_insurance_id);
+  VALUES (gen_random_uuid()::text, 'Crowdfunding & Investment', 'crowdfundingandinve-tment', financeandin_urance_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Insurance Agents', 'insurance-agents', finance_and_insurance_id);
+  VALUES (gen_random_uuid()::text, 'Insurance Agents', 'in-uranceagent', financeandin_urance_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Mobile Money & POS', 'mobile-money-and-pos', finance_and_insurance_id);
+  VALUES (gen_random_uuid()::text, 'Mobile Money & POS', 'mobilemoneyandpo', financeandin_urance_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Payroll Services', 'payroll-services', finance_and_insurance_id);
+  VALUES (gen_random_uuid()::text, 'Payroll Services', 'payroll-ervice', financeandin_urance_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Tax Consultants', 'tax-consultants', finance_and_insurance_id);
+  VALUES (gen_random_uuid()::text, 'Tax Consultants', 'taxcon-ultant', financeandin_urance_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Food & Dining
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Bakeries', 'bakeries', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Bakeries', 'bakerie', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Cafes & Coffee Shops', 'cafes-and-coffee-shops', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Cafes & Coffee Shops', 'cafe-andcoffee-hop', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Catering Services', 'catering-services', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Catering Services', 'catering-ervice', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Fast Food & Takeaway', 'fast-food-and-takeaway', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Fast Food & Takeaway', 'fa-tfoodandtakeaway', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Food Manufacturing', 'food-manufacturing', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Food Manufacturing', 'foodmanufacturing', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Food Vendors & Bukka', 'food-vendors-and-bukka', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Food Vendors & Bukka', 'foodvendor-andbukka', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Restaurants', 'restaurants', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Restaurants', 're-taurant', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Suya & Grills', 'suya-and-grills', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Suya & Grills', 'uyaandgrill', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Supermarkets & Provision Stores', 'supermarkets-and-provision-stores', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Supermarkets & Provision Stores', 'upermarket-andprovi-ion-tore', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Wine & Drinks', 'wine-and-drinks', food_and_dining_id);
+  VALUES (gen_random_uuid()::text, 'Wine & Drinks', 'wineanddrink', foodanddining_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Health & Medical
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Clinics & Hospitals', 'clinics-and-hospitals', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Clinics & Hospitals', 'clinic-andho-pital', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Dentists', 'dentists', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Dentists', 'denti-t', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Diagnostics & Labs', 'diagnostics-and-labs', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Diagnostics & Labs', 'diagno-tic-andlab', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Doctors', 'doctors', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Doctors', 'doctor', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Gyms & Fitness', 'gyms-and-fitness', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Gyms & Fitness', 'gym-andfitne', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Mental Health', 'mental-health', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Mental Health', 'mentalhealth', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Nursing & Home Care', 'nursing-and-home-care', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Nursing & Home Care', 'nur-ingandhomecare', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Opticians', 'opticians', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Opticians', 'optician', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Pharmacies', 'pharmacies', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Pharmacies', 'pharmacie', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Spa & Massage', 'spa-and-massage', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Spa & Massage', 'paandma-age', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Traditional & Alternative Medicine', 'traditional-and-alternative-medicine', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Traditional & Alternative Medicine', 'traditionalandalternativemedicine', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Veterinary', 'veterinary', health_and_medical_id);
+  VALUES (gen_random_uuid()::text, 'Veterinary', 'veterinary', healthandmedical_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Home Services
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'AC Repair & Installation', 'ac-repair-and-installation', home_services_id);
+  VALUES (gen_random_uuid()::text, 'AC Repair & Installation', 'acrepairandin-tallation', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Cleaners & Housekeeping', 'cleaners-and-housekeeping', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Cleaners & Housekeeping', 'cleaner-andhou-ekeeping', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Electricians', 'electricians', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Electricians', 'electrician', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Fumigation & Pest Control', 'fumigation-and-pest-control', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Fumigation & Pest Control', 'fumigationandpe-tcontrol', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Gardeners & Landscaping', 'gardeners-and-landscaping', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Gardeners & Landscaping', 'gardener-andland-caping', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Interior Design', 'interior-design', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Interior Design', 'interiorde-ign', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Laundry & Dry Cleaning', 'laundry-and-dry-cleaning', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Laundry & Dry Cleaning', 'laundryanddrycleaning', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Locksmiths', 'locksmiths', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Locksmiths', 'lock-mith', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Painters', 'painters', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Painters', 'painter', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Plumbers', 'home-plumbers', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Plumbers', 'home-plumber', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Waste Disposal', 'waste-disposal', home_services_id);
+  VALUES (gen_random_uuid()::text, 'Waste Disposal', 'wa-tedi-po-al', home_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Legal Services
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Corporate Law', 'corporate-law', legal_services_id);
+  VALUES (gen_random_uuid()::text, 'Corporate Law', 'corporatelaw', legal_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Family Law', 'family-law', legal_services_id);
+  VALUES (gen_random_uuid()::text, 'Family Law', 'familylaw', legal_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Immigration & Visa', 'immigration-and-visa', legal_services_id);
+  VALUES (gen_random_uuid()::text, 'Immigration & Visa', 'immigrationandvi-a', legal_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Lawyers & Solicitors', 'lawyers-and-solicitors', legal_services_id);
+  VALUES (gen_random_uuid()::text, 'Lawyers & Solicitors', 'lawyer-and-olicitor', legal_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Notary Public', 'notary-public', legal_services_id);
+  VALUES (gen_random_uuid()::text, 'Notary Public', 'notarypublic', legal_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Property Law', 'property-law', legal_services_id);
+  VALUES (gen_random_uuid()::text, 'Property Law', 'propertylaw', legal_ervice_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Logistics & Transport
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Air Freight', 'air-freight', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Air Freight', 'airfreight', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Bus & Public Transport', 'bus-and-public-transport', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Bus & Public Transport', 'bu-andpublictran-port', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Cargo & Shipping', 'cargo-and-shipping', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Cargo & Shipping', 'cargoand-hipping', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Courier Services', 'courier-services', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Courier Services', 'courier-ervice', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Dispatch Riders', 'logistics-dispatch-riders', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Dispatch Riders', 'logi-di-patchrider', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Haulage & Trucking', 'haulage-and-trucking', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Haulage & Trucking', 'haulageandtrucking', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Moving & Relocation', 'moving-and-relocation', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Moving & Relocation', 'movingandrelocation', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Taxis & Ride-Hailing', 'taxis-and-ride-hailing', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Taxis & Ride-Hailing', 'taxi-andride-hailing', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Warehousing', 'warehousing', logistics_and_transport_id);
+  VALUES (gen_random_uuid()::text, 'Warehousing', 'warehou-ing', logi_tic_andtran_port_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Manufacturing & Industry
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Chemicals', 'chemicals', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Chemicals', 'chemical', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Electrical Equipment', 'electrical-equipment', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Electrical Equipment', 'electricalequipment', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Energy & Power', 'energy-and-power', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Energy & Power', 'energyandpower', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Engineering Services', 'engineering-services', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Engineering Services', 'engineering-ervice', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Food Processing', 'food-processing', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Food Processing', 'foodproce-ing', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Furniture Manufacturing', 'furniture-manufacturing', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Furniture Manufacturing', 'furnituremanufacturing', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Industrial Equipment', 'industrial-equipment', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Industrial Equipment', 'indu-trialequipment', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Oil & Gas', 'oil-and-gas', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Oil & Gas', 'oilandga', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Packaging', 'packaging', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Packaging', 'packaging', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Plastics & Rubber', 'plastics-and-rubber', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Plastics & Rubber', 'pla-tic-andrubber', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Steel & Metal Works', 'steel-and-metal-works', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Steel & Metal Works', 'teelandmetalwork', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Textiles', 'textiles', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Textiles', 'textile', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Water Treatment', 'water-treatment', manufacturing_and_industry_id);
+  VALUES (gen_random_uuid()::text, 'Water Treatment', 'watertreatment', manufacturingandindu_try_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Property & Real Estate
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Commercial Property', 'commercial-property', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Commercial Property', 'commercialproperty', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Coworking Spaces', 'coworking-spaces', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Coworking Spaces', 'coworking-pace', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Estate Agents', 'estate-agents', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Estate Agents', 'e-tateagent', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Facility Management', 'facility-management', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Facility Management', 'facilitymanagement', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Land Agents', 'land-agents', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Land Agents', 'landagent', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Property Development', 'property-development', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Property Development', 'propertydevelopment', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Property Management', 'property-management', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Property Management', 'propertymanagement', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Short-Let Apartments', 'short-let-apartments', property_and_real_estate_id);
+  VALUES (gen_random_uuid()::text, 'Short-Let Apartments', 'hort-letapartment', propertyandreale_tate_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Religious & Community
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Charity & NGOs', 'charity-and-ngos', religious_and_community_id);
+  VALUES (gen_random_uuid()::text, 'Charity & NGOs', 'charityandngo', religiou_andcommunity_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Churches', 'churches', religious_and_community_id);
+  VALUES (gen_random_uuid()::text, 'Churches', 'churche', religiou_andcommunity_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Community Centres', 'community-centres', religious_and_community_id);
+  VALUES (gen_random_uuid()::text, 'Community Centres', 'communitycentre', religiou_andcommunity_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Counselling', 'counselling', religious_and_community_id);
+  VALUES (gen_random_uuid()::text, 'Counselling', 'coun-elling', religiou_andcommunity_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Mosques', 'mosques', religious_and_community_id);
+  VALUES (gen_random_uuid()::text, 'Mosques', 'mo-que', religiou_andcommunity_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Youth Organizations', 'youth-organizations', religious_and_community_id);
+  VALUES (gen_random_uuid()::text, 'Youth Organizations', 'youthorganization', religiou_andcommunity_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Shopping & Retail
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Baby & Kids Stores', 'baby-and-kids-stores', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Baby & Kids Stores', 'babyandkid-tore', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Books & Stationery', 'books-and-stationery', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Books & Stationery', 'book-and-tationery', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Clothing & Accessories', 'clothing-and-accessories', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Clothing & Accessories', 'clothingandacce-orie', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Electronics & Gadgets', 'electronics-and-gadgets', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Electronics & Gadgets', 'electronic-andgadget', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Gift Shops', 'gift-shops', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Gift Shops', 'gift-hop', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Hardware Stores', 'hardware-stores', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Hardware Stores', 'hardware-tore', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Home & Garden', 'home-and-garden', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Home & Garden', 'homeandgarden', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Mobile Phone Shops', 'mobile-phone-shops', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Mobile Phone Shops', 'mobilephone-hop', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Online Stores', 'online-stores', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Online Stores', 'online-tore', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Provision Stores', 'provision-stores', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Provision Stores', 'provi-ion-tore', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Supermarkets', 'supermarkets', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Supermarkets', 'upermarket', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Wholesale', 'wholesale', shopping_and_retail_id);
+  VALUES (gen_random_uuid()::text, 'Wholesale', 'whole-ale', hoppingandretail_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
   -- Tourism & Hospitality
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Apartments & Guest Houses', 'apartments-and-guest-houses', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Apartments & Guest Houses', 'apartment-andgue-thou-e', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Attractions & Sightseeing', 'attractions-and-sightseeing', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Attractions & Sightseeing', 'attraction-and-ight-eeing', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Bed & Breakfast', 'bed-and-breakfast', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Bed & Breakfast', 'bedandbreakfa-t', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Holiday Homes', 'holiday-homes', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Holiday Homes', 'holidayhome', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Hotels & Resorts', 'hotels-and-resorts', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Hotels & Resorts', 'hotel-andre-ort', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Tour Operators', 'tour-operators', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Tour Operators', 'touroperator', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Travel Agents', 'travel-agents', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Travel Agents', 'travelagent', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
   INSERT INTO categories (id, name, slug, parent_id)
-  VALUES (gen_random_uuid()::text, 'Visa Services', 'visa-services', tourism_and_hospitality_id);
+  VALUES (gen_random_uuid()::text, 'Visa Services', 'vi-a-ervice', touri_mandho_pitality_id)
+  ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name, parent_id = EXCLUDED.parent_id;
 
+  RAISE NOTICE 'Category taxonomy upgrade complete!';
 END $$;
