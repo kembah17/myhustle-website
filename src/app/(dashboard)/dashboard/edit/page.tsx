@@ -27,6 +27,7 @@ export default function EditBusinessPage() {
   const { user, loading: authLoading } = useAuth()
   const [business, setBusiness] = useState<Business | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
+  const [subcategories, setSubcategories] = useState<Category[]>([])
   const [areas, setAreas] = useState<AreaWithCity[]>([])
   const [hours, setHours] = useState<HourForm[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,7 +43,8 @@ export default function EditBusinessPage() {
     name: '',
     tagline: '',
     description: '',
-    category_id: '',
+    parent_category_id: '',
+    subcategory_id: '',
     area_id: '',
     address: '',
     phone: '',
@@ -51,6 +53,22 @@ export default function EditBusinessPage() {
     website: '',
     cover_photo_url: '',
   })
+
+  // Fetch subcategories when parent category changes
+  useEffect(() => {
+    if (!form.parent_category_id) {
+      setSubcategories([])
+      return
+    }
+    supabase
+      .from('categories')
+      .select('*')
+      .eq('parent_id', form.parent_category_id)
+      .order('name')
+      .then(({ data }) => {
+        setSubcategories(data || [])
+      })
+  }, [form.parent_category_id, supabase])
 
   const fetchData = useCallback(async () => {
     if (!user) return
@@ -72,11 +90,29 @@ export default function EditBusinessPage() {
     setCategories(catRes.data || [])
     setAreas((areaRes.data || []) as AreaWithCity[])
 
+    // Determine if current category_id is a parent or subcategory
+    let parentCatId = biz.category_id || ''
+    let subCatId = ''
+
+    if (biz.category_id) {
+      const { data: currentCat } = await supabase
+        .from('categories')
+        .select('id, parent_id')
+        .eq('id', biz.category_id)
+        .maybeSingle()
+
+      if (currentCat?.parent_id) {
+        parentCatId = currentCat.parent_id
+        subCatId = currentCat.id
+      }
+    }
+
     setForm({
       name: biz.name || '',
       tagline: biz.tagline || '',
       description: biz.description || '',
-      category_id: biz.category_id || '',
+      parent_category_id: parentCatId,
+      subcategory_id: subCatId,
       area_id: biz.area_id || '',
       address: biz.address || '',
       phone: biz.phone || '',
@@ -127,7 +163,6 @@ export default function EditBusinessPage() {
     const file = e.target.files?.[0]
     if (!file || !business) return
 
-    // Validate file
     if (!file.type.startsWith('image/')) {
       setToast({ message: 'Please select an image file', type: 'error' })
       return
@@ -167,13 +202,16 @@ export default function EditBusinessPage() {
     if (!business) return
     setSaving(true)
 
+    // Use subcategory if selected, otherwise parent category
+    const resolvedCategoryId = form.subcategory_id || form.parent_category_id || null
+
     const { error } = await supabase
       .from('businesses')
       .update({
         name: form.name,
         tagline: form.tagline || null,
         description: form.description,
-        category_id: form.category_id || null,
+        category_id: resolvedCategoryId,
         area_id: form.area_id || null,
         address: form.address || null,
         phone: form.phone,
@@ -324,7 +362,7 @@ export default function EditBusinessPage() {
                 }
               }}
               maxLength={100}
-              placeholder="e.g. No.1 Screen Doctor in Lagos \ud83d\udcaf"
+              placeholder="e.g. Your catchy business slogan"
               className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
             />
             <div className="flex items-center justify-between mt-1">
@@ -335,14 +373,15 @@ export default function EditBusinessPage() {
             </div>
           </div>
 
+          {/* Category & Subcategory */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-hustle-dark mb-1">
                 Category <span className="text-red-500">*</span>
               </label>
               <select
-                value={form.category_id}
-                onChange={(e) => setForm(f => ({ ...f, category_id: e.target.value }))}
+                value={form.parent_category_id}
+                onChange={(e) => setForm(f => ({ ...f, parent_category_id: e.target.value, subcategory_id: '' }))}
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
               >
                 <option value="">Select category</option>
@@ -351,6 +390,45 @@ export default function EditBusinessPage() {
                 ))}
               </select>
             </div>
+            {subcategories.length > 0 ? (
+              <div>
+                <label className="block text-sm font-medium text-hustle-dark mb-1">
+                  Subcategory
+                </label>
+                <select
+                  value={form.subcategory_id}
+                  onChange={(e) => setForm(f => ({ ...f, subcategory_id: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                >
+                  <option value="">Select subcategory (optional)</option>
+                  {subcategories.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-hustle-dark mb-1">
+                  Area <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={form.area_id}
+                  onChange={(e) => setForm(f => ({ ...f, area_id: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+                >
+                  <option value="">Select area</option>
+                  {areas.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}{a.city ? ` - ${a.city.name}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Area - shown separately when subcategories are visible */}
+          {subcategories.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-hustle-dark mb-1">
                 Area <span className="text-red-500">*</span>
@@ -368,7 +446,7 @@ export default function EditBusinessPage() {
                 ))}
               </select>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-hustle-dark mb-1">Address</label>
