@@ -139,7 +139,7 @@ export default function PrivacyPolicyPage() {
       </p>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        9. Children&apos;s Privacy
+        9. Children's Privacy
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         MyHustle is not intended for use by individuals under the age of 18. We do not knowingly

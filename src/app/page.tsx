@@ -238,7 +238,7 @@ export default async function HomePage() {
               </div>
               <div className="font-heading text-lg font-bold text-hustle-dark mb-2">1. Send a WhatsApp Message</div>
               <p className="text-hustle-muted text-sm">
-                Tap the button below and tell us your business name. That&apos;s it — we&apos;ll take it from there.
+                Tap the button below and tell us your business name. That's it — we'll take it from there.
               </p>
             </div>
             <div className="text-center">

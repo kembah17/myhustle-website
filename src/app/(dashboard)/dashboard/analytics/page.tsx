@@ -111,7 +111,7 @@ function EmptyState({ businessSlug }: { businessSlug: string | null }) {
         Your analytics will appear here
       </h2>
       <p className="text-hustle-muted mb-8 max-w-md mx-auto">
-        Once customers start finding your business, you&apos;ll see views, clicks,
+        Once customers start finding your business, you'll see views, clicks,
         and bookings data here. Share your listing to get started!
       </p>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

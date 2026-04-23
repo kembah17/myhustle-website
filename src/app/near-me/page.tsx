@@ -181,10 +181,10 @@ export default async function NearMePage() {
         {/* Bottom CTA */}
         <div className="mt-12 text-center bg-white rounded-xl p-8 shadow-sm border border-gray-100">
           <h2 className="font-heading text-xl font-semibold text-hustle-dark mb-2">
-            Don&apos;t see your area?
+            Don't see your area?
           </h2>
           <p className="text-hustle-muted mb-4">
-            We&apos;re expanding across Nigeria. List your business and help us grow your area.
+            We're expanding across Nigeria. List your business and help us grow your area.
           </p>
           <a
             href="/list-your-business"

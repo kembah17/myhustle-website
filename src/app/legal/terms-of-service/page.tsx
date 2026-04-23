@@ -97,7 +97,7 @@ export default function TermsOfServicePage() {
         <li>Subscriptions auto-renew at the end of each billing period unless cancelled</li>
         <li>You may cancel your subscription at any time through your dashboard</li>
         <li>No refunds are provided for partial billing periods</li>
-        <li>We reserve the right to change pricing with 30 days&apos; notice</li>
+        <li>We reserve the right to change pricing with 30 days' notice</li>
         <li>Free listings remain available with limited features</li>
       </ul>
 
@@ -163,7 +163,7 @@ export default function TermsOfServicePage() {
         11. Changes to These Terms
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
-        We may update these Terms from time to time. We will provide at least 30 days&apos; notice
+        We may update these Terms from time to time. We will provide at least 30 days' notice
         of material changes via email to your registered address. Your continued use of MyHustle
         after the effective date of changes constitutes acceptance of the updated Terms.
       </p>

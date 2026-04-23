@@ -99,7 +99,7 @@ export default function CookiePolicyPage() {
         5. How to Manage Cookies
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
-        You can control and manage cookies through your browser settings. Here&apos;s how to do it
+        You can control and manage cookies through your browser settings. Here's how to do it
         in popular browsers:
       </p>
 
@@ -117,7 +117,7 @@ export default function CookiePolicyPage() {
       </h3>
       <ol className="list-decimal list-inside text-hustle-muted space-y-2 mb-4 ml-4">
         <li>Click the hamburger menu → Settings</li>
-        <li>Navigate to Privacy &amp; Security</li>
+        <li>Navigate to Privacy & Security</li>
         <li>Under Cookies and Site Data, choose your preferred settings</li>
       </ol>
 

@@ -248,7 +248,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
               No matches
             </h2>
             <p className="text-hustle-muted mb-8 max-w-md mx-auto">
-              We couldn&apos;t find what you&apos;re looking for. Try different words or browse by category below.
+              We couldn't find what you're looking for. Try different words or browse by category below.
             </p>
 
             {suggestedCategories.length > 0 && (

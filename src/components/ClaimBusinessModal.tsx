@@ -223,7 +223,7 @@ export default function ClaimBusinessModal({ businessId, businessName, isOpen, o
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
                   To claim this business, enter the phone number registered with the listing.
-                  We&apos;ll verify it matches our records.
+                  We'll verify it matches our records.
                 </p>
               </div>
 

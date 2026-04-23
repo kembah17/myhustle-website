@@ -97,7 +97,7 @@ export default function HelpPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
         <div className="text-center mb-10">
           <h1 className="font-heading text-3xl sm:text-4xl font-bold text-hustle-dark mb-3">
-            Help &amp; FAQ
+            Help & FAQ
           </h1>
           <p className="text-hustle-muted text-lg leading-relaxed max-w-xl mx-auto">
             Find answers to common questions about using MyHustle — whether you’re

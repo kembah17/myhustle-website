@@ -527,7 +527,7 @@ export default function VerificationPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-hustle-blue mt-0.5">5.</span>
-                    <span>Upon approval, you receive the &quot;Fully Verified&quot; badge</span>
+                    <span>Upon approval, you receive the "Fully Verified" badge</span>
                   </li>
                 </ul>
               </div>

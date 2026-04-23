@@ -83,7 +83,7 @@ export default function ListYourBusinessPage() {
               <span className="text-hustle-amber">MyHustle</span>
             </h1>
             <p className="text-xl md:text-2xl text-blue-200 mb-10">
-              Get found by thousands of customers searching for businesses like yours across Nigeria. It&apos;s free and takes less than 2 minutes.
+              Get found by thousands of customers searching for businesses like yours across Nigeria. It's free and takes less than 2 minutes.
             </p>
 
             {/* WhatsApp Primary CTA */}
@@ -105,7 +105,7 @@ export default function ListYourBusinessPage() {
                 <svg className="w-5 h-5" width="20" height="20" style={{width:'20px',height:'20px',maxWidth:'20px',maxHeight:'20px',flexShrink:0}} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
                 </svg>
-                Sign Up &amp; Use Web Form
+                Sign Up & Use Web Form
               </Link>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function ListYourBusinessPage() {
             How It Works
           </h2>
           <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
-            Getting listed on MyHustle via WhatsApp is simple. Here&apos;s the process:
+            Getting listed on MyHustle via WhatsApp is simple. Here's the process:
           </p>
 
           {/* Steps */}
@@ -141,15 +141,15 @@ export default function ListYourBusinessPage() {
             </div>
             <div className="text-center">
               <div className="w-14 h-14 bg-hustle-sunset text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">4</div>
-              <h3 className="font-heading font-bold text-hustle-dark mb-2">You&apos;re Live!</h3>
-              <p className="text-hustle-muted text-sm">Within 24 hours, we&apos;ll create your listing and send you a confirmation with a link to claim and manage it.</p>
+              <h3 className="font-heading font-bold text-hustle-dark mb-2">You're Live!</h3>
+              <p className="text-hustle-muted text-sm">Within 24 hours, we'll create your listing and send you a confirmation with a link to claim and manage it.</p>
             </div>
           </div>
 
           {/* WhatsApp Template Preview + CTA */}
           <div className="max-w-3xl mx-auto">
             <h3 className="font-heading text-xl font-bold text-center mb-6">
-              Here&apos;s What the Template Looks Like
+              Here's What the Template Looks Like
             </h3>
             <div className="bg-[#E5DDD5] rounded-2xl p-4 md:p-6 mb-8">
               {/* WhatsApp-style chat bubble */}
@@ -202,7 +202,7 @@ export default function ListYourBusinessPage() {
             What to Have Ready
           </h2>
           <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
-            Here&apos;s what the template asks for. Don&apos;t worry if you don&apos;t have everything — just fill in what you can and we&apos;ll work with you on the rest.
+            Here's what the template asks for. Don't worry if you don't have everything — just fill in what you can and we'll work with you on the rest.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {/* Business Details */}
@@ -285,7 +285,7 @@ export default function ListYourBusinessPage() {
             Why List on MyHustle?
           </h2>
           <p className="text-hustle-muted text-center mb-12 max-w-2xl mx-auto">
-            We&apos;re building the go-to place for people to find businesses across Nigeria. Here&apos;s what you get — for free.
+            We're building the go-to place for people to find businesses across Nigeria. Here's what you get — for free.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="bg-hustle-light rounded-2xl p-8 shadow-sm border border-gray-100">

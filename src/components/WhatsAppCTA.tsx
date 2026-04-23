@@ -47,7 +47,7 @@ export default function WhatsAppCTA({ variant = 'inline', className = '' }: What
     return (
       <div className={`${className}`}>
         <p className="text-blue-200 mb-4 text-lg">
-          Send us your business details via WhatsApp and we&apos;ll set up your listing within 24 hours
+          Send us your business details via WhatsApp and we'll set up your listing within 24 hours
         </p>
         <Link
           href={WHATSAPP_URL}

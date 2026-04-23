@@ -52,7 +52,7 @@ export default function SuggestWhatsApp({ type, context, className = '' }: Sugge
         {heading}
       </h3>
       <p className="text-sm text-hustle-muted mb-4">
-        Tell us what&apos;s missing — we&apos;ll add it within 24 hours
+        Tell us what's missing — we'll add it within 24 hours
       </p>
       <Link
         href={whatsappUrl}

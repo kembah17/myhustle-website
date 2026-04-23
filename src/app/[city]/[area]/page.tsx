@@ -174,7 +174,7 @@ export default async function AreaPage({ params }: PageProps) {
             Businesses in <span className="text-hustle-amber">{area.name}</span>
           </h1>
           <p className="text-blue-200 text-lg mt-3">
-            See what&apos;s happening in {area.name}
+            See what's happening in {area.name}
           </p>
           {area.description && (
             <p className="text-blue-300 mt-2 max-w-3xl">{area.description}</p>
@@ -195,7 +195,7 @@ export default async function AreaPage({ params }: PageProps) {
                 <p className="text-hustle-muted leading-relaxed">
                   {area.name} is a neighborhood in {city.name}{city.state ? `, ${city.state}` : ''}.
                   MyHustle is actively building our business directory here to help you discover
-                  local services, shops, and professionals. As businesses join, you&apos;ll find
+                  local services, shops, and professionals. As businesses join, you'll find
                   reviews, contact details, and booking options all in one place.
                 </p>
               </div>

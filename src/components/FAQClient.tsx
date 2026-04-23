@@ -235,7 +235,7 @@ export default function FAQClient() {
           Still have questions?
         </h3>
         <p className="text-hustle-muted text-sm mb-4">
-          Can&apos;t find what you&apos;re looking for? We&apos;re here to help.
+          Can't find what you're looking for? We're here to help.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a

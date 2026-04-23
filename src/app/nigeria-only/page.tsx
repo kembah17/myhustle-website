@@ -33,8 +33,8 @@ export default function NigeriaOnlyPage() {
             MyHustle is Currently Available in Nigeria Only
           </h1>
           <p className="font-body text-lg text-hustle-muted leading-relaxed">
-            We&apos;re building Nigeria&apos;s most trusted business directory.
-            We&apos;re expanding to other countries soon!
+            We're building Nigeria's most trusted business directory.
+            We're expanding to other countries soon!
           </p>
         </div>
 
@@ -76,7 +76,7 @@ export default function NigeriaOnlyPage() {
         {/* VPN Note */}
         <div className="rounded-lg bg-hustle-blue/5 border border-hustle-blue/10 p-4">
           <p className="font-body text-sm text-hustle-muted">
-            🔒 If you&apos;re in Nigeria and seeing this page, please try
+            🔒 If you're in Nigeria and seeing this page, please try
             disabling your VPN or proxy service.
           </p>
         </div>

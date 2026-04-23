@@ -50,10 +50,10 @@ export default function AcceptableUsePage() {
         <li><strong>Hate speech:</strong> Content that promotes hatred, violence, or discrimination based on ethnicity, religion, gender, disability, or any protected characteristic</li>
         <li><strong>Discriminatory content:</strong> Listings or reviews that discriminate against individuals or groups</li>
         <li><strong>False or misleading information:</strong> Deliberately inaccurate business details, fake reviews, or deceptive claims</li>
-        <li><strong>Copyrighted material:</strong> Photos, text, or other content used without the owner&apos;s permission</li>
+        <li><strong>Copyrighted material:</strong> Photos, text, or other content used without the owner's permission</li>
         <li><strong>Spam:</strong> Repetitive, irrelevant, or unsolicited promotional content</li>
         <li><strong>Malicious content:</strong> Links to malware, phishing sites, or other harmful resources</li>
-        <li><strong>Personal information:</strong> Publishing another person&apos;s private information without consent</li>
+        <li><strong>Personal information:</strong> Publishing another person's private information without consent</li>
       </ul>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
