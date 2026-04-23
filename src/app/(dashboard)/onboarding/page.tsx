@@ -17,6 +17,15 @@ const STEPS = ['Basics', 'Location & Contact', 'About', 'Photos', 'Review']
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const MAX_PHOTOS = 5
 const OTHER_CATEGORY_VALUE = '__other__'
+const DRAFT_KEY = 'myhustle_onboarding_draft'
+
+const STEP_HINTS = [
+  'Tell us your business name and what you do',
+  'Where are you located and how can customers reach you?',
+  'Describe your business in your own words',
+  'Add photos to attract more customers (optional)',
+  'Review everything and submit',
+]
 
 interface HourEntry {
   day: number
@@ -118,7 +127,10 @@ export default function OnboardingPage() {
   const [categorySuggestionSent, setCategorySuggestionSent] = useState(false)
   const [showHours, setShowHours] = useState(false)
   const [showOptionalContact, setShowOptionalContact] = useState(false)
-  const { user } = useAuth()
+  const [submitted, setSubmitted] = useState(false)
+  const [hasExistingBusiness, setHasExistingBusiness] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const supabase = createClient()
 
@@ -141,6 +153,74 @@ export default function OnboardingPage() {
       closed: i >= 6,
     })),
   })
+
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(DRAFT_KEY)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const { _step, ...fields } = parsed
+        setFormData(prev => ({ ...prev, ...fields }))
+        if (typeof _step === 'number' && _step >= 0 && _step <= 4) {
+          setStep(_step)
+        }
+        setDraftRestored(true)
+      } catch {
+        // Invalid draft, ignore
+      }
+    }
+  }, [])
+
+  // Save draft to localStorage on change (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...formData, _step: step }))
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [formData, step])
+
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY)
+    setDraftRestored(false)
+    setFormData({
+      name: '',
+      category_id: '',
+      subcategory_id: '',
+      customCategory: '',
+      area_id: '',
+      address: '',
+      phone: '',
+      whatsapp: '',
+      email: '',
+      website: '',
+      description: '',
+      hours: DAYS.map((_, i) => ({
+        day: i,
+        open_time: '09:00',
+        close_time: '17:00',
+        closed: i >= 6,
+      })),
+    })
+    setStep(0)
+    setTouched({})
+  }
+
+  // Check if user already has a business
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('businesses')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setHasExistingBusiness(true)
+          }
+        })
+    }
+  }, [user, supabase])
 
   useEffect(() => {
     if (user?.email && !formData.email) {
@@ -194,7 +274,7 @@ export default function OnboardingPage() {
       }))
     opts.push({
       value: OTHER_CATEGORY_VALUE,
-      label: '📦 Other / My category isn’t listed',
+      label: '\ud83d\udce6 Other / My category isn\'t listed',
       searchTerms: 'other not listed custom',
     })
     return opts
@@ -222,7 +302,7 @@ export default function OnboardingPage() {
       .map(a => {
         const cityName = a.city?.name || ''
         const stateName = a.city?.state || ''
-        const groupLabel = stateName ? `${stateName} — ${cityName}` : cityName || 'Other'
+        const groupLabel = stateName ? `${stateName} \u2014 ${cityName}` : cityName || 'Other'
         return {
           value: a.id,
           label: `${a.name}${cityName ? `, ${cityName}` : ''}${stateName ? ` (${stateName})` : ''}`,
@@ -487,24 +567,41 @@ export default function OnboardingPage() {
         setUploadingPhotos(false)
 
         if (photoErrors > 0 && photoErrors < photos.length) {
-          setToast({ message: `Listing created! ${photoErrors} photo(s) could not be uploaded — you can add them later from your dashboard.`, type: 'success' })
-          setTimeout(() => router.push('/dashboard'), 3000)
+          // Clear draft on partial success too - business was created
+          localStorage.removeItem(DRAFT_KEY)
+          setToast({ message: `Listing created! ${photoErrors} photo(s) could not be uploaded \u2014 you can add them later from your dashboard.`, type: 'success' })
+          setSubmitted(true)
           return
         } else if (photoErrors === photos.length) {
-          setToast({ message: 'Listing created! Photos could not be uploaded — you can add them later from your dashboard.', type: 'success' })
-          setTimeout(() => router.push('/dashboard'), 3000)
+          // Clear draft - business was created
+          localStorage.removeItem(DRAFT_KEY)
+          setToast({ message: 'Listing created! Photos could not be uploaded \u2014 you can add them later from your dashboard.', type: 'success' })
+          setSubmitted(true)
           return
         }
       }
 
-      const successMsg = isOther
-        ? 'Business listed successfully! Thanks for suggesting a new category — we’ll review it soon. Redirecting...'
-        : 'Business listed successfully! Redirecting...'
-      setToast({ message: successMsg, type: 'success' })
-      setTimeout(() => router.push('/dashboard'), 2500)
+      // Clear draft on successful submission
+      localStorage.removeItem(DRAFT_KEY)
+
+      if (isOther) {
+        setToast({ message: 'Thanks for suggesting a new category \u2014 we\'ll review it soon!', type: 'success' })
+      }
+      setSubmitted(true)
     } catch (err: unknown) {
       console.error('Submission error:', err)
-      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      let message = 'Something went wrong. Please try again.'
+      if (err instanceof Error) {
+        if (err.message.includes('row-level security') || err.message.includes('policy')) {
+          message = 'Permission error \u2014 please sign out and sign back in, then try again.'
+        } else if (err.message.includes('duplicate') || err.message.includes('unique')) {
+          message = 'A business with this name already exists. Please use a different name.'
+        } else if (err.message.includes('foreign key') || err.message.includes('category')) {
+          message = 'The selected category or area is no longer available. Please go back and select again.'
+        } else {
+          message = err.message
+        }
+      }
       setToast({ message, type: 'error' })
     } finally {
       setLoading(false)
@@ -513,15 +610,71 @@ export default function OnboardingPage() {
 
   const FieldError = ({ field }: { field: keyof FieldErrors }) => {
     if (!touched[field] || !errors[field]) return null
-    return <p className="text-xs text-red-500 mt-1 flex items-center gap-1">⚠️ {errors[field]}</p>
+    return <p className="text-xs text-red-500 mt-1 flex items-center gap-1">\u26a0\ufe0f {errors[field]}</p>
   }
 
+  // Loading state
   if (dataLoading) {
     return (
       <div className="min-h-screen bg-hustle-light flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-hustle-muted">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Auth guard: if not loading and no user, show sign-in prompt
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-hustle-light flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-6xl mb-4">\ud83d\udd12</div>
+          <h1 className="font-heading text-2xl font-bold text-hustle-dark mb-2">Sign In Required</h1>
+          <p className="text-hustle-muted mb-6">You need to be signed in to list your business on MyHustle.</p>
+          <Link href="/login" className="inline-block px-6 py-3 bg-hustle-blue text-white rounded-lg font-medium hover:bg-hustle-blue/90 transition-colors">
+            Sign In to Continue
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Existing business check: if user already has a business, show redirect
+  if (hasExistingBusiness) {
+    return (
+      <div className="min-h-screen bg-hustle-light flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-6xl mb-4">\u2705</div>
+          <h1 className="font-heading text-2xl font-bold text-hustle-dark mb-2">You Already Have a Business Listed!</h1>
+          <p className="text-hustle-muted mb-6">You can manage your existing listing from your dashboard.</p>
+          <Link href="/dashboard" className="inline-block px-6 py-3 bg-hustle-blue text-white rounded-lg font-medium hover:bg-hustle-blue/90 transition-colors">
+            Go to Dashboard \u2192
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // Success state: show full success screen after submission
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-hustle-light flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-6xl mb-4">\ud83c\udf89</div>
+          <h1 className="font-heading text-2xl font-bold text-hustle-dark mb-2">Your Business is Listed!</h1>
+          <p className="text-hustle-muted mb-6">
+            Congratulations! Your business is now live on MyHustle. You can manage your listing from your dashboard.
+          </p>
+          {categorySuggestionSent && (
+            <p className="text-sm text-hustle-muted mb-4 bg-hustle-light border border-gray-200 rounded-lg p-3">
+              \ud83d\udce6 Thanks for suggesting a new category \u2014 we&apos;ll review it and may add it as an official category soon!
+            </p>
+          )}
+          <Link href="/dashboard" className="inline-block px-6 py-3 bg-hustle-blue text-white rounded-lg font-medium hover:bg-hustle-blue/90 transition-colors">
+            Go to Dashboard \u2192
+          </Link>
         </div>
       </div>
     )
@@ -549,9 +702,31 @@ export default function OnboardingPage() {
           <p className="text-hustle-muted">Complete these steps to get your business listed on MyHustle</p>
         </div>
 
-        <div className="mb-8">
+        {/* Draft restored indicator */}
+        {draftRestored && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+            <p className="text-sm text-blue-800 flex items-center gap-2">
+              \ud83d\udcdd We saved your progress from last time. Pick up where you left off!
+            </p>
+            <button
+              type="button"
+              onClick={clearDraft}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium underline underline-offset-2 whitespace-nowrap ml-4"
+            >
+              Start Fresh
+            </button>
+          </div>
+        )}
+
+        <div className="mb-4">
           <ProgressSteps steps={STEPS} currentStep={step} />
         </div>
+
+        {/* Step completion indicator */}
+        <p className="text-sm text-hustle-muted mb-6 flex items-center gap-1.5">
+          <span className="inline-block w-5 h-5 rounded-full bg-hustle-blue/10 text-hustle-blue text-xs font-bold flex items-center justify-center">{step + 1}</span>
+          {STEP_HINTS[step]}
+        </p>
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
 
@@ -574,6 +749,9 @@ export default function OnboardingPage() {
                   placeholder="e.g. Ada's Hair Studio"
                 />
                 <FieldError field="name" />
+                {!(touched.name && errors.name) && (
+                  <p className="text-xs text-hustle-muted mt-1">\ud83d\udca1 Use your real business name \u2014 this is how customers will find you.</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-hustle-dark mb-1">
@@ -616,7 +794,7 @@ export default function OnboardingPage() {
                     <FieldError field="customCategory" />
                   </div>
                   <p className="text-xs text-hustle-muted flex items-center gap-1">
-                    💡 We’ll review your suggestion and may add it as an official category soon!
+                    \ud83d\udca1 We'll review your suggestion and may add it as an official category soon!
                   </p>
                 </div>
               )}
@@ -690,7 +868,7 @@ export default function OnboardingPage() {
                   />
                   <FieldError field="phone" />
                   {formData.phone && !errors.phone && (
-                    <p className="text-xs text-green-600 mt-1">✓ Phone number accepted</p>
+                    <p className="text-xs text-green-600 mt-1">\u2713 Phone number accepted</p>
                   )}
                 </div>
                 <div>
@@ -707,7 +885,7 @@ export default function OnboardingPage() {
                   />
                   <FieldError field="whatsapp" />
                   {formData.whatsapp && !errors.whatsapp && (
-                    <p className="text-xs text-green-600 mt-1">✓ WhatsApp number accepted</p>
+                    <p className="text-xs text-green-600 mt-1">\u2713 WhatsApp number accepted</p>
                   )}
                 </div>
 
@@ -790,6 +968,7 @@ export default function OnboardingPage() {
                       {formData.description.length}/20 min
                     </span>
                   </div>
+                  <p className="text-xs text-hustle-muted mt-1">\ud83d\udca1 Tip: Mention what you sell or do, your location advantage, and why customers choose you.</p>
                 </div>
               </div>
 
@@ -857,7 +1036,7 @@ export default function OnboardingPage() {
           {step === 3 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-heading text-xl font-semibold text-hustle-dark">📸 Photos</h2>
+                <h2 className="font-heading text-xl font-semibold text-hustle-dark">\ud83d\udcf8 Photos</h2>
                 <span className="text-sm text-hustle-muted">Optional</span>
               </div>
               <p className="text-sm text-hustle-muted">
@@ -865,7 +1044,7 @@ export default function OnboardingPage() {
               </p>
 
               {photoError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">⚠️ {photoError}</div>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">\u26a0\ufe0f {photoError}</div>
               )}
 
               {photos.length < MAX_PHOTOS && (
@@ -881,7 +1060,7 @@ export default function OnboardingPage() {
                     onChange={handlePhotoSelect}
                     className="hidden"
                   />
-                  <div className="text-4xl mb-2">📷</div>
+                  <div className="text-4xl mb-2">\ud83d\udcf7</div>
                   <p className="text-hustle-dark font-medium">Click to upload photos</p>
                   <p className="text-sm text-hustle-muted mt-1">
                     JPG, PNG up to 5MB each. {MAX_PHOTOS - photos.length} of {MAX_PHOTOS} remaining.
@@ -907,7 +1086,7 @@ export default function OnboardingPage() {
                             onClick={() => setCoverPhoto(i)}
                             className="bg-white text-hustle-dark text-xs px-2 py-1 rounded-md hover:bg-gray-100"
                           >
-                            ⭐ Cover
+                            \u2b50 Cover
                           </button>
                         )}
                         <button
@@ -915,11 +1094,11 @@ export default function OnboardingPage() {
                           onClick={() => removePhoto(i)}
                           className="bg-red-500 text-white text-xs px-2 py-1 rounded-md hover:bg-red-600"
                         >
-                          × Remove
+                          \u00d7 Remove
                         </button>
                       </div>
                       {photo.isCover && (
-                        <div className="absolute top-1 left-1 bg-hustle-amber text-white text-xs px-2 py-0.5 rounded-full">⭐ Cover</div>
+                        <div className="absolute top-1 left-1 bg-hustle-amber text-white text-xs px-2 py-0.5 rounded-full">\u2b50 Cover</div>
                       )}
                     </div>
                   ))}
@@ -944,13 +1123,13 @@ export default function OnboardingPage() {
 
               {showPhotoTips && (
                 <div className="bg-hustle-light rounded-lg p-4 space-y-2 text-sm text-hustle-muted">
-                  <p className="font-medium text-hustle-dark">💡 Tips for great photos:</p>
+                  <p className="font-medium text-hustle-dark">\ud83d\udca1 Tips for great photos:</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>☀️ Use natural lighting when possible</li>
-                    <li>🏠 Show your storefront or workspace</li>
-                    <li>👥 Include photos of your team at work</li>
-                    <li>✨ Showcase your best products or results</li>
-                    <li>🎥 Keep images clear and well-framed</li>
+                    <li>\u2600\ufe0f Use natural lighting when possible</li>
+                    <li>\ud83c\udfe0 Show your storefront or workspace</li>
+                    <li>\ud83d\udc65 Include photos of your team at work</li>
+                    <li>\u2728 Showcase your best products or results</li>
+                    <li>\ud83c\udfa5 Keep images clear and well-framed</li>
                   </ul>
                 </div>
               )}
@@ -1053,7 +1232,7 @@ export default function OnboardingPage() {
                             className="w-full h-20 object-cover"
                           />
                           {photo.isCover && (
-                            <div className="absolute top-0.5 left-0.5 bg-hustle-amber text-white text-[10px] px-1 rounded">⭐ Cover</div>
+                            <div className="absolute top-0.5 left-0.5 bg-hustle-amber text-white text-[10px] px-1 rounded">\u2b50 Cover</div>
                           )}
                         </div>
                       ))}
@@ -1099,7 +1278,7 @@ export default function OnboardingPage() {
                     {uploadingPhotos ? 'Uploading photos...' : 'Creating listing...'}
                   </>
                 ) : (
-                  <>✨ Create My Listing</>
+                  <>\u2728 Create My Listing</>
                 )}
               </button>
             )}
