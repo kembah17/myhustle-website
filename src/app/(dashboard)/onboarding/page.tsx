@@ -570,13 +570,13 @@ export default function OnboardingPage() {
           // Clear draft on partial success too - business was created
           localStorage.removeItem(DRAFT_KEY)
           setToast({ message: `Listing created! ${photoErrors} photo(s) could not be uploaded \u2014 you can add them later from your dashboard.`, type: 'success' })
-          setSubmitted(true)
+          router.push('/dashboard?welcome=new')
           return
         } else if (photoErrors === photos.length) {
           // Clear draft - business was created
           localStorage.removeItem(DRAFT_KEY)
           setToast({ message: 'Listing created! Photos could not be uploaded \u2014 you can add them later from your dashboard.', type: 'success' })
-          setSubmitted(true)
+          router.push('/dashboard?welcome=new')
           return
         }
       }
@@ -587,7 +587,7 @@ export default function OnboardingPage() {
       if (isOther) {
         setToast({ message: 'Thanks for suggesting a new category \u2014 we\'ll review it soon!', type: 'success' })
       }
-      setSubmitted(true)
+      router.push('/dashboard?welcome=new')
     } catch (err: unknown) {
       console.error('Submission error:', err)
       let message = 'Something went wrong. Please try again.'

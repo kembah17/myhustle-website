@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import DashboardShell from '@/components/dashboard/DashboardShell'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import Link from 'next/link'
 import type { Business, Booking, Review } from '@/lib/types'
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user, loading: authLoading } = useAuth()
   const [business, setBusiness] = useState<Business | null>(null)
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -18,7 +18,19 @@ export default function DashboardPage() {
   const [allReviews, setAllReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+  const [welcomeToast, setWelcomeToast] = useState(false)
+
+  // Show welcome toast for newly listed businesses
+  useEffect(() => {
+    if (searchParams.get('welcome') === 'new') {
+      setWelcomeToast(true)
+      window.history.replaceState({}, '', '/dashboard')
+      const timer = setTimeout(() => setWelcomeToast(false), 8000)
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams])
 
   const fetchData = useCallback(async () => {
     if (!user) return
@@ -101,6 +113,26 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
+      {welcomeToast && (
+        <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-6 relative">
+          <button
+            onClick={() => setWelcomeToast(false)}
+            className="absolute top-3 right-3 text-green-400 hover:text-green-600 text-xl"
+            aria-label="Dismiss"
+          >
+            &times;
+          </button>
+          <div className="text-center">
+            <div className="text-4xl mb-2">🎉</div>
+            <h2 className="font-heading text-xl font-bold text-green-800 mb-1">
+              Your Business is Listed!
+            </h2>
+            <p className="text-green-700">
+              Congratulations! Your listing is now live on MyHustle. Manage it from your dashboard below.
+            </p>
+          </div>
+        </div>
+      )}
       <div className="space-y-6">
         {/* Welcome header */}
         <div>
@@ -312,5 +344,14 @@ export default function DashboardPage() {
         </div>
       </div>
     </DashboardShell>
+  )
+}
+
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>}>
+      <DashboardContent />
+    </Suspense>
   )
 }
