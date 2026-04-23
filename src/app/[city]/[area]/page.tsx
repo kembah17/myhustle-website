@@ -8,12 +8,12 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import { WHATSAPP_URL } from '@/components/WhatsAppCTA'
 import { generateAreaFAQs } from '@/lib/faq-generator'
 import FAQSection from '@/components/FAQSection'
 
 export const dynamic = 'force-dynamic'
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '2349000000000'
 
 interface PageProps {
   params: Promise<{ city: string; area: string }>
@@ -217,7 +217,7 @@ export default async function AreaPage({ params }: PageProps) {
                   business now and be the first result when customers search this area.
                 </p>
                 <Link
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hi! I'd like to list my business in ${area.name}, ${city.name} on MyHustle.`)}`}
+                  href={WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-white px-8 py-3.5 rounded-xl font-bold transition-colors shadow-lg hover:shadow-xl text-lg"
