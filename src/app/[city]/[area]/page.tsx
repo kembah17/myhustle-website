@@ -259,7 +259,7 @@ export default async function AreaPage({ params }: PageProps) {
                       href={`/${citySlug}/${areaSlug}/${cat.slug}`}
                       className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber group"
                     >
-                      <span className="text-2xl mb-2 block">{cat.icon || '\uD83D\uDCC1'}</span>
+                      <span className="text-2xl mb-2 block">{cat.icon || '📁'}</span>
                       <h3 className="font-heading text-sm font-semibold text-hustle-dark group-hover:text-hustle-blue transition-colors">
                         {cat.name}
                       </h3>
@@ -309,7 +309,7 @@ export default async function AreaPage({ params }: PageProps) {
                       href={`/${citySlug}/${areaSlug}/${cat.slug}`}
                       className="bg-white rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber group"
                     >
-                      <span className="text-2xl mb-2 block">{cat.icon || '\uD83D\uDCC1'}</span>
+                      <span className="text-2xl mb-2 block">{cat.icon || '📁'}</span>
                       <h3 className="font-heading text-sm font-semibold text-hustle-dark group-hover:text-hustle-blue transition-colors">
                         {cat.name}
                       </h3>

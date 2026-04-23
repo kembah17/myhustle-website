@@ -41,10 +41,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const catName = (biz.category as unknown as Category)?.name || ''
   const areaName = (biz.area as unknown as Area)?.name || ''
   const cityName = (biz.area as any)?.city?.name || 'Nigeria'
-  const title = `${biz.name} \u2014 ${catName} in ${areaName}, ${cityName} | MyHustle`
+  const title = `${biz.name} — ${catName} in ${areaName}, ${cityName} | MyHustle`
   const description = biz.description
     ? biz.description.slice(0, 160)
-    : `${biz.name} \u2014 ${catName} in ${areaName}, ${cityName}. See services, read reviews, and book on MyHustle.`
+    : `${biz.name} — ${catName} in ${areaName}, ${cityName}. See services, read reviews, and book on MyHustle.`
 
   return {
     title,
@@ -334,7 +334,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                                 <span className="text-red-500 font-medium">Closed</span>
                               ) : (
                                 <span className="text-hustle-dark">
-                                  {h.open_time?.slice(0, 5)} \u2014 {h.close_time?.slice(0, 5)}
+                                  {h.open_time?.slice(0, 5)} — {h.close_time?.slice(0, 5)}
                                 </span>
                               )}
                             </td>

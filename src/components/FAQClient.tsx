@@ -27,17 +27,17 @@ const FAQ_SECTIONS: FAQSection[] = [
       {
         question: 'How do I book an appointment?',
         answer:
-          'To book an appointment, visit the business page you\u2019re interested in and click the "Book Now" button. Fill in your preferred date, time, and any details about the service you need. Once submitted, you\u2019ll receive a confirmation notification. The business owner will confirm or suggest an alternative time.',
+          'To book an appointment, visit the business page you’re interested in and click the "Book Now" button. Fill in your preferred date, time, and any details about the service you need. Once submitted, you’ll receive a confirmation notification. The business owner will confirm or suggest an alternative time.',
       },
       {
         question: 'How do reviews work?',
         answer:
-          'Reviews on MyHustle are from verified customers who completed a booking through the platform. After your booking is marked as complete by the business, you\u2019ll receive an option to leave a review. Reviews include a star rating (1\u20135) and written feedback. This helps other customers make informed decisions and helps businesses improve their services.',
+          'Reviews on MyHustle are from verified customers who completed a booking through the platform. After your booking is marked as complete by the business, you’ll receive an option to leave a review. Reviews include a star rating (1–5) and written feedback. This helps other customers make informed decisions and helps businesses improve their services.',
       },
       {
         question: 'How do I suggest a business?',
         answer:
-          'Know a great business that isn\u2019t on MyHustle yet? You can suggest it by clicking the "Suggest a Business" button on any area or category page. You can also use the WhatsApp button to send us the business details directly. We\u2019ll review the suggestion and add it to our directory.',
+          'Know a great business that isn’t on MyHustle yet? You can suggest it by clicking the "Suggest a Business" button on any area or category page. You can also use the WhatsApp button to send us the business details directly. We’ll review the suggestion and add it to our directory.',
       },
       {
         question: 'How do I report a problem?',
@@ -53,32 +53,32 @@ const FAQ_SECTIONS: FAQSection[] = [
       {
         question: 'How do I claim my listing?',
         answer:
-          'Find your business on MyHustle using the search bar, then click the "Claim this Business" button on your listing page. You\u2019ll need to verify ownership either by matching the phone number on file or by uploading a verification document (such as your CAC certificate). Once verified, you\u2019ll have full control over your listing.',
+          'Find your business on MyHustle using the search bar, then click the "Claim this Business" button on your listing page. You’ll need to verify ownership either by matching the phone number on file or by uploading a verification document (such as your CAC certificate). Once verified, you’ll have full control over your listing.',
       },
       {
         question: 'What are the verification tiers?',
         answer:
-          'MyHustle has three verification tiers to build trust with customers. Tier 1: Phone Verification (free) \u2014 verify your business phone number to get a basic verification badge. Tier 2: Document Verification \u2014 upload your CAC certificate or other official documents for enhanced credibility. Tier 3: Physical Verification \u2014 a site visit confirms your business location and operations. Higher tiers receive better visibility in search results and directory listings.',
+          'MyHustle has three verification tiers to build trust with customers. Tier 1: Phone Verification (free) — verify your business phone number to get a basic verification badge. Tier 2: Document Verification — upload your CAC certificate or other official documents for enhanced credibility. Tier 3: Physical Verification — a site visit confirms your business location and operations. Higher tiers receive better visibility in search results and directory listings.',
       },
       {
         question: 'How do I manage my listing?',
         answer:
-          'Log in to your MyHustle dashboard to manage everything about your listing. You can update your business name, description, contact details, and operating hours. Add or remove photos, update your services and pricing, and respond to customer reviews \u2014 all from one place.',
+          'Log in to your MyHustle dashboard to manage everything about your listing. You can update your business name, description, contact details, and operating hours. Add or remove photos, update your services and pricing, and respond to customer reviews — all from one place.',
       },
       {
         question: 'How do I respond to bookings?',
         answer:
-          'New bookings appear in your dashboard under the Bookings section. You\u2019ll also receive a notification when a customer makes a booking. From the dashboard, you can confirm the booking, suggest an alternative time, or decline if you\u2019re unavailable. Prompt responses help build trust with customers.',
+          'New bookings appear in your dashboard under the Bookings section. You’ll also receive a notification when a customer makes a booking. From the dashboard, you can confirm the booking, suggest an alternative time, or decline if you’re unavailable. Prompt responses help build trust with customers.',
       },
       {
         question: 'What subscription plans are available?',
         answer:
-          'MyHustle offers four plans: Free (basic listing with 3 photos), Starter at \u20A65,000/month (up to 10 photos and priority in area listings), Pro at \u20A615,000/month (up to 50 photos, analytics dashboard, and featured placement), and Premium at \u20A635,000/month (up to 100 photos, priority placement across the platform, and dedicated support). All paid plans include a 7-day free trial.',
+          'MyHustle offers four plans: Free (basic listing with 3 photos), Starter at ₦5,000/month (up to 10 photos and priority in area listings), Pro at ₦15,000/month (up to 50 photos, analytics dashboard, and featured placement), and Premium at ₦35,000/month (up to 100 photos, priority placement across the platform, and dedicated support). All paid plans include a 7-day free trial.',
       },
       {
         question: 'How do I upload photos and videos?',
         answer:
-          'Go to your dashboard and click "Edit Listing", then navigate to the Photos section. Click "Upload Photos" to add images. Accepted formats are JPG, PNG, and WebP, with a maximum file size of 5MB per image. We recommend photos that are at least 1200\u00D7800 pixels for the best display quality. Tip: use good lighting and show your shopfront, products, or team. Video uploads are coming soon!',
+          'Go to your dashboard and click "Edit Listing", then navigate to the Photos section. Click "Upload Photos" to add images. Accepted formats are JPG, PNG, and WebP, with a maximum file size of 5MB per image. We recommend photos that are at least 1200×800 pixels for the best display quality. Tip: use good lighting and show your shopfront, products, or team. Video uploads are coming soon!',
       },
     ],
   },
@@ -171,7 +171,7 @@ export default function FAQClient() {
         </svg>
         <input
           type="text"
-          placeholder="Search frequently asked questions\u2026"
+          placeholder="Search frequently asked questions…"
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value)

@@ -10,7 +10,7 @@ const LEGAL_PAGES = [
   {
     href: '/legal/privacy-policy',
     label: 'Privacy Policy',
-    description: 'How we collect, use, and protect your personal data in compliance with Nigeria\u2019s NDPR/NDPA.',
+    description: 'How we collect, use, and protect your personal data in compliance with Nigeria’s NDPR/NDPA.',
   },
   {
     href: '/legal/terms-of-service',
@@ -30,7 +30,7 @@ const LEGAL_PAGES = [
   {
     href: '/legal/acceptable-use',
     label: 'Acceptable Use Policy',
-    description: 'What is and isn\u2019t allowed on the MyHustle platform.',
+    description: 'What is and isn’t allowed on the MyHustle platform.',
   },
 ]
 

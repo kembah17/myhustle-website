@@ -201,14 +201,14 @@ export default function BookingsPage() {
                             )}
                           </td>
                           <td className="py-3 px-4 text-hustle-muted">
-                            {booking.customer_phone || '\u2014'}
+                            {booking.customer_phone || '—'}
                           </td>
                           <td className="py-3 px-4 text-hustle-muted">
-                            {booking.service || '\u2014'}
+                            {booking.service || '—'}
                           </td>
                           <td className="py-3 px-4 text-hustle-dark">{booking.date}</td>
                           <td className="py-3 px-4 text-hustle-muted hidden lg:table-cell">
-                            {booking.time || '\u2014'}
+                            {booking.time || '—'}
                           </td>
                           <td className="py-3 px-4">
                             <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor(booking.status)}`}>
@@ -256,15 +256,15 @@ export default function BookingsPage() {
                               <div className="ml-8 grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                                 <div>
                                   <p className="text-xs text-hustle-muted font-medium mb-1">Email</p>
-                                  <p className="text-hustle-dark">{booking.customer_email || '\u2014'}</p>
+                                  <p className="text-hustle-dark">{booking.customer_email || '—'}</p>
                                 </div>
                                 <div>
                                   <p className="text-xs text-hustle-muted font-medium mb-1">Service</p>
-                                  <p className="text-hustle-dark">{booking.service || '\u2014'}</p>
+                                  <p className="text-hustle-dark">{booking.service || '—'}</p>
                                 </div>
                                 <div>
                                   <p className="text-xs text-hustle-muted font-medium mb-1">Time</p>
-                                  <p className="text-hustle-dark">{booking.time || '\u2014'}</p>
+                                  <p className="text-hustle-dark">{booking.time || '—'}</p>
                                 </div>
                                 <div>
                                   <p className="text-xs text-hustle-muted font-medium mb-1">Created</p>
@@ -339,15 +339,15 @@ export default function BookingsPage() {
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
                             <p className="text-xs text-hustle-muted font-medium">Phone</p>
-                            <p className="text-hustle-dark">{booking.customer_phone || '\u2014'}</p>
+                            <p className="text-hustle-dark">{booking.customer_phone || '—'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-hustle-muted font-medium">Email</p>
-                            <p className="text-hustle-dark text-xs break-all">{booking.customer_email || '\u2014'}</p>
+                            <p className="text-hustle-dark text-xs break-all">{booking.customer_email || '—'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-hustle-muted font-medium">Service</p>
-                            <p className="text-hustle-dark">{booking.service || '\u2014'}</p>
+                            <p className="text-hustle-dark">{booking.service || '—'}</p>
                           </div>
                           <div>
                             <p className="text-xs text-hustle-muted font-medium">Created</p>

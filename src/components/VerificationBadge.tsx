@@ -97,7 +97,7 @@ const TIER_CONFIG = {
     ),
   },
   3: {
-    label: 'Fully Verified \u2713',
+    label: 'Fully Verified ✓',
     description: 'This business has been remotely verified by the MyHustle team via live video call.',
     bgClass: 'bg-green-500',
     textClass: 'text-white',

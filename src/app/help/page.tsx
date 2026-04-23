@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import FAQClient from '@/components/FAQClient'
 
 export const metadata: Metadata = {
-  title: 'Help & FAQ \u2014 MyHustle',
+  title: 'Help & FAQ — MyHustle',
   description:
-    "Find answers to common questions about using MyHustle.com \u2014 Nigeria's trusted business directory.",
+    "Find answers to common questions about using MyHustle.com — Nigeria's trusted business directory.",
 }
 
 const FAQ_STRUCTURED_DATA = {
@@ -32,7 +32,7 @@ const FAQ_STRUCTURED_DATA = {
       name: 'How do reviews work on MyHustle?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "Reviews on MyHustle are from verified customers who completed a booking through the platform. After your booking is marked as complete by the business, you'll receive an option to leave a review. Reviews include a star rating (1\u20135) and written feedback.",
+        text: "Reviews on MyHustle are from verified customers who completed a booking through the platform. After your booking is marked as complete by the business, you'll receive an option to leave a review. Reviews include a star rating (1–5) and written feedback.",
       },
     },
     {
@@ -56,7 +56,7 @@ const FAQ_STRUCTURED_DATA = {
       name: 'What subscription plans does MyHustle offer?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'MyHustle offers four plans: Free (basic listing with 3 photos), Starter at \u20A65,000/month (up to 10 photos and priority in area listings), Pro at \u20A615,000/month (up to 50 photos, analytics dashboard, and featured placement), and Premium at \u20A635,000/month (up to 100 photos, priority placement across the platform, and dedicated support).',
+        text: 'MyHustle offers four plans: Free (basic listing with 3 photos), Starter at ₦5,000/month (up to 10 photos and priority in area listings), Pro at ₦15,000/month (up to 50 photos, analytics dashboard, and featured placement), and Premium at ₦35,000/month (up to 100 photos, priority placement across the platform, and dedicated support).',
       },
     },
     {
@@ -80,7 +80,7 @@ const FAQ_STRUCTURED_DATA = {
       name: 'How do I upload photos to my MyHustle listing?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Go to your dashboard and click "Edit Listing", then navigate to the Photos section. Click "Upload Photos" to add images. Accepted formats are JPG, PNG, and WebP, with a maximum file size of 5MB per image. We recommend photos that are at least 1200\u00D7800 pixels for the best display quality.',
+        text: 'Go to your dashboard and click "Edit Listing", then navigate to the Photos section. Click "Upload Photos" to add images. Accepted formats are JPG, PNG, and WebP, with a maximum file size of 5MB per image. We recommend photos that are at least 1200×800 pixels for the best display quality.',
       },
     },
   ],
@@ -100,7 +100,7 @@ export default function HelpPage() {
             Help &amp; FAQ
           </h1>
           <p className="text-hustle-muted text-lg leading-relaxed max-w-xl mx-auto">
-            Find answers to common questions about using MyHustle \u2014 whether you\u2019re
+            Find answers to common questions about using MyHustle — whether you’re
             a customer looking for businesses or a business owner managing your listing.
           </p>
         </div>

@@ -13,18 +13,18 @@ import FAQSection from '@/components/FAQSection'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'MyHustle.com \u2014 Find & Book Trusted Businesses Across Nigeria',
+  title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
   description:
     'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark. Read real reviews and book appointments directly.',
   openGraph: {
-    title: 'MyHustle.com \u2014 Find & Book Trusted Businesses Across Nigeria',
+    title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
     description:
       'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MyHustle.com \u2014 Find & Book Trusted Businesses Across Nigeria',
+    title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
     description:
       'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark.',
   },
