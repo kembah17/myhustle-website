@@ -399,6 +399,15 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                 </a>
               )}
 
+              {biz.phone2 && (
+                <a href={`tel:${biz.phone2}`} className="flex items-center gap-3 text-hustle-dark hover:text-hustle-blue transition-colors">
+                  <svg className="w-5 h-5 text-hustle-muted flex-shrink-0" width="20" height="20" style={{width:"20px",height:"20px",maxWidth:"20px",maxHeight:"20px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-sm">{biz.phone2} <span className="text-hustle-muted text-xs">(Alt.)</span></span>
+                </a>
+              )}
+
               {biz.email && (
                 <a href={`mailto:${biz.email}`} className="flex items-center gap-3 text-hustle-dark hover:text-hustle-blue transition-colors">
                   <svg className="w-5 h-5 text-hustle-muted flex-shrink-0" width="20" height="20" style={{width:"20px",height:"20px",maxWidth:"20px",maxHeight:"20px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">

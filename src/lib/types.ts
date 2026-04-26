@@ -78,6 +78,7 @@ export interface Business {
   phone: string | null
   email: string | null
   whatsapp: string | null
+  phone2: string | null
   website: string | null
   tier: string
   verified: boolean

@@ -48,6 +48,7 @@ export default function EditBusinessPage() {
     area_id: '',
     address: '',
     phone: '',
+    phone2: '',
     whatsapp: '',
     email: '',
     website: '',
@@ -116,6 +117,7 @@ export default function EditBusinessPage() {
       area_id: biz.area_id || '',
       address: biz.address || '',
       phone: biz.phone || '',
+      phone2: biz.phone2 || '',
       whatsapp: biz.whatsapp || '',
       email: biz.email || '',
       website: biz.website || '',
@@ -215,6 +217,7 @@ export default function EditBusinessPage() {
         area_id: form.area_id || null,
         address: form.address || null,
         phone: form.phone,
+        phone2: form.phone2 || null,
         whatsapp: form.whatsapp || null,
         email: form.email || null,
         website: form.website || null,
@@ -468,6 +471,16 @@ export default function EditBusinessPage() {
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="+234 801 234 5678"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-hustle-dark mb-1">Alt. Phone</label>
+              <input
+                type="tel"
+                value={form.phone2}
+                onChange={(e) => setForm(f => ({ ...f, phone2: e.target.value }))}
                 placeholder="+234 801 234 5678"
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent"
               />

@@ -48,6 +48,7 @@ interface FormData {
   area_id: string
   address: string
   phone: string
+  phone2: string
   whatsapp: string
   email: string
   website: string
@@ -61,6 +62,7 @@ interface FieldErrors {
   customCategory?: string
   area_id?: string
   phone?: string
+  phone2?: string
   whatsapp?: string
   email?: string
   website?: string
@@ -142,6 +144,7 @@ export default function OnboardingPage() {
     area_id: '',
     address: '',
     phone: '',
+    phone2: '',
     whatsapp: '',
     email: '',
     website: '',
@@ -191,6 +194,7 @@ export default function OnboardingPage() {
       area_id: '',
       address: '',
       phone: '',
+      phone2: '',
       whatsapp: '',
       email: '',
       website: '',
@@ -328,6 +332,7 @@ export default function OnboardingPage() {
     if (!data.area_id) errs.area_id = 'Please select an area'
     if (!data.phone) errs.phone = 'Phone number is required'
     else if (!isValidNigerianPhone(data.phone)) errs.phone = 'Enter a valid Nigerian phone number (e.g. 08012345678 or +2348012345678)'
+    if (data.phone2 && !isValidNigerianPhone(data.phone2)) errs.phone2 = 'Enter a valid Nigerian phone number'
     if (data.whatsapp && !isValidNigerianPhone(data.whatsapp)) errs.whatsapp = 'Enter a valid Nigerian phone number'
     if (!isValidEmail(data.email)) errs.email = 'Enter a valid email address'
     if (!isValidUrl(data.website)) errs.website = 'Enter a valid URL (e.g. https://example.com)'
@@ -366,7 +371,7 @@ export default function OnboardingPage() {
         return hasName && !!(formData.category_id && !errors.category_id)
       }
       case 1:
-        return !!(formData.area_id && !errors.area_id && formData.phone && !errors.phone && !errors.whatsapp && !errors.email && !errors.website)
+        return !!(formData.area_id && !errors.area_id && formData.phone && !errors.phone && !errors.phone2 && !errors.whatsapp && !errors.email && !errors.website)
       case 2:
         return !!(formData.description && formData.description.length >= 20 && !errors.description)
       case 3:
@@ -382,7 +387,7 @@ export default function OnboardingPage() {
         setTouched(prev => ({ ...prev, name: true, category_id: true, customCategory: true }))
         break
       case 1:
-        setTouched(prev => ({ ...prev, area_id: true, phone: true, whatsapp: true, email: true, website: true }))
+        setTouched(prev => ({ ...prev, area_id: true, phone: true, phone2: true, whatsapp: true, email: true, website: true }))
         break
       case 2:
         setTouched(prev => ({ ...prev, description: true }))
@@ -486,6 +491,7 @@ export default function OnboardingPage() {
           city_id: area?.city_id || null,
           phone: formatNigerianPhone(formData.phone),
           whatsapp: formData.whatsapp ? formatNigerianPhone(formData.whatsapp) : null,
+          phone2: formData.phone2 ? formatNigerianPhone(formData.phone2) : null,
           email: formData.email || null,
           website: formData.website || null,
           address: formData.address || null,
@@ -872,6 +878,23 @@ export default function OnboardingPage() {
                   )}
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-hustle-dark mb-1">Alternative Phone Number</label>
+                  <input
+                    type="tel"
+                    value={formData.phone2}
+                    onChange={(e) => updateField('phone2', e.target.value)}
+                    onBlur={() => markTouched('phone2')}
+                    className={`w-full px-4 py-2.5 rounded-lg border text-hustle-dark focus:outline-none focus:ring-2 focus:ring-hustle-blue focus:border-transparent ${
+                      touched.phone2 && errors.phone2 ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                    placeholder="08012345678"
+                  />
+                  <FieldError field="phone2" />
+                  {formData.phone2 && !errors.phone2 && (
+                    <p className="text-xs text-green-600 mt-1">✓ Phone number accepted</p>
+                  )}
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-hustle-dark mb-1">WhatsApp Number</label>
                   <input
                     type="tel"
@@ -1192,6 +1215,12 @@ export default function OnboardingPage() {
                       <dt className="w-32 text-hustle-muted">Phone</dt>
                       <dd className="text-hustle-dark">{formData.phone}</dd>
                     </div>
+                    {formData.phone2 && (
+                      <div className="flex">
+                        <dt className="w-32 text-hustle-muted">Alt. Phone</dt>
+                        <dd className="text-hustle-dark">{formData.phone2}</dd>
+                      </div>
+                    )}
                     {formData.whatsapp && (
                       <div className="flex">
                         <dt className="w-32 text-hustle-muted">WhatsApp</dt>
