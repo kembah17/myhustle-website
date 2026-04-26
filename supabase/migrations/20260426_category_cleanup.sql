@@ -77,8 +77,8 @@ UPDATE categories SET name = 'Event Decorators', slug = 'event-decorators' WHERE
 
 DO $$ 
 DECLARE
-  v_parent_id UUID;
-  v_old_id UUID;
+  v_parent_id TEXT;
+  v_old_id TEXT;
 BEGIN
 
   -- E1. Split 'Arts & Crafts' under Entertainment & Leisure
