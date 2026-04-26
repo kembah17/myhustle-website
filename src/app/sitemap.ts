@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next'
 
 export const dynamic = 'force-dynamic'
 
-const BASE_URL = 'https://myhustle.com'
+const BASE_URL = 'https://myhustle.space'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 

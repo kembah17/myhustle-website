@@ -29,7 +29,7 @@ export const metadata: Metadata = {
       'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark.',
   },
   alternates: {
-    canonical: 'https://myhustle.com',
+    canonical: 'https://myhustle.space',
   },
 }
 
@@ -145,11 +145,11 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'MyHustle.com',
-    url: 'https://myhustle.com',
+    url: 'https://myhustle.space',
     description: "Nigeria's trusted SME directory. Find and book businesses across Nigeria.",
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://myhustle.com/search?q={search_term_string}',
+      target: 'https://myhustle.space/search?q={search_term_string}',
       'query-input': 'required name=search_term_string',
     },
   }
@@ -158,8 +158,8 @@ export default async function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'MyHustle.com',
-    url: 'https://myhustle.com',
-    logo: 'https://myhustle.com/logo-dark.png',
+    url: 'https://myhustle.space',
+    logo: 'https://myhustle.space/logo-dark.png',
     description: "Nigeria's trusted SME directory",
     sameAs: [],
     contactPoint: {

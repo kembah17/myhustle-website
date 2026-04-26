@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Contact Us — MyHustle',
     description: "Have a question or need help? Contact the MyHustle team.",
-    url: 'https://myhustle.com/contact',
+    url: 'https://myhustle.space/contact',
   },
 }
 

@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: { title, description },
     twitter: { card: 'summary_large_image', title, description },
     alternates: {
-      canonical: `https://myhustle.com/${citySlug}`,
+      canonical: `https://myhustle.space/${citySlug}`,
     },
   }
 }
@@ -81,8 +81,8 @@ export default async function CityPage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myhustle.com' },
-      { '@type': 'ListItem', position: 2, name: city.name, item: `https://myhustle.com/${citySlug}` },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myhustle.space' },
+      { '@type': 'ListItem', position: 2, name: city.name, item: `https://myhustle.space/${citySlug}` },
     ],
   }
 
@@ -97,7 +97,7 @@ export default async function CityPage({ params }: PageProps) {
       item: {
         '@type': 'Place',
         name: `${a.name}, ${city.name}`,
-        url: `https://myhustle.com/${citySlug}/${a.slug}`,
+        url: `https://myhustle.space/${citySlug}/${a.slug}`,
       },
     })),
   }

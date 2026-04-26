@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: 'List Your Business Free on MyHustle',
     description:
       'Get discovered by thousands of customers across Nigeria. List your business via WhatsApp in 2 minutes.',
-    url: 'https://myhustle.com/list-your-business',
+    url: 'https://myhustle.space/list-your-business',
     siteName: 'MyHustle.com',
     type: 'website',
   },
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
       'Get discovered by thousands of customers across Nigeria. List your business via WhatsApp in 2 minutes.',
   },
   alternates: {
-    canonical: 'https://myhustle.com/list-your-business',
+    canonical: 'https://myhustle.space/list-your-business',
   },
 }
 
@@ -35,11 +35,11 @@ export default function ListYourBusinessPage() {
     name: 'List Your Business on MyHustle',
     description:
       'Add your business to Nigeria\'s #1 SME directory for free. Get found by customers across Nigeria.',
-    url: 'https://myhustle.com/list-your-business',
+    url: 'https://myhustle.space/list-your-business',
     isPartOf: {
       '@type': 'WebSite',
       name: 'MyHustle.com',
-      url: 'https://myhustle.com',
+      url: 'https://myhustle.space',
     },
     mainEntity: {
       '@type': 'Service',
@@ -49,7 +49,7 @@ export default function ListYourBusinessPage() {
       provider: {
         '@type': 'Organization',
         name: 'MyHustle.com',
-        url: 'https://myhustle.com',
+        url: 'https://myhustle.space',
       },
       areaServed: {
         '@type': 'City',

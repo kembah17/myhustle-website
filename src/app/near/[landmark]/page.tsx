@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: { title, description },
     twitter: { card: 'summary_large_image', title, description },
     alternates: {
-      canonical: `https://myhustle.com/near/${slug}`,
+      canonical: `https://myhustle.space/near/${slug}`,
     },
   }
 }
@@ -77,7 +77,7 @@ export default async function LandmarkPage({ params }: PageProps) {
       item: {
         '@type': 'LocalBusiness',
         name: biz.name,
-        url: `https://myhustle.com/business/${biz.slug}`,
+        url: `https://myhustle.space/business/${biz.slug}`,
       },
     })),
   }
@@ -101,9 +101,9 @@ export default async function LandmarkPage({ params }: PageProps) {
       <JsonLd data={itemListJsonLd} />
       <BreadcrumbJsonLd
         items={[
-          { name: 'Home', url: 'https://myhustle.com' },
-          { name: 'Near', url: 'https://myhustle.com' },
-          { name: landmark.name, url: `https://myhustle.com/near/${slug}` },
+          { name: 'Home', url: 'https://myhustle.space' },
+          { name: 'Near', url: 'https://myhustle.space' },
+          { name: landmark.name, url: `https://myhustle.space/near/${slug}` },
         ]}
       />
 

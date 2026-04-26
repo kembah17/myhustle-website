@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: { title, description },
     twitter: { card: 'summary_large_image', title, description },
     alternates: {
-      canonical: `https://myhustle.com/${citySlug}/${areaSlug}/${catSlug}`,
+      canonical: `https://myhustle.space/${citySlug}/${areaSlug}/${catSlug}`,
     },
   }
 }
@@ -108,7 +108,7 @@ export default async function AreaCategoryPage({ params }: PageProps) {
       item: {
         '@type': 'LocalBusiness',
         name: biz.name,
-        url: `https://myhustle.com/business/${biz.slug}`,
+        url: `https://myhustle.space/business/${biz.slug}`,
       },
     })),
   }
@@ -126,10 +126,10 @@ export default async function AreaCategoryPage({ params }: PageProps) {
       <JsonLd data={itemListJsonLd} />
       <BreadcrumbJsonLd
         items={[
-          { name: 'Home', url: 'https://myhustle.com' },
-          { name: city.name, url: `https://myhustle.com/${citySlug}` },
-          { name: area.name, url: `https://myhustle.com/${citySlug}/${areaSlug}` },
-          { name: category.name, url: `https://myhustle.com/${citySlug}/${areaSlug}/${catSlug}` },
+          { name: 'Home', url: 'https://myhustle.space' },
+          { name: city.name, url: `https://myhustle.space/${citySlug}` },
+          { name: area.name, url: `https://myhustle.space/${citySlug}/${areaSlug}` },
+          { name: category.name, url: `https://myhustle.space/${citySlug}/${areaSlug}/${catSlug}` },
         ]}
       />
 

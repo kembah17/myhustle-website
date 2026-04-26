@@ -86,8 +86,8 @@ function AnalyticsSkeleton() {
 // Empty state
 function EmptyState({ businessSlug }: { businessSlug: string | null }) {
   const listingUrl = businessSlug
-    ? `https://myhustle.com/business/${businessSlug}`
-    : 'https://myhustle.com'
+    ? `https://myhustle.space/business/${businessSlug}`
+    : 'https://myhustle.space'
   const [copied, setCopied] = useState(false)
 
   const copyLink = () => {

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
       'Explore all business categories on MyHustle. Find trusted businesses across Nigeria by category.',
   },
   alternates: {
-    canonical: 'https://myhustle.com/categories',
+    canonical: 'https://myhustle.space/categories',
   },
 }
 
@@ -75,8 +75,8 @@ export default async function CategoriesPage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myhustle.com' },
-      { '@type': 'ListItem', position: 2, name: 'Categories', item: 'https://myhustle.com/categories' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myhustle.space' },
+      { '@type': 'ListItem', position: 2, name: 'Categories', item: 'https://myhustle.space/categories' },
     ],
   }
 

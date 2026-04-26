@@ -18,7 +18,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://myhustle.com'),
+  metadataBase: new URL('https://myhustle.space'),
   title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
   description:
     'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark. Read real reviews and book appointments directly.',

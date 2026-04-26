@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: { title, description, type: 'article' },
     twitter: { card: 'summary_large_image', title, description },
     alternates: {
-      canonical: `https://myhustle.com/business/${slug}`,
+      canonical: `https://myhustle.space/business/${slug}`,
     },
   }
 }
@@ -155,7 +155,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: biz.name,
-    url: `https://myhustle.com/business/${biz.slug}`,
+    url: `https://myhustle.space/business/${biz.slug}`,
     ...(biz.description || biz.tagline ? { description: [biz.tagline, biz.description].filter(Boolean).join('. ') } : {}),
     ...(biz.phone ? { telephone: biz.phone } : {}),
     ...(biz.email ? { email: biz.email } : {}),
@@ -201,12 +201,12 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       <JsonLd data={localBusinessJsonLd} />
       <BreadcrumbJsonLd
         items={[
-          { name: 'Home', url: 'https://myhustle.com' },
+          { name: 'Home', url: 'https://myhustle.space' },
           ...(biz.area ? [
-            { name: (biz.area as any)?.city?.name || 'Nigeria', url: `https://myhustle.com/${(biz.area as any)?.city?.slug || 'lagos'}` },
-            { name: biz.area.name, url: `https://myhustle.com/${(biz.area as any)?.city?.slug || 'lagos'}/${biz.area.slug}` },
+            { name: (biz.area as any)?.city?.name || 'Nigeria', url: `https://myhustle.space/${(biz.area as any)?.city?.slug || 'lagos'}` },
+            { name: biz.area.name, url: `https://myhustle.space/${(biz.area as any)?.city?.slug || 'lagos'}/${biz.area.slug}` },
           ] : []),
-          { name: biz.name, url: `https://myhustle.com/business/${biz.slug}` },
+          { name: biz.name, url: `https://myhustle.space/business/${biz.slug}` },
         ]}
       />
       <PageViewTracker businessId={biz.id} />

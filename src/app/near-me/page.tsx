@@ -23,7 +23,7 @@ export const metadata: Metadata = {
       'Browse businesses by city and area across Nigeria. Find trusted services near you.',
   },
   alternates: {
-    canonical: 'https://myhustle.com/near-me',
+    canonical: 'https://myhustle.space/near-me',
   },
 }
 
@@ -92,8 +92,8 @@ export default async function NearMePage() {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myhustle.com' },
-      { '@type': 'ListItem', position: 2, name: 'Near Me', item: 'https://myhustle.com/near-me' },
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://myhustle.space' },
+      { '@type': 'ListItem', position: 2, name: 'Near Me', item: 'https://myhustle.space/near-me' },
     ],
   }
 

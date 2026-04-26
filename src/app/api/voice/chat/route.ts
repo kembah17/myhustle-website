@@ -159,7 +159,7 @@ YOUR PERSONALITY & RULES:
       headers: {
         'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://myhustle.com',
+        'HTTP-Referer': 'https://myhustle.space',
         'X-Title': 'MyHustle Voice Receptionist',
       },
       body: JSON.stringify({
