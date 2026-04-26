@@ -56,7 +56,7 @@ export const metadata: Metadata = {
   },
 
   verification: {
-    google: 'GOOGLE_SEARCH_CONSOLE_VERIFICATION_CODE',
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION || '',
   },
   icons: {
     icon: '/logo-icon.svg',
