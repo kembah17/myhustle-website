@@ -1,3 +1,6 @@
+-- Fix: ensure categories.id auto-generates UUIDs
+ALTER TABLE categories ALTER COLUMN id SET DEFAULT gen_random_uuid()::text;
+
 -- Migration: Category Taxonomy Cleanup + phone2 column
 -- Date: 2026-04-26
 -- Description: Rename parent categories, remove duplicate subcategories,
@@ -84,63 +87,63 @@ BEGIN
   IF v_old_id IS NOT NULL AND v_parent_id IS NOT NULL THEN
     -- Reassign businesses to first new sub (art-galleries)
     -- We'll create it first, then reassign
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Art Galleries', 'art-galleries', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Art Galleries', 'art-galleries', v_parent_id) ON CONFLICT (slug) DO NOTHING;
     UPDATE businesses SET category_id = (SELECT id FROM categories WHERE slug = 'art-galleries')
       WHERE category_id = v_old_id;
     DELETE FROM categories WHERE id = v_old_id;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Craft Workshops', 'craft-workshops', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Bead Making', 'bead-making', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Pottery', 'pottery', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Craft Workshops', 'craft-workshops', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Bead Making', 'bead-making', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Pottery', 'pottery', v_parent_id) ON CONFLICT (slug) DO NOTHING;
   END IF;
 
   -- E2. Split 'Consultants' under Business Services
   SELECT id INTO v_parent_id FROM categories WHERE slug = 'business-services';
   SELECT id INTO v_old_id FROM categories WHERE slug = 'consultants';
   IF v_old_id IS NOT NULL AND v_parent_id IS NOT NULL THEN
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Management Consultants', 'management-consultants', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Management Consultants', 'management-consultants', v_parent_id) ON CONFLICT (slug) DO NOTHING;
     UPDATE businesses SET category_id = (SELECT id FROM categories WHERE slug = 'management-consultants')
       WHERE category_id = v_old_id;
     DELETE FROM categories WHERE id = v_old_id;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('IT Consultants', 'it-consultants', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Strategy Consultants', 'strategy-consultants', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'IT Consultants', 'it-consultants', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Strategy Consultants', 'strategy-consultants', v_parent_id) ON CONFLICT (slug) DO NOTHING;
   END IF;
 
   -- E3. Split 'Wedding Services' under Events & Weddings
   SELECT id INTO v_parent_id FROM categories WHERE slug = 'events-and-weddings';
   SELECT id INTO v_old_id FROM categories WHERE slug = 'wedding-services';
   IF v_old_id IS NOT NULL AND v_parent_id IS NOT NULL THEN
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Wedding Planners', 'wedding-planners', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Wedding Planners', 'wedding-planners', v_parent_id) ON CONFLICT (slug) DO NOTHING;
     UPDATE businesses SET category_id = (SELECT id FROM categories WHERE slug = 'wedding-planners')
       WHERE category_id = v_old_id;
     DELETE FROM categories WHERE id = v_old_id;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Bridal Shops', 'bridal-shops', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Wedding Cakes', 'wedding-cakes', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Aso-Ebi', 'aso-ebi', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Bridal Shops', 'bridal-shops', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Wedding Cakes', 'wedding-cakes', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Aso-Ebi', 'aso-ebi', v_parent_id) ON CONFLICT (slug) DO NOTHING;
   END IF;
 
   -- E4. Split 'Recreation & Sports' under Entertainment & Leisure
   SELECT id INTO v_parent_id FROM categories WHERE slug = 'entertainment-and-leisure';
   SELECT id INTO v_old_id FROM categories WHERE slug = 'recreation-and-sports';
   IF v_old_id IS NOT NULL AND v_parent_id IS NOT NULL THEN
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Sports Centres', 'sports-centres', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Sports Centres', 'sports-centres', v_parent_id) ON CONFLICT (slug) DO NOTHING;
     UPDATE businesses SET category_id = (SELECT id FROM categories WHERE slug = 'sports-centres')
       WHERE category_id = v_old_id;
     DELETE FROM categories WHERE id = v_old_id;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Swimming Pools', 'swimming-pools', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Football Pitches', 'football-pitches', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Gyms', 'gyms', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Swimming Pools', 'swimming-pools', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Football Pitches', 'football-pitches', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Gyms', 'gyms', v_parent_id) ON CONFLICT (slug) DO NOTHING;
   END IF;
 
   -- E5. Split 'Online Stores' under Shopping & Retail
   SELECT id INTO v_parent_id FROM categories WHERE slug = 'shopping-and-retail';
   SELECT id INTO v_old_id FROM categories WHERE slug = 'online-stores';
   IF v_old_id IS NOT NULL AND v_parent_id IS NOT NULL THEN
-    INSERT INTO categories (name, slug, parent_id) VALUES ('E-commerce', 'e-commerce', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'E-commerce', 'e-commerce', v_parent_id) ON CONFLICT (slug) DO NOTHING;
     UPDATE businesses SET category_id = (SELECT id FROM categories WHERE slug = 'e-commerce')
       WHERE category_id = v_old_id;
     DELETE FROM categories WHERE id = v_old_id;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Dropshipping', 'dropshipping', v_parent_id) ON CONFLICT (slug) DO NOTHING;
-    INSERT INTO categories (name, slug, parent_id) VALUES ('Instagram Shops', 'instagram-shops', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Dropshipping', 'dropshipping', v_parent_id) ON CONFLICT (slug) DO NOTHING;
+    INSERT INTO categories (id, name, slug, parent_id) VALUES (gen_random_uuid()::text, 'Instagram Shops', 'instagram-shops', v_parent_id) ON CONFLICT (slug) DO NOTHING;
   END IF;
 
 END $$;
