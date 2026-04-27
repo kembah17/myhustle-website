@@ -511,6 +511,17 @@ export default function OnboardingPage() {
         throw new Error('Business was not created. Please try again.')
       }
 
+      // Stop reminder sequence — user has listed a business
+      try {
+        fetch('/api/reminders/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user.id }),
+        }).catch(() => {}) // Fire-and-forget, never block onboarding
+      } catch {
+        // Silently ignore — reminders are non-critical
+      }
+
       // Insert hours (independent of photos)
       try {
         const hoursData = formData.hours.map(h => ({
