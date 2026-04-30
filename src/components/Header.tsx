@@ -69,6 +69,9 @@ export default function Header() {
     setMobileMenuOpen(false)
   }
 
+  // Show top 6 cities in dropdown, rest accessible via /cities
+  const displayCities = cities.slice(0, 6)
+
   return (
     <header className="bg-hustle-blue text-white border-b border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -93,7 +96,7 @@ export default function Header() {
                 </svg>
               </button>
               <div className="absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 min-w-[160px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                {cities.map((city) => (
+                {displayCities.map((city) => (
                   <Link
                     key={city.slug}
                     href={`/${city.slug}`}
@@ -102,6 +105,17 @@ export default function Header() {
                     {city.name}
                   </Link>
                 ))}
+                {cities.length > 6 && (
+                  <>
+                    <hr className="my-1 border-gray-100" />
+                    <Link
+                      href="/cities"
+                      className="block px-4 py-2 text-hustle-blue hover:bg-gray-50 text-sm font-semibold"
+                    >
+                      View all {cities.length} cities &rarr;
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
             <Link href="/categories" className="text-sm font-medium hover:text-hustle-amber transition-colors">
@@ -206,17 +220,29 @@ export default function Header() {
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden pb-4 space-y-2">
-            <p className="text-xs font-semibold text-white/60 uppercase tracking-wider px-2 pt-2">Cities</p>
-            {cities.map((city) => (
-              <Link
-                key={city.slug}
-                href={`/${city.slug}`}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-2 py-1.5 text-sm hover:text-hustle-amber transition-colors"
-              >
-                {city.name}
-              </Link>
-            ))}
+            {/* Cities - show top 3 + link to all */}
+            <Link
+              href="/cities"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-2 py-2 text-sm font-semibold text-hustle-amber hover:text-white transition-colors"
+            >
+              <span>🏙️ Browse All Cities</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+            <div className="flex flex-wrap gap-2 px-2 pb-2">
+              {displayCities.slice(0, 4).map((city) => (
+                <Link
+                  key={city.slug}
+                  href={`/${city.slug}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-1 text-xs bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                >
+                  {city.name}
+                </Link>
+              ))}
+            </div>
             <hr className="border-white/20" />
             <Link href="/categories" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-1.5 text-sm hover:text-hustle-amber transition-colors">Categories</Link>
             <Link href="/near-me" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-1.5 text-sm hover:text-hustle-amber transition-colors">Nearby</Link>

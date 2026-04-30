@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-browser'
-import type { Category, Area } from '@/lib/types'
+import SmartLocationInput from '@/components/search/SmartLocationInput'
+import type { Category } from '@/lib/types'
 
 interface SearchBarProps {
   initialQuery?: string
@@ -26,24 +27,16 @@ export default function SearchBar({
   const [areaSlug, setAreaSlug] = useState(initialArea)
   const [sort, setSort] = useState(initialSort)
   const [categories, setCategories] = useState<Category[]>([])
-  const [areas, setAreas] = useState<Area[]>([])
 
   useEffect(() => {
-      const supabase = createClient()
+    const supabase = createClient()
     async function loadFilters() {
-      const [catRes, areaRes] = await Promise.all([
-        supabase
-          .from('categories')
-          .select('*')
-          .is('parent_id', null)
-          .order('name'),
-        supabase
-          .from('areas')
-          .select('*')
-          .order('name'),
-      ])
+      const catRes = await supabase
+        .from('categories')
+        .select('*')
+        .is('parent_id', null)
+        .order('name')
       if (catRes.data) setCategories(catRes.data)
-      if (areaRes.data) setAreas(areaRes.data)
     }
     loadFilters()
   }, [])
@@ -56,6 +49,10 @@ export default function SearchBar({
     if (areaSlug) params.set('area', areaSlug)
     if (sort && sort !== 'relevant') params.set('sort', sort)
     router.push(`/search?${params.toString()}`)
+  }
+
+  const handleLocationSelect = (slug: string, type: 'area' | 'landmark') => {
+    setAreaSlug(slug)
   }
 
   if (variant === 'compact') {
@@ -81,18 +78,13 @@ export default function SearchBar({
               </option>
             ))}
           </select>
-          <select
-            value={areaSlug}
-            onChange={(e) => setAreaSlug(e.target.value)}
-            className="px-3 py-2.5 rounded-lg border border-white/20 bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-hustle-amber [&>option]:text-hustle-dark [&>option]:bg-white"
-          >
-            <option value="">All Areas</option>
-            {areas.map((area) => (
-              <option key={area.id} value={area.slug}>
-                {area.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex-1 min-w-0">
+            <SmartLocationInput
+              onSelect={handleLocationSelect}
+              initialValue={initialArea}
+              variant="compact"
+            />
+          </div>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value)}
@@ -146,28 +138,13 @@ export default function SearchBar({
               </option>
             ))}
           </select>
-          <select
-            value={areaSlug}
-            onChange={(e) => setAreaSlug(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60"
-          >
-            <option value="">All Areas</option>
-            {areas.map((area) => (
-              <option key={area.id} value={area.slug}>
-                {area.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            className="flex-1 px-4 py-3 rounded-lg text-hustle-dark text-base bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60"
-          >
-            <option value="relevant">Most Relevant</option>
-            <option value="rating">Highest Rated</option>
-            <option value="newest">Newest</option>
-            <option value="az">A-Z</option>
-          </select>
+          <div className="flex-1 min-w-0">
+            <SmartLocationInput
+              onSelect={handleLocationSelect}
+              initialValue={initialArea}
+              variant="hero"
+            />
+          </div>
         </div>
       </div>
     </form>

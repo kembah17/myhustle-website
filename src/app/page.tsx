@@ -141,6 +141,9 @@ async function getHomePageData() {
 export default async function HomePage() {
   const { cities, categories, businesses, areas } = await getHomePageData()
 
+  // Top 6 cities by business count for compact display
+  const topCities = [...cities].sort((a, b) => (b.business_count || 0) - (a.business_count || 0)).slice(0, 6)
+
   const websiteJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -203,19 +206,37 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* City Selector */}
-      <section className="py-16 bg-gray-50">
+      {/* Compact City Section - Top 6 cities */}
+      <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-heading text-3xl font-bold text-center mb-8">Explore by City</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {cities.map(city => (
-              <Link key={city.slug} href={`/${city.slug}`}
-                className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow text-center group">
-                <h3 className="font-heading text-2xl font-bold text-hustle-blue group-hover:text-hustle-amber transition-colors">{city.name}</h3>
-                <p className="text-hustle-muted mt-1 text-sm">{city.state}</p>
-                <p className="text-hustle-muted mt-2">{city.business_count} {city.business_count === 1 ? 'business' : 'businesses'}</p>
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-center mb-6">Explore by City</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+            {topCities.map(city => (
+              <Link
+                key={city.slug}
+                href={`/${city.slug}`}
+                className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber text-center group"
+              >
+                <h3 className="font-heading text-base md:text-lg font-bold text-hustle-blue group-hover:text-hustle-amber transition-colors">
+                  {city.name}
+                </h3>
+                <p className="text-xs text-hustle-muted mt-0.5">{city.state}</p>
+                <p className="text-xs text-hustle-muted mt-1">
+                  {city.business_count} {city.business_count === 1 ? 'business' : 'businesses'}
+                </p>
               </Link>
             ))}
+          </div>
+          <div className="text-center mt-6">
+            <Link
+              href="/cities"
+              className="inline-flex items-center gap-1 text-hustle-blue font-semibold hover:text-hustle-amber transition-colors text-sm"
+            >
+              View all {cities.length} cities
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
@@ -238,7 +259,7 @@ export default async function HomePage() {
               </div>
               <div className="font-heading text-lg font-bold text-hustle-dark mb-2">1. Send a WhatsApp Message</div>
               <p className="text-hustle-muted text-sm">
-                Tap the button below and tell us your business name. That's it — we'll take it from there.
+                Tap the button below and tell us your business name. That&apos;s it — we&apos;ll take it from there.
               </p>
             </div>
             <div className="text-center">
