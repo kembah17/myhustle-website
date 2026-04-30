@@ -70,7 +70,7 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-hustle-blue text-white">
+    <header className="bg-hustle-blue text-white border-b border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center">
