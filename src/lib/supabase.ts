@@ -1,5 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Placeholder values that pass Supabase validation
+const PLACEHOLDER_URL = 'https://placeholder-project.supabase.co'
+const PLACEHOLDER_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDk5NTI4MDAsImV4cCI6MTk2NTUyODgwMH0.placeholder'
+
 // Create a new Supabase client on each call
 // This ensures environment variables are read at call time,
 // not at module initialization time (critical for Vercel builds)
@@ -7,12 +11,8 @@ export function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Guard for build-time prerendering when env vars may not be available
-  if (!url || !key) {
-    return createClient(
-      'https://placeholder.supabase.co',
-      'placeholder-key'
-    )
+  if (!url || !key || !url.startsWith('http')) {
+    return createClient(PLACEHOLDER_URL, PLACEHOLDER_KEY)
   }
 
   return createClient(url, key)
@@ -23,18 +23,13 @@ export function createServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  // Guard for build-time prerendering
-  if (!url || !key) {
-    return createClient(
-      'https://placeholder.supabase.co',
-      'placeholder-key',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+  if (!url || !key || !url.startsWith('http')) {
+    return createClient(PLACEHOLDER_URL, PLACEHOLDER_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
       }
-    )
+    })
   }
 
   return createClient(url, key, {

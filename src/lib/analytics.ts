@@ -1,8 +1,13 @@
 // Lightweight client-side analytics tracking for MyHustle.com
 // Fire-and-forget pattern - never blocks UI
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Lazy-loaded env vars (NOT module-level to prevent build-time errors)
+function getSupabaseUrl(): string {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+}
+function getSupabaseKey(): string {
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+}
 
 // Debounce tracking: max 1 page view per business per 30 seconds
 const recentPageViews = new Map<string, number>()
@@ -53,7 +58,7 @@ function getBaseMetadata(): Record<string, string> {
 
 /**
  * Core tracking function. Sends event to Supabase REST API.
- * * Fire-and-forget: uses fetch with keepalive for reliable tracking.
+ * Fire-and-forget: uses fetch with keepalive for reliable tracking.
  * Never throws, never blocks UI.
  */
 export function trackEvent(
@@ -63,6 +68,12 @@ export function trackEvent(
 ): void {
   if (typeof window === 'undefined') return
 
+  const supabaseUrl = getSupabaseUrl()
+  const supabaseKey = getSupabaseKey()
+
+  // Skip if env vars not available
+  if (!supabaseUrl || !supabaseKey) return
+
   const payload = {
     business_id: businessId,
     event_type: eventType,
@@ -71,16 +82,15 @@ export function trackEvent(
   }
 
   // Fire-and-forget with keepalive for reliability on page unload
-  const url = `${SUPABASE_URL}/rest/v1/analytics_events`
+  const url = `${supabaseUrl}/rest/v1/analytics_events`
   const body = JSON.stringify(payload)
   const headers = {
     'Content-Type': 'application/json',
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    'apikey': supabaseKey,
+    'Authorization': `Bearer ${supabaseKey}`,
     'Prefer': 'return=minimal',
   }
 
-  // Fire-and-forget with keepalive for reliability on page unload
   try {
     fetch(url, {
       method: 'POST',
