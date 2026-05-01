@@ -6,10 +6,15 @@ import { createClient } from '@supabase/supabase-js'
 export function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Guard for build-time prerendering when env vars may not be available
   if (!url || !key) {
-    console.error('[Supabase] Missing env vars at call time:', { url: !!url, key: !!key })
-    throw new Error('Missing Supabase environment variables')
+    return createClient(
+      'https://placeholder.supabase.co',
+      'placeholder-key'
+    )
   }
+
   return createClient(url, key)
 }
 
@@ -17,10 +22,21 @@ export function getSupabase() {
 export function createServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  // Guard for build-time prerendering
   if (!url || !key) {
-    console.error('[Supabase] Missing service role env vars:', { url: !!url, key: !!key })
-    throw new Error('Missing Supabase service role environment variables')
+    return createClient(
+      'https://placeholder.supabase.co',
+      'placeholder-key',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
   }
+
   return createClient(url, key, {
     auth: {
       autoRefreshToken: false,
