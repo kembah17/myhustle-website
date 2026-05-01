@@ -4,16 +4,24 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  // Guard: if Supabase env vars are missing, skip auth checks and pass through
+  if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
           supabaseResponse = NextResponse.next({ request })
@@ -33,8 +41,6 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // 2. Geo-restriction check (before auth redirects)
-  // Use Vercel's x-vercel-ip-country header (set automatically on Vercel Edge)
-  // Falls back to undefined in local dev, which we allow through
   const country = request.headers.get('x-vercel-ip-country') || undefined
   const bypassIPs = (process.env.GEO_BYPASS_IPS || '')
     .split(',')
@@ -60,12 +66,6 @@ export async function middleware(request: NextRequest) {
   ]
   const isGeoRestricted = geoRestrictedPaths.some(p => pathname.startsWith(p))
 
-  // Only restrict if:
-  // - Country is known AND not Nigeria
-  // - Not a search engine crawler
-  // - Not a bypass IP
-  // - Route is geo-restricted
-  // - Not the /nigeria-only page itself (avoid redirect loop)
   if (
     country &&
     country !== 'NG' &&
