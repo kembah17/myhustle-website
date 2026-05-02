@@ -54,18 +54,19 @@ export default async function NearMePage() {
     .select('id, slug, name, city_id')
     .order('name')
 
-  // Get business counts
-  const { data: allBusinesses } = await getSupabase()
-    .from('businesses')
-    .select('id, city_id, area_id')
-    .eq('active', true)
+  // Get counts via RPC (no .eq('active', true) needed)
+  const { data: cityCounts } = await getSupabase().rpc('get_city_business_counts')
+  const { data: areaCounts } = await getSupabase().rpc('get_area_business_counts')
 
   // Build count maps
   const cityCountMap: Record<string, number> = {}
+  for (const row of cityCounts || []) {
+    cityCountMap[row.city_id] = Number(row.count)
+  }
+
   const areaCountMap: Record<string, number> = {}
-  for (const biz of allBusinesses || []) {
-    if (biz.city_id) cityCountMap[biz.city_id] = (cityCountMap[biz.city_id] || 0) + 1
-    if (biz.area_id) areaCountMap[biz.area_id] = (areaCountMap[biz.area_id] || 0) + 1
+  for (const row of areaCounts || []) {
+    areaCountMap[row.area_id] = Number(row.count)
   }
 
   // Group areas by city
@@ -85,7 +86,7 @@ export default async function NearMePage() {
     })).sort((a, b) => b.business_count - a.business_count),
   })).sort((a, b) => b.business_count - a.business_count)
 
-  const totalBusinesses = allBusinesses?.length || 0
+  const totalBusinesses = (cityCounts || []).reduce((sum: number, r: any) => sum + Number(r.count), 0)
   const totalAreas = areas?.length || 0
 
   const breadcrumbLd = {

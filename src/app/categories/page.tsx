@@ -35,31 +35,29 @@ export default async function CategoriesPage() {
     .is('parent_id', null)
     .order('name')
 
-  // Get all businesses to compute counts
-  const { data: allBusinesses } = await getSupabase()
-    .from('businesses')
-    .select('id, category_id')
-    .eq('active', true)
+  // Get category counts via RPC
+  const { data: categoryCounts } = await getSupabase().rpc('get_category_business_counts')
 
-  // Get all categories (including children) for count mapping
+  // Get all categories (including children) for parent-child mapping
   const { data: allCategories } = await getSupabase()
     .from('categories')
     .select('id, parent_id')
 
   // Build category count map (parent counts include children)
   const catCountMap: Record<string, number> = {}
-  if (allBusinesses && allCategories) {
+  if (categoryCounts && allCategories) {
     const childToParent: Record<string, string> = {}
     for (const cat of allCategories) {
       if (cat.parent_id) {
         childToParent[cat.id] = cat.parent_id
       }
     }
-    for (const biz of allBusinesses) {
-      const catId = biz.category_id
-      catCountMap[catId] = (catCountMap[catId] || 0) + 1
+    for (const row of categoryCounts) {
+      const catId = row.category_id
+      const cnt = Number(row.count)
+      catCountMap[catId] = (catCountMap[catId] || 0) + cnt
       if (childToParent[catId]) {
-        catCountMap[childToParent[catId]] = (catCountMap[childToParent[catId]] || 0) + 1
+        catCountMap[childToParent[catId]] = (catCountMap[childToParent[catId]] || 0) + cnt
       }
     }
   }
@@ -69,7 +67,7 @@ export default async function CategoriesPage() {
     business_count: catCountMap[cat.id] || 0,
   }))
 
-  const totalBusinesses = allBusinesses?.length || 0
+  const totalBusinesses = categoryCounts?.reduce((sum: number, r: any) => sum + Number(r.count), 0) || 0
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',
