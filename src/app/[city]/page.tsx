@@ -64,30 +64,24 @@ export default async function CityPage({ params }: PageProps) {
 
   if (!city) notFound()
 
-  // Fetch businesses with area and category info (limit 1000)
+  // Fetch businesses with area and category info (only those with area assignments)
   const { data: businesses, count: totalBizCount } = await getSupabase()
     .from('businesses')
     .select('id, slug, name, phone, area_id, category:categories(name), area:areas(id, slug, name)', { count: 'exact' })
     .eq('city_id', city.id)
     .eq('active', true)
+    .not('area_id', 'is', null)
     .order('name')
     .limit(1000)
 
   const bizList = (businesses || []) as unknown as BusinessRow[]
 
-  // Group businesses by area (businesses without area go to 'ungrouped')
+  // Group businesses by area
   const areaMap = new Map<string, AreaGroup>()
-  const ungroupedBusinesses: BusinessRow[] = []
-  let ungroupedTotal = 0
 
   for (const biz of bizList) {
-    if (!biz.area || !biz.area_id) {
-      ungroupedTotal++
-      if (ungroupedBusinesses.length < BUSINESSES_PER_AREA) {
-        ungroupedBusinesses.push(biz)
-      }
-      continue
-    }
+    if (!biz.area || !biz.area_id) continue
+
     const areaId = biz.area_id
 
     if (!areaMap.has(areaId)) {
@@ -237,88 +231,6 @@ export default async function CityPage({ params }: PageProps) {
                 )}
               </section>
             ))}
-
-            {/* Businesses without specific area */}
-            {ungroupedBusinesses.length > 0 && (
-              <section>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark">
-                    Other Businesses
-                    <span className="text-sm font-normal text-hustle-muted ml-2">
-                      ({ungroupedTotal} {ungroupedTotal === 1 ? 'business' : 'businesses'})
-                    </span>
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {ungroupedBusinesses.map((biz) => (
-                    <Link
-                      key={biz.id}
-                      href={`/business/${biz.slug}`}
-                      className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber block"
-                    >
-                      <h3 className="font-semibold text-hustle-dark text-sm md:text-base truncate">
-                        {biz.name}
-                      </h3>
-                      {biz.category?.name && (
-                        <p className="text-xs text-hustle-blue mt-1">
-                          {biz.category.name}
-                        </p>
-                      )}
-                      {biz.phone && (
-                        <p className="text-xs text-hustle-muted mt-1 flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                          </svg>
-                          {biz.phone}
-                        </p>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-        ) : ungroupedBusinesses.length > 0 ? (
-          /* No area-grouped businesses but ungrouped exist */
-          <div className="space-y-12">
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark">
-                  All Businesses
-                  <span className="text-sm font-normal text-hustle-muted ml-2">
-                    ({ungroupedTotal} {ungroupedTotal === 1 ? 'business' : 'businesses'})
-                  </span>
-                </h2>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {ungroupedBusinesses.map((biz) => (
-                  <Link
-                    key={biz.id}
-                    href={`/business/${biz.slug}`}
-                    className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber block"
-                  >
-                    <h3 className="font-semibold text-hustle-dark text-sm md:text-base truncate">
-                      {biz.name}
-                    </h3>
-                    {biz.category?.name && (
-                      <p className="text-xs text-hustle-blue mt-1">
-                        {biz.category.name}
-                      </p>
-                    )}
-                    {biz.phone && (
-                      <p className="text-xs text-hustle-muted mt-1 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        {biz.phone}
-                      </p>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            </section>
           </div>
         ) : (
           /* No businesses yet */
