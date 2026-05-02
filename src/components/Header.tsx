@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase-browser'
@@ -24,8 +24,26 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
+  const [citiesOpen, setCitiesOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const fetchedRef = useRef(false)
+  const citiesRef = useRef<HTMLDivElement>(null)
+  const accountRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (citiesRef.current && !citiesRef.current.contains(e.target as Node)) {
+        setCitiesOpen(false)
+      }
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
 
   // Fetch cities
   useEffect(() => {
@@ -67,7 +85,11 @@ export default function Header() {
     await supabase.auth.signOut()
     setUser(null)
     setMobileMenuOpen(false)
+    setAccountOpen(false)
   }
+
+  const closeCities = useCallback(() => setCitiesOpen(false), [])
+  const closeAccount = useCallback(() => setAccountOpen(false), [])
 
   // Show top 6 cities in dropdown, rest accessible via /cities
   const displayCities = cities.slice(0, 6)
@@ -87,19 +109,23 @@ export default function Header() {
             />
           </Link>
           <nav className="hidden md:flex items-center space-x-8">
-            {/* City dropdown */}
-            <div className="relative group">
-              <button className="text-sm font-medium hover:text-hustle-amber transition-colors flex items-center gap-1">
+            {/* City dropdown - click based */}
+            <div className="relative" ref={citiesRef}>
+              <button
+                onClick={() => { setCitiesOpen(prev => !prev); setAccountOpen(false) }}
+                className="text-sm font-medium hover:text-hustle-amber transition-colors flex items-center gap-1"
+              >
                 Cities
-                <svg className="w-4 h-4" width="16" height="16" style={{width:'16px',height:'16px',maxWidth:'16px',maxHeight:'16px',flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-4 h-4 transition-transform ${citiesOpen ? 'rotate-180' : ''}`} width="16" height="16" style={{width:'16px',height:'16px',maxWidth:'16px',maxHeight:'16px',flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              <div className="absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 min-w-[160px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className={`absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 min-w-[160px] transition-all z-50 ${citiesOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
                 {displayCities.map((city) => (
                   <Link
                     key={city.slug}
                     href={`/${city.slug}`}
+                    onClick={closeCities}
                     className="block px-4 py-2 text-hustle-dark hover:bg-gray-50 text-sm"
                   >
                     {city.name}
@@ -110,6 +136,7 @@ export default function Header() {
                     <hr className="my-1 border-gray-100" />
                     <Link
                       href="/cities"
+                      onClick={closeCities}
                       className="block px-4 py-2 text-hustle-blue hover:bg-gray-50 text-sm font-semibold"
                     >
                       View all {cities.length} cities &rarr;
@@ -137,21 +164,24 @@ export default function Header() {
             {/* Auth buttons */}
             {!authLoading && (
               user ? (
-                <div className="relative group">
-                  <button className="flex items-center gap-2 text-sm font-medium hover:text-hustle-amber transition-colors">
+                <div className="relative" ref={accountRef}>
+                  <button
+                    onClick={() => { setAccountOpen(prev => !prev); setCitiesOpen(false) }}
+                    className="flex items-center gap-2 text-sm font-medium hover:text-hustle-amber transition-colors"
+                  >
                     <div className="w-8 h-8 rounded-full bg-hustle-amber/20 flex items-center justify-center text-hustle-amber font-bold text-xs">
                       {user.user_metadata?.owner_name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
                     </div>
-                    <svg className="w-4 h-4" width="16" height="16" style={{width:'16px',height:'16px',maxWidth:'16px',maxHeight:'16px',flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 transition-transform ${accountOpen ? 'rotate-180' : ''}`} width="16" height="16" style={{width:'16px',height:'16px',maxWidth:'16px',maxHeight:'16px',flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  <div className="absolute top-full right-0 bg-white shadow-lg rounded-lg py-2 min-w-[180px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                  <div className={`absolute top-full right-0 bg-white shadow-lg rounded-lg py-2 min-w-[180px] transition-all z-50 ${accountOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-sm font-medium text-hustle-dark truncate">{user.user_metadata?.owner_name || 'My Account'}</p>
                       <p className="text-xs text-hustle-muted truncate">{user.email}</p>
                     </div>
-                    <Link href="/dashboard" className="block px-4 py-2 text-hustle-dark hover:bg-gray-50 text-sm">
+                    <Link href="/dashboard" onClick={closeAccount} className="block px-4 py-2 text-hustle-dark hover:bg-gray-50 text-sm">
                       Dashboard
                     </Link>
                     <button
