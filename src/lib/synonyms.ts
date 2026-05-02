@@ -73,21 +73,21 @@ export const NIGERIAN_SYNONYMS: Record<string, string[]> = {
   'borehole': ['water drilling', 'well', 'water supply', 'borehole drilling'],
   'fumigation': ['pest control', 'termite', 'cockroach', 'rat', 'insect', 'bedbugs', 'fumigator'],
   'generator': ['gen', 'power generator', 'diesel generator', 'generator repair', 'gen mechanic'],
-  'AC': ['air conditioning', 'air conditioner', 'AC repair', 'AC installation', 'cooling', 'HVAC'],
+  'ac': ['air conditioning', 'air conditioner', 'AC repair', 'AC installation', 'cooling', 'HVAC'],
   'interior': ['interior design', 'decoration', 'decor', 'home decor', 'curtain', 'blinds', 'wallpaper'],
   'building': ['construction', 'contractor', 'mason', 'bricklayer', 'block', 'cement'],
   'aluminium': ['aluminum', 'window', 'sliding door', 'glass', 'glazing'],
 
   // Finance & Business
-  'POS': ['point of sale', 'cash', 'withdrawal', 'transfer', 'agent banking', 'mobile money'],
+  'pos': ['point of sale', 'cash', 'withdrawal', 'transfer', 'agent banking', 'mobile money'],
   'accounting': ['accountant', 'bookkeeping', 'tax', 'audit', 'financial'],
   'insurance': ['HMO', 'health insurance', 'car insurance', 'life insurance'],
   'loan': ['microfinance', 'credit', 'lending', 'cooperative', 'thrift'],
   'forex': ['bureau de change', 'BDC', 'dollar', 'exchange rate', 'aboki fx'],
 
   // Events & Entertainment
-  'DJ': ['disc jockey', 'music', 'party', 'entertainment', 'sound'],
-  'MC': ['master of ceremony', 'emcee', 'host', 'compere', 'event host'],
+  'dj': ['disc jockey', 'music', 'party', 'entertainment', 'sound'],
+  'mc': ['master of ceremony', 'emcee', 'host', 'compere', 'event host'],
   'photographer': ['photography', 'photo', 'studio', 'camera', 'videographer', 'video'],
   'event planner': ['event planning', 'party planner', 'wedding planner', 'decoration', 'event decorator'],
   'catering': ['caterer', 'food service', 'party food', 'small chops', 'event food'],
