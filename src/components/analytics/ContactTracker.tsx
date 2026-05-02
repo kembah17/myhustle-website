@@ -9,11 +9,15 @@ interface ContactTrackerProps {
 }
 
 export default function ContactTracker({ businessId, whatsapp, phone }: ContactTrackerProps) {
+  // Use whatsapp field if available, otherwise fall back to phone number
+  // In Nigeria, most business phone numbers are WhatsApp-enabled
+  const whatsappNumber = whatsapp || phone
+
   return (
     <div className="pt-4 space-y-3 border-t border-gray-100">
-      {whatsapp && (
+      {whatsappNumber && (
         <a
-          href={`https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}`}
+          href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackWhatsAppClick(businessId)}
