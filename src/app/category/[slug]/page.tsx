@@ -99,14 +99,15 @@ export default async function CategoryPage({ params }: PageProps) {
     ? [category.id, ...children.map(c => c.id)]
     : [category.id]
 
-  // Fetch businesses
-  const { data: businesses } = await getSupabase()
+  // Fetch businesses (limit 1000 - Supabase default)
+  const { data: businesses, count: totalCount } = await getSupabase()
     .from('businesses')
-    .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)')
+    .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)', { count: 'exact' })
     .in('category_id', categoryIds)
     .eq('active', true)
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
+    .limit(1000)
 
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
@@ -139,7 +140,7 @@ export default async function CategoryPage({ params }: PageProps) {
     '@type': 'ItemList',
     name: `${category.name} in Nigeria`,
     description: `Top ${category.name} businesses across Nigeria`,
-    numberOfItems: bizList.length,
+    numberOfItems: totalCount ?? bizList.length,
     itemListElement: bizList.slice(0, 20).map((biz, index) => ({
       '@type': 'ListItem',
       position: index + 1,
@@ -239,7 +240,7 @@ export default async function CategoryPage({ params }: PageProps) {
         <div className="mb-12">
           <h2 className="font-heading text-2xl font-bold mb-6">
             {isParent ? `All ${category.name} Businesses` : category.name}
-            <span className="text-hustle-muted text-lg font-normal ml-2">({bizList.length})</span>
+            <span className="text-hustle-muted text-lg font-normal ml-2">({totalCount ?? bizList.length})</span>
           </h2>
           <BusinessGrid
             businesses={bizList}
