@@ -133,7 +133,7 @@ export default function BusinessesAdminPage() {
               ) : (
                 businesses.map((b) => (
                   <tr key={b.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-hustle-dark max-w-[200px] truncate">{b.name}</td>
+                    <td className="px-4 py-3 font-medium max-w-[200px] truncate"><Link href={`/dashboard/admin/businesses/${b.id}`} className="text-hustle-blue hover:underline">{b.name}</Link></td>
                     <td className="px-4 py-3 text-hustle-muted">{b.category?.name || '—'}</td>
                     <td className="px-4 py-3 text-hustle-muted">
                       {b.area?.name || '—'}{b.city?.name ? `, ${b.city.name}` : ''}

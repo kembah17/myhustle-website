@@ -1,6 +1,7 @@
 'use client'
 
 import { trackWhatsAppClick, trackCallClick } from '@/lib/analytics'
+import { normalizeNigerianPhone } from '@/lib/phone'
 
 interface ContactTrackerProps {
   businessId: string
@@ -17,7 +18,7 @@ export default function ContactTracker({ businessId, whatsapp, phone }: ContactT
     <div className="pt-4 space-y-3 border-t border-gray-100">
       {whatsappNumber && (
         <a
-          href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
+          href={`https://wa.me/${normalizeNigerianPhone(whatsappNumber)}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackWhatsAppClick(businessId)}
@@ -31,7 +32,7 @@ export default function ContactTracker({ businessId, whatsapp, phone }: ContactT
       )}
       {phone && (
         <a
-          href={`tel:${phone}`}
+          href={`tel:+${normalizeNigerianPhone(phone)}`}
           onClick={() => trackCallClick(businessId)}
           className="w-full flex items-center justify-center gap-2 bg-hustle-blue text-white py-3 rounded-lg font-bold hover:bg-hustle-dark transition-colors"
         >

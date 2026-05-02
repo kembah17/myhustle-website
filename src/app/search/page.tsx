@@ -7,6 +7,7 @@ import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 import SearchImpressionTracker from '@/components/analytics/SearchImpressionTracker'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import { expandSearchTerms } from '@/lib/synonyms'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; category?: string; area?: string; sort?: string }>
@@ -83,9 +84,20 @@ export default async function SearchPage({ searchParams }: PageProps) {
     }
   }
 
-  // Text search
+  // Text search with synonym expansion
   if (q) {
-    query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`)
+    const searchTerms = expandSearchTerms(q)
+    // Limit to 15 most relevant terms to avoid overly large queries
+    const terms = searchTerms.slice(0, 15)
+    // Build OR conditions: for each term, search in name and description
+    const orConditions = terms
+      .map((term) => {
+        // Escape special PostgREST characters in the term
+        const escaped = term.replace(/[%_]/g, '\\$&')
+        return `name.ilike.%${escaped}%,description.ilike.%${escaped}%`
+      })
+      .join(',')
+    query = query.or(orConditions)
   }
 
   // Apply sorting
@@ -248,7 +260,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
               No matches
             </h2>
             <p className="text-hustle-muted mb-8 max-w-md mx-auto">
-              We couldn't find what you're looking for. Try different words or browse by category below.
+              We couldn&apos;t find what you&apos;re looking for. Try different words or browse by category below.
             </p>
 
             {suggestedCategories.length > 0 && (

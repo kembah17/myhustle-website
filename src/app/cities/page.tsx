@@ -28,28 +28,63 @@ interface CityWithCount {
   business_count: number
 }
 
-async function getCitiesData() {
+async function getCityBusinessCounts(): Promise<Record<string, number>> {
   const supabase = getSupabase()
-
-  const { data: cities } = await supabase
-    .from('cities')
-    .select('id, slug, name, state')
-    .order('name')
-
-  // Get business counts
-  const { data: allBusinesses } = await supabase
-    .from('businesses')
-    .select('id, city_id')
-    .eq('active', true)
-
   const cityCountMap: Record<string, number> = {}
-  if (allBusinesses) {
-    for (const biz of allBusinesses) {
+
+  // Try the efficient RPC function first
+  const { data: rpcData, error: rpcError } = await supabase
+    .rpc('get_city_business_counts')
+
+  if (!rpcError && rpcData) {
+    for (const row of rpcData as { city_id: string; count: number }[]) {
+      cityCountMap[row.city_id] = Number(row.count)
+    }
+    return cityCountMap
+  }
+
+  // Fallback: paginate through businesses fetching only city_id
+  // Supabase returns max 1000 rows per request
+  const PAGE_SIZE = 1000
+  let offset = 0
+  let hasMore = true
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('businesses')
+      .select('city_id')
+      .eq('active', true)
+      .not('city_id', 'is', null)
+      .range(offset, offset + PAGE_SIZE - 1)
+
+    if (error || !data || data.length === 0) {
+      hasMore = false
+      break
+    }
+
+    for (const biz of data) {
       if (biz.city_id) {
         cityCountMap[biz.city_id] = (cityCountMap[biz.city_id] || 0) + 1
       }
     }
+
+    if (data.length < PAGE_SIZE) {
+      hasMore = false
+    } else {
+      offset += PAGE_SIZE
+    }
   }
+
+  return cityCountMap
+}
+
+async function getCitiesData() {
+  const supabase = getSupabase()
+
+  const [{ data: cities }, cityCountMap] = await Promise.all([
+    supabase.from('cities').select('id, slug, name, state').order('name'),
+    getCityBusinessCounts(),
+  ])
 
   const citiesWithCounts: CityWithCount[] = (cities || []).map((city) => ({
     ...city,

@@ -19,6 +19,29 @@ async function getAuthUser(request: NextRequest) {
   return user
 }
 
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getAuthUser(request)
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { id } = await params
+  const db = createServiceClient()
+
+  const { data, error } = await db
+    .from('businesses')
+    .select('*, category:categories(id, name), city:cities(id, name), area:areas(id, name)')
+    .eq('id', id)
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json(data)
+}
+
+const ALLOWED_FIELDS = [
+  'name', 'description', 'phone', 'phone2', 'whatsapp', 'email',
+  'website', 'address', 'tagline', 'category_id', 'active', 'verified',
+] as const
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAuthUser(request)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -28,12 +51,22 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const db = createServiceClient()
 
   const updates: Record<string, unknown> = {}
-  if (typeof body.active === 'boolean') updates.active = body.active
-  if (typeof body.verified === 'boolean') updates.verified = body.verified
+  for (const field of ALLOWED_FIELDS) {
+    if (body[field] !== undefined) {
+      // Convert empty strings to null for optional fields
+      if (typeof body[field] === 'string' && body[field].trim() === '' && field !== 'name') {
+        updates[field] = null
+      } else {
+        updates[field] = body[field]
+      }
+    }
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
   }
+
+  updates.updated_at = new Date().toISOString()
 
   const { data, error } = await db.from('businesses').update(updates).eq('id', id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
