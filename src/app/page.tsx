@@ -48,53 +48,64 @@ async function getHomePageData() {
     .is('parent_id', null)
     .order('name')
 
-  // Get all businesses to compute counts
-  const { data: allBusinesses } = await getSupabase()
-    .from('businesses')
-    .select('id, category_id, area_id, city_id')
-    .eq('active', true)
+  // Use RPC functions for accurate counts (avoids Supabase 1000-row limit)
+  const { data: cityCounts } = await getSupabase().rpc('get_city_business_counts')
+  const { data: categoryCounts } = await getSupabase().rpc('get_category_business_counts')
+  const { data: areaCounts } = await getSupabase().rpc('get_area_business_counts')
 
-  // Get all categories (including children) for count mapping
+  // Get all categories (including children) for parent aggregation
   const { data: allCategories } = await getSupabase()
     .from('categories')
     .select('id, parent_id')
 
-  // Build category count map (parent counts include children)
+  // Build city count map from RPC
+  const cityCountMap: Record<string, number> = {}
+  if (cityCounts) {
+    for (const row of cityCounts) {
+      cityCountMap[row.city_id] = Number(row.count)
+    }
+  }
+
+  // Build category count map from RPC, aggregating children into parents
   const catCountMap: Record<string, number> = {}
-  if (allBusinesses && allCategories) {
+  if (categoryCounts && allCategories) {
+    // First, map raw counts
+    const rawCounts: Record<string, number> = {}
+    for (const row of categoryCounts) {
+      rawCounts[row.category_id] = Number(row.count)
+    }
+    // Build child-to-parent mapping
     const childToParent: Record<string, string> = {}
     for (const cat of allCategories) {
       if (cat.parent_id) {
         childToParent[cat.id] = cat.parent_id
       }
     }
-    for (const biz of allBusinesses) {
-      const catId = biz.category_id
-      catCountMap[catId] = (catCountMap[catId] || 0) + 1
+    // Aggregate: each category gets its own count + parent gets children's counts
+    for (const [catId, count] of Object.entries(rawCounts)) {
+      catCountMap[catId] = (catCountMap[catId] || 0) + count
       if (childToParent[catId]) {
-        catCountMap[childToParent[catId]] = (catCountMap[childToParent[catId]] || 0) + 1
+        catCountMap[childToParent[catId]] = (catCountMap[childToParent[catId]] || 0) + count
       }
     }
   }
 
-  const categoriesWithCounts = (parentCategories || []).map(cat => ({
-    ...cat,
-    business_count: catCountMap[cat.id] || 0,
-  }))
-
-  // Business counts per city
-  const cityCountMap: Record<string, number> = {}
-  if (allBusinesses) {
-    for (const biz of allBusinesses) {
-      if (biz.city_id) {
-        cityCountMap[biz.city_id] = (cityCountMap[biz.city_id] || 0) + 1
-      }
+  // Build area count map from RPC
+  const areaCountMap: Record<string, number> = {}
+  if (areaCounts) {
+    for (const row of areaCounts) {
+      areaCountMap[row.area_id] = Number(row.count)
     }
   }
 
   const citiesWithCounts = (cities || []).map(city => ({
     ...city,
     business_count: cityCountMap[city.id] || 0,
+  }))
+
+  const categoriesWithCounts = (parentCategories || []).map(cat => ({
+    ...cat,
+    business_count: catCountMap[cat.id] || 0,
   }))
 
   // Get featured/recent businesses with relations
@@ -110,15 +121,6 @@ async function getHomePageData() {
     .from('areas')
     .select('id, slug, name, city:cities(slug, name)')
     .order('name')
-
-  const areaCountMap: Record<string, number> = {}
-  if (allBusinesses) {
-    for (const biz of allBusinesses) {
-      if (biz.area_id) {
-        areaCountMap[biz.area_id] = (areaCountMap[biz.area_id] || 0) + 1
-      }
-    }
-  }
 
   const areasWithCounts = (areas || [])
     .map(area => ({
