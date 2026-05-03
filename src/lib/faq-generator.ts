@@ -63,7 +63,7 @@ export function generateHomepageFAQs(data: {
     },
     {
       question: 'How does business verification work on MyHustle?',
-      answer: 'MyHustle offers a multi-tier verification system. Verified businesses have been confirmed by our team to ensure their contact details and location are accurate. Look for the verification badge on business listings to identify trusted businesses.',
+      answer: 'When you find a business on MyHustle, you can trust the listing is real. We check phone numbers, addresses, and opening hours so you can call or visit with confidence. Verified listings display a badge — meaning our team has personally confirmed the business details are accurate and up to date.',
     },
     {
       question: 'Can I read reviews of businesses on MyHustle?',
@@ -233,7 +233,7 @@ export function generateAreaFAQs(data: {
   faqs.push(
     {
       question: `Are businesses in ${areaName} verified on MyHustle?`,
-      answer: `Yes, MyHustle offers verification for businesses in ${areaName}, ${cityName}. Verified businesses have been confirmed by our team and display a verification badge on their listing, helping you choose trusted providers.`,
+      answer: `Yes! Businesses in ${areaName}, ${cityName} can earn a verification badge on MyHustle. This means their phone number, address, and services have been confirmed by our team — so you can book or visit with confidence.`,
     },
     {
       question: `How do I list my business in ${areaName}, ${cityName}?`,
@@ -404,7 +404,7 @@ export function generateCategoryFAQs(data: {
   faqs.push(
     {
       question: `Are ${categoryName} businesses verified on MyHustle?`,
-      answer: `MyHustle offers a multi-tier verification system for ${categoryName} businesses. Verified businesses display a badge confirming their contact details and location have been checked, helping you choose trusted service providers.`,
+      answer: `When browsing ${categoryName} businesses on MyHustle, look for the verification badge. It means we have confirmed their phone number, location, and services are accurate — giving you peace of mind before you book or visit.`,
     },
     {
       question: `How do I compare ${catLower} businesses on MyHustle?`,

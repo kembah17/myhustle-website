@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://myhustle.space'),
   title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
   description:
-    'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark. Read real reviews and book appointments directly.',
+    'Find and book trusted businesses near you in Nigeria. Over 73,000 listings across 39 cities — salons, mechanics, restaurants, clinics and more. Search free, book instantly.',
   keywords: [
     'Nigeria business directory',
     'Nigerian SME directory',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
     description:
-      'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark. Read real reviews and book appointments directly.',
+      'Find and book trusted businesses near you in Nigeria. Over 73,000 listings across 39 cities — salons, mechanics, restaurants, clinics and more. Search free, book instantly.',
     siteName: 'MyHustle.com',
     locale: 'en_NG',
     type: 'website',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     site: '@myhustle_ng',
     title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
     description:
-      'Discover trusted businesses across Nigeria. Browse by city, area, category, or landmark.',
+      'Find and book trusted businesses near you in Nigeria. Over 73,000 listings across 39 cities — search free, book instantly.',
   },
 
   verification: {
