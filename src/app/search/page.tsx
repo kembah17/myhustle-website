@@ -98,14 +98,28 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
       // Only check if no area filter already applied
       if (!areaSlug && !detectedAreaId) {
-        const { data: areaMatch } = await getSupabase()
+        // Try EXACT match first (e.g., 'Lekki' not 'Ibeju-Lekki')
+        const { data: exactArea } = await getSupabase()
+          .from('areas')
+          .select('id, name')
+          .ilike('name', word)
+          .limit(1)
+        if (exactArea && exactArea.length > 0) {
+          detectedAreaId = exactArea[0].id
+          activeAreaName = exactArea[0].name
+          continue // Don't add to text search
+        }
+        // Fallback: partial match, prefer shortest name (most specific)
+        const { data: partialAreas } = await getSupabase()
           .from('areas')
           .select('id, name')
           .ilike('name', `%${word}%`)
-          .limit(1)
-        if (areaMatch && areaMatch.length > 0) {
-          detectedAreaId = areaMatch[0].id
-          activeAreaName = areaMatch[0].name
+          .limit(5)
+        if (partialAreas && partialAreas.length > 0) {
+          // Sort by name length - shortest is most specific
+          const best = partialAreas.sort((a, b) => a.name.length - b.name.length)[0]
+          detectedAreaId = best.id
+          activeAreaName = best.name
           continue // Don't add to text search
         }
       }
