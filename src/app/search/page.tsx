@@ -8,6 +8,7 @@ import type { Business, Category, Area, Review } from '@/lib/types'
 import SearchImpressionTracker from '@/components/analytics/SearchImpressionTracker'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 import { expandSearchTerms, expandMultiWordQuery } from '@/lib/synonyms'
+import { inferCategoryFromTerms } from '@/lib/category-inference'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; category?: string; area?: string; sort?: string }>
@@ -33,6 +34,26 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
 type BizWithRelations = Business & { category: Category; area: Area; reviews: Review[] }
 
+/**
+ * Check how many search terms match a business name or description.
+ * Returns { nameMatches, descMatches } counts.
+ */
+function countTermMatches(
+  biz: BizWithRelations,
+  terms: string[]
+): { nameMatches: number; descMatches: number } {
+  const name = (biz.name || '').toLowerCase()
+  const desc = (biz.description || '').toLowerCase()
+  let nameMatches = 0
+  let descMatches = 0
+  for (const term of terms) {
+    const t = term.toLowerCase()
+    if (name.includes(t)) nameMatches++
+    else if (desc.includes(t)) descMatches++
+  }
+  return { nameMatches, descMatches }
+}
+
 export default async function SearchPage({ searchParams }: PageProps) {
   const {
     q = '',
@@ -48,7 +69,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   // Filter by category
   let activeCategoryName = ''
+  let explicitCategoryFilter = false
   if (catSlug) {
+    explicitCategoryFilter = true
     const { data: cat } = await getSupabase()
       .from('categories')
       .select('id, name, parent_id')
@@ -84,7 +107,10 @@ export default async function SearchPage({ searchParams }: PageProps) {
     }
   }
 
-  // Text search with synonym expansion + location detection
+  // Text search with synonym expansion + location detection + category inference
+  let searchTermsUsed: string[] = []
+  let isMultiTermSearch = false
+
   if (q) {
     // STEP 1: Detect location terms in query
     const queryWords = q.toLowerCase().trim().split(/\s+/)
@@ -147,11 +173,31 @@ export default async function SearchPage({ searchParams }: PageProps) {
       query = query.eq('city_id', detectedCityId)
     }
 
-    // STEP 2: Expand remaining keywords through synonyms
+    // STEP 2: Category Inference (Layer 1)
+    // If no explicit category filter, try to infer from search terms
+    if (!explicitCategoryFilter && nonLocationWords.length >= 2) {
+      const inference = inferCategoryFromTerms(nonLocationWords)
+      if (inference.confidence === 'high' && inference.parentCategoryId) {
+        // Apply parent category filter - get all subcategory IDs under this parent
+        const { data: children } = await getSupabase()
+          .from('categories')
+          .select('id')
+          .eq('parent_id', inference.parentCategoryId)
+        const ids = [inference.parentCategoryId, ...(children || []).map((c) => c.id)]
+        query = query.in('category_id', ids)
+      }
+    }
+
+    // STEP 3: Expand remaining keywords through synonyms
     if (nonLocationWords.length > 0) {
       const searchText = nonLocationWords.join(' ')
       const searchTerms = expandMultiWordQuery(searchText)
-      const terms = searchTerms.slice(0, 15)
+      searchTermsUsed = searchTerms.slice(0, 15)
+      isMultiTermSearch = nonLocationWords.length >= 2
+
+      // Layer 2: Name Priority - search name with higher priority
+      // We use OR conditions but will re-rank results after fetching
+      const terms = searchTermsUsed
       const orConditions = terms
         .map((term) => {
           const escaped = term.replace(/[%_]/g, '\\$&')
@@ -165,26 +211,65 @@ export default async function SearchPage({ searchParams }: PageProps) {
   // Apply sorting
   switch (sort) {
     case 'rating':
-      // We'll sort client-side for rating since it's computed from reviews
       query = query.limit(100)
       break
     case 'newest':
-      query = query.order('created_at', { ascending: false }).limit(50)
+      query = query.order('created_at', { ascending: false }).limit(100)
       break
     case 'az':
-      query = query.order('name', { ascending: true }).limit(50)
+      query = query.order('name', { ascending: true }).limit(100)
       break
     case 'relevant':
     default:
       query = query
         .order('verified', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(100)
       break
   }
 
   const { data: businesses } = await query
   let bizList = (businesses || []) as BizWithRelations[]
+
+  // POST-FETCH: Apply Layer 2 (Name Priority) and Layer 3 (Minimum Match Threshold)
+  if (searchTermsUsed.length > 0 && bizList.length > 0) {
+    // Score each business: name matches get 3x weight
+    const scored = bizList.map((biz) => {
+      const { nameMatches, descMatches } = countTermMatches(biz, searchTermsUsed)
+      const score = nameMatches * 3 + descMatches
+      return { biz, nameMatches, descMatches, score, totalMatches: nameMatches + descMatches }
+    })
+
+    // Layer 3: Minimum Match Threshold
+    // For multi-term searches, require at least 2 terms to match total
+    // (either in name or description)
+    let filtered = scored
+    if (isMultiTermSearch) {
+      filtered = scored.filter((item) => {
+        // If it matches in the name at all, keep it (name match = high relevance)
+        if (item.nameMatches >= 1) return true
+        // For description-only matches, require 2+ terms
+        return item.totalMatches >= 2
+      })
+      // If filtering removed everything, fall back to all results
+      if (filtered.length === 0) filtered = scored
+    }
+
+    // Layer 2: Sort by score (name matches prioritized)
+    if (sort === 'relevant') {
+      filtered.sort((a, b) => {
+        // Primary: score (name matches weighted 3x)
+        if (b.score !== a.score) return b.score - a.score
+        // Secondary: verified businesses first
+        if (b.biz.verified !== a.biz.verified) return b.biz.verified ? 1 : -1
+        return 0
+      })
+    }
+
+    bizList = filtered.map((item) => item.biz).slice(0, 50)
+  } else {
+    bizList = bizList.slice(0, 50)
+  }
 
   // Client-side sort by average rating if needed
   if (sort === 'rating') {
