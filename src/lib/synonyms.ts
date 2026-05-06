@@ -161,23 +161,81 @@ export const NIGERIAN_SYNONYMS: Record<string, string[]> = {
 }
 
 // Reverse lookup: given a search term, find all related terms
+// Generate singular and plural forms of a word
+// Handles common English pluralization rules
+function getSingularPluralForms(word: string): string[] {
+  const lower = word.toLowerCase().trim()
+  if (lower.length < 3) return [lower]
+
+  const forms = new Set<string>([lower])
+
+  // If word ends in common plural suffixes, generate singular
+  if (lower.endsWith('ies') && lower.length > 4) {
+    // pharmacies -> pharmacy, bakeries -> bakery
+    forms.add(lower.slice(0, -3) + 'y')
+  } else if (lower.endsWith('ves')) {
+    // knives -> knife, wives -> wife
+    forms.add(lower.slice(0, -3) + 'fe')
+    forms.add(lower.slice(0, -3) + 'f')
+  } else if (lower.endsWith('ses') || lower.endsWith('xes') || lower.endsWith('zes') || lower.endsWith('ches') || lower.endsWith('shes')) {
+    // buses -> bus, boxes -> box, churches -> church
+    if (lower.endsWith('ches') || lower.endsWith('shes')) {
+      forms.add(lower.slice(0, -2))
+    } else {
+      forms.add(lower.slice(0, -2))
+    }
+  } else if (lower.endsWith('s') && !lower.endsWith('ss') && !lower.endsWith('us')) {
+    // hospitals -> hospital, salons -> salon
+    forms.add(lower.slice(0, -1))
+  }
+
+  // Generate plural from singular
+  if (lower.endsWith('y') && !lower.endsWith('ay') && !lower.endsWith('ey') && !lower.endsWith('oy') && !lower.endsWith('uy')) {
+    // pharmacy -> pharmacies, bakery -> bakeries
+    forms.add(lower.slice(0, -1) + 'ies')
+  } else if (lower.endsWith('f')) {
+    // leaf -> leaves
+    forms.add(lower.slice(0, -1) + 'ves')
+  } else if (lower.endsWith('fe')) {
+    // knife -> knives
+    forms.add(lower.slice(0, -2) + 'ves')
+  } else if (lower.endsWith('s') || lower.endsWith('x') || lower.endsWith('z') || lower.endsWith('ch') || lower.endsWith('sh')) {
+    // bus -> buses, box -> boxes, church -> churches
+    forms.add(lower + 'es')
+  } else if (!lower.endsWith('s')) {
+    // hospital -> hospitals, salon -> salons
+    forms.add(lower + 's')
+  }
+
+  return Array.from(forms)
+}
+
 export function expandSearchTerms(term: string): string[] {
   const lower = term.toLowerCase().trim()
   const expanded = new Set<string>([lower])
 
-  // Direct match: term is a key
-  if (NIGERIAN_SYNONYMS[lower]) {
-    for (const syn of NIGERIAN_SYNONYMS[lower]) {
-      expanded.add(syn.toLowerCase())
-    }
+  // Generate singular/plural forms of the search term
+  const forms = getSingularPluralForms(lower)
+  for (const form of forms) {
+    expanded.add(form)
   }
 
-  // Reverse match: term appears in a value array
-  for (const [key, values] of Object.entries(NIGERIAN_SYNONYMS)) {
-    if (values.some(v => v.toLowerCase() === lower || v.toLowerCase().includes(lower))) {
-      expanded.add(key.toLowerCase())
-      for (const v of values) {
-        expanded.add(v.toLowerCase())
+  // Check each form (singular and plural) against synonym map
+  for (const form of forms) {
+    // Direct match: form is a key
+    if (NIGERIAN_SYNONYMS[form]) {
+      for (const syn of NIGERIAN_SYNONYMS[form]) {
+        expanded.add(syn.toLowerCase())
+      }
+    }
+
+    // Reverse match: form appears in a value array
+    for (const [key, values] of Object.entries(NIGERIAN_SYNONYMS)) {
+      if (values.some(v => v.toLowerCase() === form || v.toLowerCase().includes(form))) {
+        expanded.add(key.toLowerCase())
+        for (const v of values) {
+          expanded.add(v.toLowerCase())
+        }
       }
     }
   }

@@ -174,18 +174,23 @@ export default function SmartLocationInput({
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const items = query.trim() ? results : nearbyAreas
-    if (!items.length) return
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown' && items.length) {
       e.preventDefault()
       setSelectedIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0))
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowUp' && items.length) {
       e.preventDefault()
       setSelectedIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1))
-    } else if (e.key === 'Enter' && selectedIndex >= 0) {
-      e.preventDefault()
-      const item = items[selectedIndex]
-      handleSelect(item)
+    } else if (e.key === 'Enter') {
+      if (selectedIndex >= 0 && items.length) {
+        // Select highlighted item from dropdown
+        e.preventDefault()
+        const item = items[selectedIndex]
+        handleSelect(item)
+      } else {
+        // No item selected - close dropdown and let form submit naturally
+        setIsOpen(false)
+      }
     } else if (e.key === 'Escape') {
       setIsOpen(false)
       inputRef.current?.blur()
@@ -240,6 +245,7 @@ export default function SmartLocationInput({
           }}
           onKeyDown={handleKeyDown}
           placeholder="📍 Area or landmark..."
+          enterKeyHint="search"
           className={baseInputClass}
           autoComplete="off"
           role="combobox"

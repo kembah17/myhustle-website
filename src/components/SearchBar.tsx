@@ -64,6 +64,7 @@ export default function SearchBar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search businesses..."
+            enterKeyHint="search"
             className="flex-1 px-4 py-2.5 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-hustle-amber focus:border-transparent"
           />
           <select
@@ -116,6 +117,7 @@ export default function SearchBar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="What are you looking for?"
+            enterKeyHint="search"
             className="flex-1 px-6 py-4 rounded-lg text-hustle-dark text-lg bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60 placeholder-hustle-dark/40"
           />
           <button
