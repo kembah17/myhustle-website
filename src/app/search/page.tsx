@@ -175,9 +175,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
     // STEP 2: Category Inference (Layer 1)
     // If no explicit category filter, try to infer from search terms
-    if (!explicitCategoryFilter && nonLocationWords.length >= 2) {
+    if (!explicitCategoryFilter && nonLocationWords.length >= 1) {
       const inference = inferCategoryFromTerms(nonLocationWords)
-      if (inference.confidence === 'high' && inference.parentCategoryId) {
+      if ((inference.confidence === 'high' || inference.confidence === 'low') && inference.parentCategoryId) {
         // Apply parent category filter - get all subcategory IDs under this parent
         const { data: children } = await getSupabase()
           .from('categories')
