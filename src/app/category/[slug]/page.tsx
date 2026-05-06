@@ -104,18 +104,21 @@ export default async function CategoryPage({ params }: PageProps) {
     .from('businesses')
     .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)', { count: 'exact' })
     .in('category_id', categoryIds)
-    .eq('active', true)
+    
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(1000)
 
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
-  // Compute child category counts
+  // Get accurate subcategory counts via RPC (efficient single query)
   if (isParent && children.length > 0) {
+    const { data: categoryCounts } = await getSupabase().rpc('get_category_business_counts')
     const countMap: Record<string, number> = {}
-    for (const biz of bizList) {
-      countMap[biz.category_id] = (countMap[biz.category_id] || 0) + 1
+    if (categoryCounts) {
+      for (const row of categoryCounts) {
+        countMap[row.category_id] = Number(row.count)
+      }
     }
     children = children.map(c => ({ ...c, business_count: countMap[c.id] || 0 }))
   }

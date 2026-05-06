@@ -109,7 +109,7 @@ export default function AboutPage() {
           </div>
           <div className="grid sm:grid-cols-3 gap-8">
             <div>
-              <div className="text-4xl font-bold text-hustle-blue mb-2">100K+</div>
+              <div className="text-4xl font-bold text-hustle-blue mb-2">2,000,000+</div>
               <p className="text-hustle-muted">Business listings across Nigeria</p>
             </div>
             <div>
