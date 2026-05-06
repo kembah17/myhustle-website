@@ -184,3 +184,37 @@ export function expandSearchTerms(term: string): string[] {
 
   return Array.from(expanded)
 }
+
+// Multi-word query expansion: splits query into words, handles multi-word synonym keys,
+// and expands each word individually through the synonym engine
+export function expandMultiWordQuery(query: string): string[] {
+  const words = query.toLowerCase().trim().split(/\s+/).filter(w => w.length > 1)
+  if (words.length === 0) return []
+  if (words.length === 1) return expandSearchTerms(words[0])
+
+  const expanded = new Set<string>()
+
+  // Check for multi-word synonym keys first (e.g., 'car wash', 'panel beater', 'ice cream')
+  const usedIndices = new Set<number>()
+  for (let i = 0; i < words.length - 1; i++) {
+    const twoWord = `${words[i]} ${words[i + 1]}`
+    if (NIGERIAN_SYNONYMS[twoWord]) {
+      for (const syn of expandSearchTerms(twoWord)) {
+        expanded.add(syn)
+      }
+      usedIndices.add(i)
+      usedIndices.add(i + 1)
+    }
+  }
+
+  // Expand remaining individual words
+  for (let i = 0; i < words.length; i++) {
+    if (!usedIndices.has(i)) {
+      for (const syn of expandSearchTerms(words[i])) {
+        expanded.add(syn)
+      }
+    }
+  }
+
+  return Array.from(expanded)
+}

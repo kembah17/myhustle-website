@@ -7,7 +7,7 @@ import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 import SearchImpressionTracker from '@/components/analytics/SearchImpressionTracker'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
-import { expandSearchTerms } from '@/lib/synonyms'
+import { expandSearchTerms, expandMultiWordQuery } from '@/lib/synonyms'
 
 interface PageProps {
   searchParams: Promise<{ q?: string; category?: string; area?: string; sort?: string }>
@@ -84,20 +84,68 @@ export default async function SearchPage({ searchParams }: PageProps) {
     }
   }
 
-  // Text search with synonym expansion
+  // Text search with synonym expansion + location detection
   if (q) {
-    const searchTerms = expandSearchTerms(q)
-    // Limit to 15 most relevant terms to avoid overly large queries
-    const terms = searchTerms.slice(0, 15)
-    // Build OR conditions: for each term, search in name and description
-    const orConditions = terms
-      .map((term) => {
-        // Escape special PostgREST characters in the term
-        const escaped = term.replace(/[%_]/g, '\\$&')
-        return `name.ilike.%${escaped}%,description.ilike.%${escaped}%`
-      })
-      .join(',')
-    query = query.or(orConditions)
+    // STEP 1: Detect location terms in query
+    const queryWords = q.toLowerCase().trim().split(/\s+/)
+    let detectedAreaId: string | null = null
+    let detectedCityId: string | null = null
+    const nonLocationWords: string[] = []
+
+    // Check each word against areas and cities
+    for (const word of queryWords) {
+      if (word.length < 3) { nonLocationWords.push(word); continue }
+
+      // Only check if no area filter already applied
+      if (!areaSlug && !detectedAreaId) {
+        const { data: areaMatch } = await getSupabase()
+          .from('areas')
+          .select('id, name')
+          .ilike('name', `%${word}%`)
+          .limit(1)
+        if (areaMatch && areaMatch.length > 0) {
+          detectedAreaId = areaMatch[0].id
+          activeAreaName = areaMatch[0].name
+          continue // Don't add to text search
+        }
+      }
+
+      // Check cities if no area found
+      if (!areaSlug && !detectedAreaId && !detectedCityId) {
+        const { data: cityMatch } = await getSupabase()
+          .from('cities')
+          .select('id, name')
+          .ilike('name', word)
+          .limit(1)
+        if (cityMatch && cityMatch.length > 0) {
+          detectedCityId = cityMatch[0].id
+          continue
+        }
+      }
+
+      nonLocationWords.push(word)
+    }
+
+    // Apply detected location filter
+    if (detectedAreaId) {
+      query = query.eq('area_id', detectedAreaId)
+    } else if (detectedCityId) {
+      query = query.eq('city_id', detectedCityId)
+    }
+
+    // STEP 2: Expand remaining keywords through synonyms
+    if (nonLocationWords.length > 0) {
+      const searchText = nonLocationWords.join(' ')
+      const searchTerms = expandMultiWordQuery(searchText)
+      const terms = searchTerms.slice(0, 15)
+      const orConditions = terms
+        .map((term) => {
+          const escaped = term.replace(/[%_]/g, '\\$&')
+          return `name.ilike.%${escaped}%,description.ilike.%${escaped}%`
+        })
+        .join(',')
+      query = query.or(orConditions)
+    }
   }
 
   // Apply sorting
