@@ -174,9 +174,23 @@ export default async function SearchPage({ searchParams }: PageProps) {
     }
 
     // STEP 2: Category Inference (Layer 1)
+    // First expand synonyms (needed for both inference fallback and text search)
+    let searchTermsExpanded: string[] = []
+    if (nonLocationWords.length > 0) {
+      const searchText = nonLocationWords.join(' ')
+      searchTermsExpanded = expandMultiWordQuery(searchText)
+    }
+
     // If no explicit category filter, try to infer from search terms
     if (!explicitCategoryFilter && nonLocationWords.length >= 1) {
-      const inference = inferCategoryFromTerms(nonLocationWords)
+      // Try inference on raw terms first
+      let inference = inferCategoryFromTerms(nonLocationWords)
+
+      // If raw terms don't match, try expanded synonym terms
+      if (inference.confidence === 'none' && searchTermsExpanded.length > 0) {
+        inference = inferCategoryFromTerms(searchTermsExpanded)
+      }
+
       if ((inference.confidence === 'high' || inference.confidence === 'low') && inference.parentCategoryId) {
         // Apply parent category filter - get all subcategory IDs under this parent
         const { data: children } = await getSupabase()
@@ -188,11 +202,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
       }
     }
 
-    // STEP 3: Expand remaining keywords through synonyms
+    // STEP 3: Use already-expanded terms for text search
     if (nonLocationWords.length > 0) {
-      const searchText = nonLocationWords.join(' ')
-      const searchTerms = expandMultiWordQuery(searchText)
-      searchTermsUsed = searchTerms.slice(0, 15)
+      searchTermsUsed = searchTermsExpanded.slice(0, 15)
       isMultiTermSearch = nonLocationWords.length >= 2
 
       // Layer 2: Name Priority - search name with higher priority
