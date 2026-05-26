@@ -23,15 +23,8 @@ export const metadata: Metadata = {
   title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
   description:
     'Find and book trusted businesses near you in Nigeria. Over 73,000 listings across 39 cities — salons, mechanics, restaurants, clinics and more. Search free, book instantly.',
-  keywords: [
-    'Nigeria business directory',
-    'Nigerian SME directory',
-    'find businesses in Nigeria',
-    'book appointments Nigeria',
-    'Nigeria services',
-    'MyHustle',
-    'business listing Nigeria',
-  ],
+  // Note: meta keywords removed intentionally - Google officially ignores them
+  // and they can expose SEO strategy to competitors
   openGraph: {
     title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',
     description:

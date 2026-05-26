@@ -31,10 +31,15 @@ export async function GET(
   const end = start + PAGE_SIZE - 1
 
   try {
+    // Quality filter: only include businesses with a name AND (address OR phone)
+    // This filters out truly empty placeholder pages that Google marks as thin content
     const { data: businesses, error } = await getSupabase()
       .from('businesses')
-      .select('slug, updated_at')
+      .select('slug, updated_at, created_at, name, address, phone')
       .eq('active', true)
+      .not('name', 'is', null)
+      .neq('name', '')
+      .or('address.neq.,phone.neq.')
       .order('id', { ascending: true })
       .range(start, end)
 
@@ -44,8 +49,10 @@ export async function GET(
 
     if (businesses) {
       for (const biz of businesses) {
-        const lastmod = biz.updated_at
-          ? new Date(biz.updated_at).toISOString().split('T')[0]
+        // Use updated_at if available, fall back to created_at, then today
+        const dateStr = biz.updated_at || biz.created_at
+        const lastmod = dateStr
+          ? new Date(dateStr).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0]
         urls.push(`  <url>
     <loc>${BASE_URL}/business/${escapeXml(biz.slug)}</loc>

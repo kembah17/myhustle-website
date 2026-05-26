@@ -20,6 +20,8 @@ import { generateBusinessFAQs } from '@/lib/faq-generator'
 import ClaimBusinessButton from '@/components/ClaimBusinessButton'
 import ReportListingButton from '@/components/ReportListingButton'
 import FAQSection from '@/components/FAQSection'
+import { generateBusinessContent, hasRichDescription } from '@/lib/content-enrichment'
+import { getSchemaMapping, getMetaServices } from '@/lib/schema-mappings'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params
   const { data: biz } = await getSupabase()
     .from('businesses')
-    .select('name, description, category:categories(name), area:areas(name, city:cities(name, slug))')
+    .select('name, description, category:categories(name, slug, parent_id, parent:categories!categories_parent_id_fkey(slug)), area:areas(name, city:cities(name, slug))')
     .eq('slug', slug)
     .single()
 
@@ -42,9 +44,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const areaName = (biz.area as unknown as Area)?.name || ''
   const cityName = (biz.area as any)?.city?.name || 'Nigeria'
   const title = `${biz.name} — ${catName} in ${areaName}, ${cityName} | MyHustle`
-  const description = biz.description
-    ? biz.description.slice(0, 160)
-    : `${biz.name} — ${catName} in ${areaName}, ${cityName}. See services, read reviews, and book on MyHustle.`
+
+  // Fix 4: Generate unique meta descriptions with category-specific service keywords
+  const parentSlug = (biz.category as any)?.parent?.slug || (biz.category as any)?.slug || ''
+  const serviceKeywords = getMetaServices(parentSlug, biz.name)
+  const description = `Find ${biz.name} in ${areaName}, ${cityName}. ${catName} services including ${serviceKeywords}. Read reviews, compare, and book on MyHustle.`
 
   return {
     title,
@@ -66,13 +70,13 @@ export default async function BusinessDetailPage({ params }: PageProps) {
 
   const { data: business } = await getSupabase()
     .from('businesses')
-    .select('*, category:categories(*), area:areas(*, city:cities(*))')
+    .select('*, category:categories(*, parent:categories!categories_parent_id_fkey(*)), area:areas(*, city:cities(*))')
     .eq('slug', slug)
     .single()
 
   if (!business) notFound()
 
-  const biz = business as Business & { category: Category; area: Area }
+  const biz = business as Business & { category: Category & { parent?: Category | null }; area: Area }
 
   // Fetch business photos
   const { data: photos } = await getSupabase()
@@ -129,6 +133,28 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   // Determine cover photo
   const coverPhoto = biz.cover_photo_url || photoList.find(p => p.is_cover)?.url || null
 
+  // Determine parent category slug for content enrichment and schema
+  const parentCategorySlug = (biz.category as any)?.parent?.slug || biz.category?.slug || 'other'
+  const parentCategoryName = (biz.category as any)?.parent?.name || biz.category?.name || ''
+
+  // Generate enriched content for thin listings (Fix 2)
+  const showEnrichedContent = !hasRichDescription(biz.description)
+  const enrichedContent = showEnrichedContent
+    ? generateBusinessContent({
+        businessName: biz.name,
+        categoryName: biz.category?.name || '',
+        parentCategorySlug,
+        areaName: biz.area?.name || '',
+        cityName: (biz.area as any)?.city?.name || 'Nigeria',
+        hasPhone: !!biz.phone,
+        hasWebsite: !!biz.website,
+        hasAddress: !!biz.address,
+        hasHours: sortedHours.length > 0,
+        reviewCount: reviewList.length,
+        avgRating,
+      })
+    : null
+
   // Schema.org LocalBusiness
   const DAY_NAMES_FOR_FAQ = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
   const bizFaqs = generateBusinessFAQs({
@@ -151,9 +177,12 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     })),
   })
 
-  const localBusinessJsonLd = {
+  // Fix 5: Enhanced LocalBusiness schema with specific types, geo, priceRange, areaServed
+  const schemaMapping = getSchemaMapping(parentCategorySlug)
+
+  const localBusinessJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': schemaMapping.type,
     name: biz.name,
     url: `https://myhustle.space/business/${biz.slug}`,
     ...(biz.description || biz.tagline ? { description: [biz.tagline, biz.description].filter(Boolean).join('. ') } : {}),
@@ -161,6 +190,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     ...(biz.email ? { email: biz.email } : {}),
     ...(biz.website ? { sameAs: biz.website } : {}),
     ...(coverPhoto ? { image: coverPhoto } : {}),
+    priceRange: schemaMapping.priceRange,
     ...(biz.address ? {
       address: {
         '@type': 'PostalAddress',
@@ -170,6 +200,19 @@ export default async function BusinessDetailPage({ params }: PageProps) {
         addressCountry: 'NG',
       },
     } : {}),
+    // Geo coordinates from area
+    ...(biz.area?.lat && biz.area?.lon ? {
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: biz.area.lat,
+        longitude: biz.area.lon,
+      },
+    } : {}),
+    // Area served
+    areaServed: [
+      ...(biz.area?.name ? [{ '@type': 'City', name: biz.area.name }] : []),
+      ...((biz.area as any)?.city?.name ? [{ '@type': 'City', name: (biz.area as any).city.name }] : []),
+    ],
     ...(reviewList.length > 0 ? {
       aggregateRating: {
         '@type': 'AggregateRating',
@@ -303,6 +346,42 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                 <h2 className="font-heading text-2xl font-bold mb-4">About {biz.name}</h2>
                 <div className="prose prose-lg text-hustle-muted max-w-none">
                   <p>{biz.description}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Enriched Content for thin listings (Fix 2) */}
+            {enrichedContent && (
+              <div className="space-y-8">
+                {/* About Section - enriched */}
+                <div>
+                  {!biz.description && (
+                    <h2 className="font-heading text-2xl font-bold mb-4">About {biz.name}</h2>
+                  )}
+                  <div className="prose prose-lg text-hustle-muted max-w-none">
+                    {enrichedContent.aboutSection.split('\n\n').map((paragraph, i) => (
+                      <p key={i}>{paragraph}</p>
+                    ))}
+                  </div>
+                </div>
+
+                {/* What to Expect */}
+                <div>
+                  <h2 className="font-heading text-2xl font-bold mb-4">What to Expect</h2>
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <ul
+                      className="space-y-3 text-hustle-muted"
+                      dangerouslySetInnerHTML={{ __html: enrichedContent.whatToExpect.replace(/<li>/g, '<li class="flex items-start gap-2"><span class="text-hustle-blue mt-1 flex-shrink-0">✓</span><span>').replace(/<\/li>/g, '</span></li>') }}
+                    />
+                  </div>
+                </div>
+
+                {/* Area Guide */}
+                <div>
+                  <h2 className="font-heading text-2xl font-bold mb-4">{biz.area?.name || 'Area'} Guide</h2>
+                  <div className="prose prose-lg text-hustle-muted max-w-none">
+                    <p>{enrichedContent.areaGuide}</p>
+                  </div>
                 </div>
               </div>
             )}
