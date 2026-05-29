@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
@@ -52,10 +52,27 @@ export default async function AreaPage({ params }: PageProps) {
     .from('cities').select('*').eq('slug', citySlug).single()
   if (!city) notFound()
 
-  // Fetch area
+  // Fetch area under this city
   const { data: area } = await getSupabase()
     .from('areas').select('*').eq('slug', areaSlug).eq('city_id', city.id).single()
-  if (!area) notFound()
+
+  if (!area) {
+    // Area not found under this city - check if it exists under a different city
+    // This handles misrouted URLs (e.g., /lagos/gra-phase-1 when area belongs to port-harcourt)
+    const { data: areaElsewhere } = await getSupabase()
+      .from('areas')
+      .select('slug, city:cities!inner(slug)')
+      .eq('slug', areaSlug)
+      .limit(1)
+      .single()
+
+    if (areaElsewhere && (areaElsewhere.city as any)?.slug) {
+      const correctCitySlug = (areaElsewhere.city as any).slug
+      redirect(`/${correctCitySlug}/${areaSlug}`)
+    }
+
+    notFound()
+  }
 
   // Fetch businesses in this area with relations
   const { data: businesses } = await getSupabase()
