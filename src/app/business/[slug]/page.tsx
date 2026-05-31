@@ -20,8 +20,10 @@ import { generateBusinessFAQs } from '@/lib/faq-generator'
 import ClaimBusinessButton from '@/components/ClaimBusinessButton'
 import ReportListingButton from '@/components/ReportListingButton'
 import FAQSection from '@/components/FAQSection'
+import SimilarBusinesses from '@/components/SimilarBusinesses'
 import { generateBusinessContent, hasRichDescription } from '@/lib/content-enrichment'
 import { getSchemaMapping, getMetaServices } from '@/lib/schema-mappings'
+import ServicesSection from '@/components/business/ServicesSection'
 
 export const dynamic = 'force-dynamic'
 
@@ -129,6 +131,41 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   const sortedHours = DISPLAY_ORDER
     .map(dayNum => hoursList.find(h => h.day === dayNum))
     .filter(Boolean) as BusinessHour[]
+
+  // Fetch similar businesses nearby (Recommendation 2)
+  let similarBusinesses: any[] = []
+  if (biz.category_id && biz.area_id) {
+    // First: same category + same area
+    const { data: sameArea } = await getSupabase()
+      .from('businesses')
+      .select('id, slug, name, description, cover_photo_url, verified, verification_tier, tagline, category:categories(name, slug, icon), area:areas(name, slug, city:cities(name, slug)), reviews(rating)')
+      .eq('category_id', biz.category_id)
+      .eq('area_id', biz.area_id)
+      .neq('id', biz.id)
+      .order('verified', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(6)
+
+    similarBusinesses = sameArea || []
+
+    // If fewer than 6, fill with same category + same city
+    if (similarBusinesses.length < 6 && biz.city_id) {
+      const excludeIds = [biz.id, ...similarBusinesses.map((b: any) => b.id)]
+      const { data: sameCity } = await getSupabase()
+        .from('businesses')
+        .select('id, slug, name, description, cover_photo_url, verified, verification_tier, tagline, category:categories(name, slug, icon), area:areas(name, slug, city:cities(name, slug)), reviews(rating)')
+        .eq('category_id', biz.category_id)
+        .eq('city_id', biz.city_id)
+        .not('id', 'in', `(${excludeIds.join(',')})`)
+        .order('verified', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(6 - similarBusinesses.length)
+
+      if (sameCity && sameCity.length > 0) {
+        similarBusinesses = [...similarBusinesses, ...sameCity]
+      }
+    }
+  }
 
   // Determine cover photo
   const coverPhoto = biz.cover_photo_url || photoList.find(p => p.is_cover)?.url || null
@@ -239,9 +276,32 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     } : {}),
   }
 
+  // Service schema JSON-LD (Recommendation 3)
+  const serviceSchemaServices = getSchemaMapping(parentCategorySlug)?.services || []
+  const serviceSchemaJsonLd = serviceSchemaServices.length > 0 ? serviceSchemaServices.map(service => ({
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    serviceType: service,
+    provider: {
+      '@type': 'LocalBusiness',
+      name: biz.name,
+      url: `https://myhustle.space/business/${biz.slug}`,
+    },
+    areaServed: {
+      '@type': 'City',
+      name: (biz.area as any)?.city?.name || 'Nigeria',
+    },
+  })) : []
+
   return (
     <div>
       <JsonLd data={localBusinessJsonLd} />
+      {serviceSchemaJsonLd.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchemaJsonLd) }}
+        />
+      )}
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.space' },
@@ -386,6 +446,19 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               </div>
             )}
 
+            {/* Services Section (Recommendation 3) */}
+            {(() => {
+              const schemaServices = getSchemaMapping(parentCategorySlug)?.services || []
+              if (schemaServices.length === 0) return null
+              return (
+                <ServicesSection
+                  services={schemaServices}
+                  businessName={biz.name}
+                  categoryName={biz.category?.name || ''}
+                />
+              )
+            })()}
+
             {/* Photo Gallery - above business hours */}
             <PhotoGallery photos={photoList} businessName={biz.name} />
 
@@ -469,6 +542,26 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                 </div>
               )}
 
+              {/* Google Maps Link (Recommendation 1) */}
+              {(() => {
+                const mapLat = biz.lat || biz.area?.lat
+                const mapLon = biz.lon || biz.area?.lon
+                if (!mapLat || !mapLon) return null
+                return (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${mapLat},${mapLon}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-hustle-blue hover:text-hustle-amber transition-colors"
+                  >
+                    <svg className="w-5 h-5 flex-shrink-0" width="20" height="20" style={{width:"20px",height:"20px",maxWidth:"20px",maxHeight:"20px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    <span className="text-sm">📍 View {biz.name} on Google Maps</span>
+                  </a>
+                )
+              })()}
+
               {biz.phone && (
                 <a href={`tel:${biz.phone}`} className="flex items-center gap-3 text-hustle-dark hover:text-hustle-blue transition-colors">
                   <svg className="w-5 h-5 text-hustle-muted flex-shrink-0" width="20" height="20" style={{width:"20px",height:"20px",maxWidth:"20px",maxHeight:"20px",flexShrink:0}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -523,6 +616,18 @@ export default async function BusinessDetailPage({ params }: PageProps) {
         </div>
 
         <FAQSection faqs={bizFaqs} />
+
+        {/* Similar Businesses Nearby (Recommendation 2) */}
+        {similarBusinesses.length > 0 && (
+          <SimilarBusinesses
+            businesses={similarBusinesses}
+            categoryName={biz.category?.name || ''}
+            categorySlug={biz.category?.slug || ''}
+            areaName={biz.area?.name || ''}
+            areaSlug={biz.area?.slug || ''}
+            citySlug={(biz.area as any)?.city?.slug || 'lagos'}
+          />
+        )}
       </div>
     </div>
   )

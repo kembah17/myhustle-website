@@ -137,23 +137,49 @@ export default async function CategoryPage({ params }: PageProps) {
   }
   const areasWithCount = Array.from(areaMap.values()).sort((a, b) => b.count - a.count)
 
-  // Schema.org
+  // Schema.org - Enhanced ItemList (Recommendation 4)
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `${category.name} in Nigeria`,
-    description: `Top ${category.name} businesses across Nigeria`,
+    description: `Top ${category.name} businesses across Nigeria on MyHustle`,
+    url: `https://myhustle.space/category/${slug}`,
     numberOfItems: totalCount ?? bizList.length,
-    itemListElement: bizList.slice(0, 20).map((biz, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      item: {
-        '@type': 'LocalBusiness',
-        name: biz.name,
-        url: `https://myhustle.space/business/${biz.slug}`,
-        ...(biz.address ? { address: biz.address } : {}),
-      },
-    })),
+    itemListElement: bizList.slice(0, 30).map((biz, index) => {
+      const bizReviews = biz.reviews || []
+      const bizAvgRating = bizReviews.length > 0
+        ? bizReviews.reduce((sum: number, r: Review) => sum + r.rating, 0) / bizReviews.length
+        : 0
+      return {
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'LocalBusiness',
+          name: biz.name,
+          url: `https://myhustle.space/business/${biz.slug}`,
+          ...(biz.cover_photo_url ? { image: biz.cover_photo_url } : {}),
+          ...(biz.address ? {
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: biz.address,
+              addressLocality: biz.area?.name || '',
+              addressRegion: (biz.area as any)?.city?.name || '',
+              addressCountry: 'NG',
+            }
+          } : {}),
+          ...(biz.phone ? { telephone: biz.phone } : {}),
+          ...(bizReviews.length > 0 ? {
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: bizAvgRating.toFixed(1),
+              reviewCount: bizReviews.length,
+              bestRating: 5,
+              worstRating: 1,
+            }
+          } : {}),
+        },
+      }
+    }),
   }
 
   // Breadcrumbs
