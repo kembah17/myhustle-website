@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase-browser'
 import SmartLocationInput from '@/components/search/SmartLocationInput'
+import SearchAutocomplete from '@/components/search/SearchAutocomplete'
 import type { Category } from '@/lib/types'
 
 interface SearchBarProps {
@@ -27,6 +28,7 @@ export default function SearchBar({
   const [areaSlug, setAreaSlug] = useState(initialArea)
   const [sort, setSort] = useState(initialSort)
   const [categories, setCategories] = useState<Category[]>([])
+  const formRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -41,8 +43,7 @@ export default function SearchBar({
     loadFilters()
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+  const doSearch = () => {
     const params = new URLSearchParams()
     if (query.trim()) params.set('q', query.trim())
     if (categorySlug) params.set('category', categorySlug)
@@ -51,21 +52,25 @@ export default function SearchBar({
     router.push(`/search?${params.toString()}`)
   }
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    doSearch()
+  }
+
   const handleLocationSelect = (slug: string, type: 'area' | 'landmark') => {
     setAreaSlug(slug)
   }
 
   if (variant === 'compact') {
     return (
-      <form onSubmit={handleSearch} className="space-y-3">
+      <form ref={formRef} onSubmit={handleSearch} className="space-y-3">
         <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            type="text"
+          <SearchAutocomplete
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={setQuery}
+            onSubmit={doSearch}
             placeholder="Search businesses..."
-            enterKeyHint="search"
-            className="flex-1 px-4 py-2.5 rounded-lg border border-white/20 bg-white/10 text-white placeholder-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-hustle-amber focus:border-transparent"
+            variant="compact"
           />
           <select
             value={categorySlug}
@@ -109,16 +114,15 @@ export default function SearchBar({
 
   // Hero variant
   return (
-    <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+    <form ref={formRef} onSubmit={handleSearch} className="max-w-3xl mx-auto">
       <div className="flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="text"
+          <SearchAutocomplete
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={setQuery}
+            onSubmit={doSearch}
             placeholder="What are you looking for?"
-            enterKeyHint="search"
-            className="flex-1 px-6 py-4 rounded-lg text-hustle-dark text-lg bg-amber-50 border-2 border-hustle-amber focus:outline-none focus:ring-2 focus:ring-hustle-amber/60 placeholder-hustle-dark/40"
+            variant="hero"
           />
           <button
             type="submit"
