@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params
   const { data: biz } = await getSupabase()
     .from('businesses')
-    .select('name, description, category:categories(name, slug, parent_id, parent:categories!categories_parent_id_fkey(slug)), area:areas(name, city:cities(name, slug))')
+    .select('name, description, category:categories(name, slug, parent_id, parent:categories(slug)), area:areas(name, city:cities(name, slug))')
     .eq('slug', slug)
     .single()
 
@@ -72,7 +72,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
 
   const { data: business } = await getSupabase()
     .from('businesses')
-    .select('*, category:categories(*, parent:categories!categories_parent_id_fkey(*)), area:areas(*, city:cities(*))')
+    .select('*, category:categories(*, parent:categories(*)), area:areas(*, city:cities(*))')
     .eq('slug', slug)
     .single()
 
