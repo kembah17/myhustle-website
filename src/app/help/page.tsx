@@ -72,7 +72,7 @@ const FAQ_STRUCTURED_DATA = {
       name: 'How do I report a problem on MyHustle?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'If you encounter incorrect information, inappropriate content, or any other issue, click the "Report this listing" button on any business page. You can also email us directly at report@myhustle.com with details of the problem. We review all reports within 48 hours.',
+        text: 'If you encounter incorrect information, inappropriate content, or any other issue, click the "Report this listing" button on any business page. You can also email us directly at report@myhustle.space with details of the problem. We review all reports within 48 hours.',
       },
     },
     {

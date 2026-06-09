@@ -95,8 +95,8 @@ export default function PrivacyPolicyPage() {
       </ul>
       <p className="text-hustle-muted leading-relaxed mb-4">
         To exercise any of these rights, please contact us at{' '}
-        <a href="mailto:privacy@myhustle.com" className="text-hustle-blue hover:underline">
-          privacy@myhustle.com
+        <a href="mailto:privacy@myhustle.space" className="text-hustle-blue hover:underline">
+          privacy@myhustle.space
         </a>.
       </p>
 
@@ -165,8 +165,8 @@ export default function PrivacyPolicyPage() {
       </p>
       <ul className="list-disc list-inside text-hustle-muted space-y-2 mb-4 ml-4">
         <li>Email:{' '}
-          <a href="mailto:privacy@myhustle.com" className="text-hustle-blue hover:underline">
-            privacy@myhustle.com
+          <a href="mailto:privacy@myhustle.space" className="text-hustle-blue hover:underline">
+            privacy@myhustle.space
           </a>
         </li>
         <li>Platform: MyHustle.com</li>

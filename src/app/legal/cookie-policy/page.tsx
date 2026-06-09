@@ -160,8 +160,8 @@ export default function CookiePolicyPage() {
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         If you have questions about our use of cookies, please contact us at{' '}
-        <a href="mailto:privacy@myhustle.com" className="text-hustle-blue hover:underline">
-          privacy@myhustle.com
+        <a href="mailto:privacy@myhustle.space" className="text-hustle-blue hover:underline">
+          privacy@myhustle.space
         </a>.
       </p>
     </div>

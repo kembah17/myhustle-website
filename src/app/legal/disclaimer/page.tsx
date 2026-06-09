@@ -68,8 +68,8 @@ export default function DisclaimerPage() {
       <p className="text-hustle-muted leading-relaxed mb-4">
         If you believe any user-generated content is false, misleading, or violates our policies,
         please report it to{' '}
-        <a href="mailto:report@myhustle.com" className="text-hustle-blue hover:underline">
-          report@myhustle.com
+        <a href="mailto:report@myhustle.space" className="text-hustle-blue hover:underline">
+          report@myhustle.space
         </a>.
       </p>
 
@@ -118,8 +118,8 @@ export default function DisclaimerPage() {
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         If you have questions or concerns about this Disclaimer, please contact us at{' '}
-        <a href="mailto:legal@myhustle.com" className="text-hustle-blue hover:underline">
-          legal@myhustle.com
+        <a href="mailto:legal@myhustle.space" className="text-hustle-blue hover:underline">
+          legal@myhustle.space
         </a>.
       </p>
     </div>

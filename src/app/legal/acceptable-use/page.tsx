@@ -118,8 +118,8 @@ export default function AcceptableUsePage() {
       </p>
       <ul className="list-disc list-inside text-hustle-muted space-y-2 mb-4 ml-4">
         <li>Email:{' '}
-          <a href="mailto:report@myhustle.com" className="text-hustle-blue hover:underline">
-            report@myhustle.com
+          <a href="mailto:report@myhustle.space" className="text-hustle-blue hover:underline">
+            report@myhustle.space
           </a>
         </li>
         <li>Use the &ldquo;Report this listing&rdquo; button on any business page</li>
@@ -143,8 +143,8 @@ export default function AcceptableUsePage() {
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         For questions about this policy, please contact us at{' '}
-        <a href="mailto:report@myhustle.com" className="text-hustle-blue hover:underline">
-          report@myhustle.com
+        <a href="mailto:report@myhustle.space" className="text-hustle-blue hover:underline">
+          report@myhustle.space
         </a>.
       </p>
     </div>

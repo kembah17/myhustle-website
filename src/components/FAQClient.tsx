@@ -42,7 +42,7 @@ const FAQ_SECTIONS: FAQSection[] = [
       {
         question: 'How do I report a problem?',
         answer:
-          'If you encounter incorrect information, inappropriate content, or any other issue, click the "Report this listing" button on any business page. You can also email us directly at report@myhustle.com with details of the problem. We review all reports within 48 hours.',
+          'If you encounter incorrect information, inappropriate content, or any other issue, click the "Report this listing" button on any business page. You can also email us directly at report@myhustle.space with details of the problem. We review all reports within 48 hours.',
       },
     ],
   },
@@ -239,7 +239,7 @@ export default function FAQClient() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <a
-            href="mailto:support@myhustle.com"
+            href="mailto:support@myhustle.space"
             className="inline-flex items-center justify-center gap-2 bg-hustle-blue text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-hustle-blue/90 transition-colors"
           >
             <svg className="w-4 h-4" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">

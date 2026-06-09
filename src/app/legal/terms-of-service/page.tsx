@@ -176,8 +176,8 @@ export default function TermsOfServicePage() {
       </p>
       <ul className="list-disc list-inside text-hustle-muted space-y-2 mb-4 ml-4">
         <li>Email:{' '}
-          <a href="mailto:legal@myhustle.com" className="text-hustle-blue hover:underline">
-            legal@myhustle.com
+          <a href="mailto:legal@myhustle.space" className="text-hustle-blue hover:underline">
+            legal@myhustle.space
           </a>
         </li>
         <li>Platform: MyHustle.com</li>
