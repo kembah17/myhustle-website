@@ -24,11 +24,58 @@ import SimilarBusinesses from '@/components/SimilarBusinesses'
 import { generateBusinessContent, hasRichDescription } from '@/lib/content-enrichment'
 import { getSchemaMapping, getMetaServices } from '@/lib/schema-mappings'
 import ServicesSection from '@/components/business/ServicesSection'
+import { calculateQualityScore } from '@/lib/quality-score'
 
-export const dynamic = 'force-dynamic'
+// Task 5: Switch from force-dynamic to ISR with 24-hour revalidation
+export const revalidate = 86400
 
 interface PageProps {
   params: Promise<{ slug: string }>
+}
+
+/**
+ * Helper: fetch quality signals for a business by slug.
+ * Used by both generateMetadata and the page component.
+ */
+async function fetchQualitySignals(slug: string) {
+  const supabase = getSupabase()
+
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('id, description, area_id, website, verified, verification_tier')
+    .eq('slug', slug)
+    .single()
+
+  if (!biz) return null
+
+  // Check for photos
+  const { count: photoCount } = await supabase
+    .from('business_photos')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', biz.id)
+
+  // Check for published reviews
+  const { count: reviewCount } = await supabase
+    .from('reviews')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', biz.id)
+    .eq('status', 'published')
+
+  // Check for business hours
+  const { count: hoursCount } = await supabase
+    .from('business_hours')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', biz.id)
+
+  return calculateQualityScore({
+    description: biz.description,
+    area_id: biz.area_id,
+    website: biz.website,
+    hasPhotos: (photoCount || 0) > 0,
+    hasReviews: (reviewCount || 0) > 0,
+    hasHours: (hoursCount || 0) > 0,
+    isClaimed: biz.verified || (biz.verification_tier || 0) > 0,
+  })
 }
 
 
@@ -52,9 +99,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const serviceKeywords = getMetaServices(parentSlug, biz.name)
   const description = `Find ${biz.name} in ${areaName}, ${cityName}. ${catName} services including ${serviceKeywords}. Read reviews, compare, and book on MyHustle.`
 
+  // Task 3: Quality-based robots directive
+  const qualityScore = await fetchQualitySignals(slug)
+  const shouldIndex = qualityScore?.isIndexable ?? false
+
   return {
     title,
     description,
+    robots: {
+      index: shouldIndex,
+      follow: true,
+    },
     openGraph: { title, description, type: 'article' },
     twitter: { card: 'summary_large_image', title, description },
     alternates: {
@@ -132,6 +187,20 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     .map(dayNum => hoursList.find(h => h.day === dayNum))
     .filter(Boolean) as BusinessHour[]
 
+  // Task 3: Calculate quality score for conditional rendering
+  const qualityScore = calculateQualityScore({
+    description: biz.description,
+    area_id: biz.area_id,
+    website: biz.website,
+    hasPhotos: photoList.length > 0,
+    hasReviews: rawReviews.length > 0,
+    hasHours: sortedHours.length > 0,
+    isClaimed: biz.verified || (biz.verification_tier || 0) > 0,
+  })
+  const isIndexed = qualityScore.isIndexable
+  // Show template content ONLY on noindexed pages (for UX), hide on indexed pages (to avoid duplication)
+  const showTemplateContent = !isIndexed
+
   // Fetch similar businesses nearby (Recommendation 2)
   let similarBusinesses: any[] = []
   if (biz.category_id && biz.area_id) {
@@ -174,8 +243,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   const parentCategorySlug = (biz.category as any)?.parent?.slug || biz.category?.slug || 'other'
   const parentCategoryName = (biz.category as any)?.parent?.name || biz.category?.name || ''
 
-  // Generate enriched content for thin listings (Fix 2)
-  const showEnrichedContent = !hasRichDescription(biz.description)
+  // Generate enriched content for thin listings (Fix 2) — only if showing template content
+  const showEnrichedContent = showTemplateContent && !hasRichDescription(biz.description)
   const enrichedContent = showEnrichedContent
     ? generateBusinessContent({
         businessName: biz.name,
@@ -192,27 +261,29 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       })
     : null
 
-  // Schema.org LocalBusiness
+  // Generate FAQs only if showing template content
   const DAY_NAMES_FOR_FAQ = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const bizFaqs = generateBusinessFAQs({
-    businessName: biz.name,
-    categoryName: biz.category?.name || '',
-    areaName: biz.area?.name || '',
-    cityName: (biz.area as any)?.city?.name || '',
-    hasBooking: true,
-    hasWhatsApp: !!biz.whatsapp,
-    hasPhone: !!biz.phone,
-    reviewCount: reviewList.length,
-    avgRating,
-    isVerified: biz.verified || biz.verification_tier > 0,
-    verificationTier: biz.verification_tier || 0,
-    hours: sortedHours.map(h => ({
-      day: DAY_NAMES_FOR_FAQ[h.day],
-      open: h.open_time || '',
-      close: h.close_time || '',
-      closed: h.closed,
-    })),
-  })
+  const bizFaqs = showTemplateContent
+    ? generateBusinessFAQs({
+        businessName: biz.name,
+        categoryName: biz.category?.name || '',
+        areaName: biz.area?.name || '',
+        cityName: (biz.area as any)?.city?.name || '',
+        hasBooking: true,
+        hasWhatsApp: !!biz.whatsapp,
+        hasPhone: !!biz.phone,
+        reviewCount: reviewList.length,
+        avgRating,
+        isVerified: biz.verified || biz.verification_tier > 0,
+        verificationTier: biz.verification_tier || 0,
+        hours: sortedHours.map(h => ({
+          day: DAY_NAMES_FOR_FAQ[h.day],
+          open: h.open_time || '',
+          close: h.close_time || '',
+          closed: h.closed,
+        })),
+      })
+    : []
 
   // Fix 5: Enhanced LocalBusiness schema with specific types, geo, priceRange, areaServed
   const schemaMapping = getSchemaMapping(parentCategorySlug)
@@ -276,8 +347,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     } : {}),
   }
 
-  // Service schema JSON-LD (Recommendation 3)
-  const serviceSchemaServices = getSchemaMapping(parentCategorySlug)?.services || []
+  // Service schema JSON-LD (Recommendation 3) — only for indexed pages
+  const serviceSchemaServices = isIndexed ? (getSchemaMapping(parentCategorySlug)?.services || []) : []
   const serviceSchemaJsonLd = serviceSchemaServices.length > 0 ? serviceSchemaServices.map(service => ({
     '@context': 'https://schema.org',
     '@type': 'Service',
@@ -400,7 +471,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Description */}
+            {/* Description — always shown (real content) */}
             {biz.description && (
               <div>
                 <h2 className="font-heading text-2xl font-bold mb-4">About {biz.name}</h2>
@@ -410,8 +481,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Enriched Content for thin listings (Fix 2) */}
-            {enrichedContent && (
+            {/* Enriched Content for thin listings — ONLY on noindexed pages */}
+            {showTemplateContent && enrichedContent && (
               <div className="space-y-8">
                 {/* About Section - enriched */}
                 <div>
@@ -446,8 +517,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Services Section (Recommendation 3) */}
-            {(() => {
+            {/* Services Section — ONLY on noindexed pages */}
+            {showTemplateContent && (() => {
               const schemaServices = getSchemaMapping(parentCategorySlug)?.services || []
               if (schemaServices.length === 0) return null
               return (
@@ -615,9 +686,12 @@ export default async function BusinessDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        <FAQSection faqs={bizFaqs} />
+        {/* FAQ Section — ONLY on noindexed pages */}
+        {showTemplateContent && bizFaqs.length > 0 && (
+          <FAQSection faqs={bizFaqs} />
+        )}
 
-        {/* Similar Businesses Nearby (Recommendation 2) */}
+        {/* Similar Businesses Nearby — always shown (good for internal linking) */}
         {similarBusinesses.length > 0 && (
           <SimilarBusinesses
             businesses={similarBusinesses}

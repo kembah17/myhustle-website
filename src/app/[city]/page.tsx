@@ -106,7 +106,7 @@ export default async function CityPage({ params }: PageProps) {
   if (!data) notFound()
 
   const { city, areas, totalBusinesses, totalAreas } = data
-  const cityIntro = getCityIntro(city.name)
+  const cityIntro = city.seo_description || getCityIntro(city.name)
 
   const cityFaqs = generateCityFAQs({
     cityName: city.name,

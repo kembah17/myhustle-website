@@ -193,8 +193,8 @@ export default async function AreaPage({ params }: PageProps) {
           <p className="text-blue-200 text-lg mt-3">
             See what's happening in {area.name}
           </p>
-          {area.description && (
-            <p className="text-blue-300 mt-2 max-w-3xl">{area.description}</p>
+          {(area.seo_description || area.description) && (
+            <p className="text-blue-300 mt-2 max-w-3xl">{area.seo_description || area.description}</p>
           )}
         </div>
       </section>
@@ -210,10 +210,7 @@ export default async function AreaPage({ params }: PageProps) {
                   About {area.name}
                 </h2>
                 <p className="text-hustle-muted leading-relaxed">
-                  {area.name} is a neighborhood in {city.name}{city.state ? `, ${city.state}` : ''}.
-                  MyHustle is actively building our business directory here to help you discover
-                  local services, shops, and professionals. As businesses join, you'll find
-                  reviews, contact details, and booking options all in one place.
+                  {area.seo_description || `${area.name} is a neighborhood in ${city.name}${city.state ? `, ${city.state}` : ''}. MyHustle is actively building our business directory here to help you discover local services, shops, and professionals. As businesses join, you'll find reviews, contact details, and booking options all in one place.`}
                 </p>
               </div>
             </div>
@@ -315,6 +312,20 @@ export default async function AreaPage({ params }: PageProps) {
         ) : (
           /* ===== NORMAL STATE (has businesses) ===== */
           <>
+            {/* Area Description */}
+            {area.seo_description && (
+              <div className="mb-10">
+                <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 border border-gray-100">
+                  <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-3">
+                    About {area.name}, {city.name}
+                  </h2>
+                  <p className="text-hustle-muted leading-relaxed">
+                    {area.seo_description}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Categories filter */}
             {categoriesWithCounts.some(c => c.business_count > 0) && (
               <div className="mb-12">
