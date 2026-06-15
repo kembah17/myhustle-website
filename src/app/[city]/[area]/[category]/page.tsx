@@ -7,10 +7,8 @@ import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
-import { generateAreaCategoryFAQs } from '@/lib/faq-generator'
-import FAQSection from '@/components/FAQSection'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 86400
 
 interface PageProps {
   params: Promise<{ city: string; area: string; category: string }>
@@ -102,7 +100,7 @@ export default async function AreaCategoryPage({ params }: PageProps) {
     name: `${category.name} in ${area.name}, ${city.name}`,
     description: `Best ${category.name} businesses in ${area.name}, ${city.name}`,
     numberOfItems: bizList.length,
-    itemListElement: bizList.map((biz, index) => ({
+    itemListElement: bizList.slice(0, 20).map((biz, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       item: {
@@ -112,14 +110,6 @@ export default async function AreaCategoryPage({ params }: PageProps) {
       },
     })),
   }
-
-  const areaCatFaqs = generateAreaCategoryFAQs({
-    areaName: area.name,
-    cityName: city.name,
-    categoryName: category.name,
-    businessCount: bizList.length,
-    businessNames: bizList.slice(0, 5).map(b => b.name),
-  })
 
   return (
     <div>
@@ -186,6 +176,38 @@ export default async function AreaCategoryPage({ params }: PageProps) {
           />
         </div>
 
+        {/* Directory Context */}
+        {bizList.length > 0 && (
+          <div className="mb-12">
+            <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 border border-gray-100">
+              <h2 className="font-heading text-lg md:text-xl font-bold text-hustle-dark mb-3">
+                {category.name} in {area.name}, {city.name}
+              </h2>
+              <div className="text-hustle-muted leading-relaxed space-y-3 text-sm">
+                <p>
+                  MyHustle has found <strong>{bizList.length} {category.name.toLowerCase()} {bizList.length === 1 ? 'business' : 'businesses'}</strong> in {area.name} so far.
+                  {bizList.filter(b => b.verified).length > 0
+                    ? ` Of these, ${bizList.filter(b => b.verified).length} have been verified by our team, confirming their contact details and operating status.`
+                    : ' As businesses are verified, their listings will display a verification badge for added trust.'
+                  }
+                </p>
+                <p>
+                  This listing updates automatically as new {category.name.toLowerCase()} businesses in {area.name} register on MyHustle.
+                  Each profile includes contact information and location details, with many also featuring customer reviews.
+                  {isParent && subcategories.length > 0
+                    ? ` You can also filter by subcategory \u2014 including ${subcategories.slice(0, 3).map(s => s.name).join(', ')}${subcategories.length > 3 ? ' and more' : ''} \u2014 to find exactly what you need.`
+                    : ''
+                  }
+                </p>
+                <p>
+                  Can't find what you're looking for? Browse <Link href={`/${citySlug}/${areaSlug}`} className="text-hustle-blue hover:text-hustle-amber transition-colors font-medium">all businesses in {area.name}</Link> or
+                  explore <Link href={`/category/${catSlug}`} className="text-hustle-blue hover:text-hustle-amber transition-colors font-medium">{category.name} across Nigeria</Link> for more options.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Related links */}
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-hustle-light rounded-xl p-6">
@@ -207,8 +229,6 @@ export default async function AreaCategoryPage({ params }: PageProps) {
             </Link>
           </div>
         </div>
-
-        <FAQSection faqs={areaCatFaqs} />
       </div>
     </div>
   )

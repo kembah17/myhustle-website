@@ -2,17 +2,15 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
-import BusinessGrid from '@/components/BusinessGrid'
+import PaginatedBusinessGrid from '@/components/PaginatedBusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Category, Business, Area, Review } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
-import { generateCategoryFAQs } from '@/lib/faq-generator'
-import FAQSection from '@/components/FAQSection'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 86400
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -104,7 +102,7 @@ export default async function CategoryPage({ params }: PageProps) {
     .from('businesses')
     .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)', { count: 'exact' })
     .in('category_id', categoryIds)
-    
+
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(1000)
@@ -137,7 +135,14 @@ export default async function CategoryPage({ params }: PageProps) {
   }
   const areasWithCount = Array.from(areaMap.values()).sort((a, b) => b.count - a.count)
 
-  // Schema.org - Enhanced ItemList (Recommendation 4)
+  // Collect city names for content sections
+  const cityNamesSet = new Set<string>()
+  bizList.forEach(b => {
+    const cn = (b.area as any)?.city?.name
+    if (cn) cityNamesSet.add(cn)
+  })
+
+  // Schema.org - Enhanced ItemList
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -145,7 +150,7 @@ export default async function CategoryPage({ params }: PageProps) {
     description: `Top ${category.name} businesses across Nigeria on MyHustle`,
     url: `https://myhustle.space/category/${slug}`,
     numberOfItems: totalCount ?? bizList.length,
-    itemListElement: bizList.slice(0, 30).map((biz, index) => {
+    itemListElement: bizList.slice(0, 20).map((biz, index) => {
       const bizReviews = biz.reviews || []
       const bizAvgRating = bizReviews.length > 0
         ? bizReviews.reduce((sum: number, r: Review) => sum + r.rating, 0) / bizReviews.length
@@ -190,18 +195,6 @@ export default async function CategoryPage({ params }: PageProps) {
       : []),
     { label: category.name },
   ]
-
-  const cityNamesSet = new Set<string>()
-  bizList.forEach(b => {
-    const cn = (b.area as any)?.city?.name
-    if (cn) cityNamesSet.add(cn)
-  })
-  const catFaqs = generateCategoryFAQs({
-    categoryName: category.name,
-    businessCount: bizList.length,
-    cityNames: Array.from(cityNamesSet),
-    subcategoryNames: children.map(c => c.name),
-  })
 
   return (
     <div>
@@ -271,12 +264,87 @@ export default async function CategoryPage({ params }: PageProps) {
             {isParent ? `All ${category.name} Businesses` : category.name}
             <span className="text-hustle-muted text-lg font-normal ml-2">({totalCount ?? bizList.length})</span>
           </h2>
-          <BusinessGrid
+          <PaginatedBusinessGrid
             businesses={bizList}
-            emptyTitle={`No ${category.name} businesses yet`}
-            emptyMessage={`Know a great ${category.name} business? Tell them about MyHustle!`}
+            areaName={category.name}
           />
         </div>
+
+        {/* Category Overview */}
+        {bizList.length > 0 && (
+          <div className="mb-12">
+            <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 md:p-8 border border-gray-100">
+              <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
+                {category.name} Businesses Across Nigeria
+              </h2>
+              <div className="text-hustle-muted leading-relaxed space-y-3">
+                <p>
+                  MyHustle has discovered <strong>{(totalCount ?? bizList.length).toLocaleString()} {category.name.toLowerCase()} {(totalCount ?? bizList.length) === 1 ? 'business' : 'businesses'}</strong> across Nigeria so far,
+                  spanning {areasWithCount.length} different {areasWithCount.length === 1 ? 'area' : 'areas'}
+                  {cityNamesSet.size > 0 ? ` in ${cityNamesSet.size} ${cityNamesSet.size === 1 ? 'city' : 'cities'}` : ''}.
+                  This directory is updated as new {category.name.toLowerCase()} businesses register on the platform.
+                </p>
+                {areasWithCount.length > 0 && (
+                  <p>
+                    {(() => {
+                      const topAreas = areasWithCount.slice(0, 5)
+                      const areaPhrases = topAreas.map(a => `${a.name} (${a.count})`)
+                      return `The highest concentration of ${category.name.toLowerCase()} businesses found to date is in ${areaPhrases.join(', ')}. These numbers reflect current listings and change as new businesses join MyHustle.`
+                    })()}
+                  </p>
+                )}
+                {isParent && children.length > 0 && (
+                  <p>
+                    {(() => {
+                      const activeSubs = children.filter(c => (c.business_count || 0) > 0)
+                      if (activeSubs.length === 0) return `This category includes ${children.length} subcategories. As more businesses are listed, you'll find increasingly specific options to match your needs.`
+                      const subPhrases = activeSubs.slice(0, 4).map(c => `${c.name} (${c.business_count} listed)`)
+                      return `Within ${category.name}, the most active subcategories discovered so far include ${subPhrases.join(', ')}. Browse subcategories above to narrow your search.`
+                    })()}
+                  </p>
+                )}
+                <p>
+                  Every listing includes contact details and location information, with many also featuring customer reviews
+                  and booking options. As business owners claim their profiles, listings are enriched with descriptions,
+                  photos, and verified operating details — making it easier for you to find and compare
+                  {' '}{category.name.toLowerCase()} services near you.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Geographic Distribution */}
+        {areasWithCount.length > 5 && (
+          <div className="mb-12">
+            <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-2">
+              Where to Find {category.name} in Nigeria
+            </h2>
+            <p className="text-hustle-muted mb-4">
+              {category.name} businesses on MyHustle are spread across {areasWithCount.length} areas in
+              {cityNamesSet.size > 0 ? ` ${cityNamesSet.size} Nigerian ${cityNamesSet.size === 1 ? 'city' : 'cities'}` : ' Nigeria'}.
+              This geographic breakdown updates as new listings are added to the directory.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                <p className="text-2xl font-bold text-hustle-blue">{(totalCount ?? bizList.length).toLocaleString()}</p>
+                <p className="text-xs text-hustle-muted mt-1">Total Found</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                <p className="text-2xl font-bold text-hustle-amber">{areasWithCount.length}</p>
+                <p className="text-xs text-hustle-muted mt-1">Areas Covered</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                <p className="text-2xl font-bold text-green-600">{cityNamesSet.size}</p>
+                <p className="text-xs text-hustle-muted mt-1">{cityNamesSet.size === 1 ? 'City' : 'Cities'}</p>
+              </div>
+              <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                <p className="text-2xl font-bold text-purple-600">{isParent ? children.length : 0}</p>
+                <p className="text-xs text-hustle-muted mt-1">Subcategories</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Back to parent link */}
         {parentCategory && (
@@ -293,8 +361,6 @@ export default async function CategoryPage({ params }: PageProps) {
         <section className="mt-12 max-w-lg mx-auto">
           <SuggestWhatsApp type="category" />
         </section>
-
-        <FAQSection faqs={catFaqs} />
       </div>
     </div>
   )

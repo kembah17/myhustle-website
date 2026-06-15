@@ -5,11 +5,9 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
-import { generateCityFAQs } from '@/lib/faq-generator'
-import FAQSection from '@/components/FAQSection'
 import { getCityIntro } from '@/lib/city-intros'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 86400
 
 interface PageProps {
   params: Promise<{ city: string }>
@@ -108,14 +106,6 @@ export default async function CityPage({ params }: PageProps) {
   const { city, areas, totalBusinesses, totalAreas } = data
   const cityIntro = city.seo_description || getCityIntro(city.name)
 
-  const cityFaqs = generateCityFAQs({
-    cityName: city.name,
-    areaCount: totalAreas,
-    businessCount: totalBusinesses,
-    areaNames: areas.slice(0, 8).map(a => a.name),
-    topCategories: [],
-  })
-
   const breadcrumbLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -130,7 +120,7 @@ export default async function CityPage({ params }: PageProps) {
     '@type': 'ItemList',
     name: `Businesses in ${city.name}`,
     numberOfItems: totalBusinesses,
-    itemListElement: areas.slice(0, 50).map((a, i) => ({
+    itemListElement: areas.slice(0, 20).map((a, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       item: {
@@ -252,11 +242,65 @@ export default async function CityPage({ params }: PageProps) {
           </div>
         )}
 
+        {/* City Business Ecosystem */}
+        {areas.length > 0 && (
+          <section className="mt-12 mb-8">
+            <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 md:p-8 border border-gray-100">
+              <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
+                The Business Landscape of {city.name}
+              </h2>
+              <div className="text-hustle-muted leading-relaxed space-y-3">
+                <p>
+                  MyHustle has mapped <strong>{totalBusinesses.toLocaleString()} businesses</strong> across <strong>{totalAreas} areas</strong> in {city.name} so far.
+                  {city.state ? ` As the ${city.name === city.state ? 'capital' : 'a major city in ' + city.state + ' State'}, ` : ' '}
+                  the local business community continues to grow as more entrepreneurs and service providers join the directory.
+                </p>
+                <p>
+                  {(() => {
+                    const topAreas = areas.slice(0, 5)
+                    if (topAreas.length === 0) return null
+                    const areaPhrases = topAreas.map(a => `${a.name} (${a.business_count.toLocaleString()} businesses)`)
+                    return `The most commercially active areas discovered to date include ${areaPhrases.join(', ')}. These figures reflect businesses currently listed on MyHustle and update automatically as new listings are added and verified.`
+                  })()}
+                </p>
+                <p>
+                  Every business listing on MyHustle includes contact details, location information, and customer reviews where available.
+                  As business owners in {city.name} claim their profiles and add descriptions, photos, and service details,
+                  each listing becomes a more complete and useful resource for customers searching for local services.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Discovery Stats */}
+        {totalBusinesses > 0 && (
+          <section className="mb-8">
+            <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
+              {city.name} Directory at a Glance
+            </h2>
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+              <p className="text-hustle-muted leading-relaxed">
+                The MyHustle directory for {city.name} currently covers {totalAreas} distinct areas,
+                with {totalBusinesses.toLocaleString()} business listings found so far.
+                {areas.length > 10
+                  ? ` From established commercial districts to emerging neighbourhoods, the directory captures the full breadth of ${city.name}'s business activity. `
+                  : ` The directory is actively expanding to cover more of ${city.name}'s business landscape. `
+                }
+                Listings are free for all businesses, and the directory is updated regularly as new businesses register
+                and existing profiles are enriched with reviews, photos, and verified contact information.
+                {areas.filter(a => a.business_count >= 50).length > 0
+                  ? ` ${areas.filter(a => a.business_count >= 50).length} areas already have 50 or more listed businesses, indicating strong commercial activity in those neighbourhoods.`
+                  : ''
+                }
+              </p>
+            </div>
+          </section>
+        )}
+
         <section className="mt-12 max-w-lg mx-auto">
           <SuggestWhatsApp type="area" context={city.name} />
         </section>
-
-        <FAQSection faqs={cityFaqs} />
       </div>
     </div>
   )
