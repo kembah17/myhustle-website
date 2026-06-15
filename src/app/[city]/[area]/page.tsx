@@ -3,16 +3,15 @@ import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
+import PaginatedBusinessGrid from '@/components/PaginatedBusinessGrid'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 import { WHATSAPP_URL } from '@/components/WhatsAppCTA'
-import { generateAreaFAQs } from '@/lib/faq-generator'
-import FAQSection from '@/components/FAQSection'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 86400
 
 
 interface PageProps {
@@ -136,24 +135,60 @@ export default async function AreaPage({ params }: PageProps) {
     nearbyBusinesses = (nearby || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
   }
 
-  const areaFaqs = generateAreaFAQs({
-    areaName: area.name,
-    cityName: city.name,
-    businessCount: bizList.length,
-    categoryNames: categoriesWithCounts.filter(c => c.business_count > 0).slice(0, 6).map(c => c.name),
-    landmarkNames: (landmarks || []).map((l: any) => l.name),
-  })
+  // Fetch nearby areas with business counts for the normal state
+  let nearbyAreas: { id: string; name: string; slug: string; seo_description: string | null; business_count: number }[] = []
+  if (bizList.length > 0) {
+    // Try RPC for area business counts
+    const { data: cityAreaCounts } = await getSupabase()
+      .rpc('get_area_business_counts', { target_city_id: city.id })
+
+    const { data: nearbyAreasRaw } = await getSupabase()
+      .from('areas')
+      .select('id, name, slug, seo_description')
+      .eq('city_id', city.id)
+      .neq('id', area.id)
+      .order('name')
+
+    if (cityAreaCounts && nearbyAreasRaw) {
+      const areaCountMap = new Map((cityAreaCounts as any[]).map((r: any) => [r.area_id, Number(r.count)]))
+      nearbyAreas = nearbyAreasRaw
+        .map((a: any) => ({ ...a, business_count: areaCountMap.get(a.id) || 0 }))
+        .filter((a: any) => a.business_count > 0)
+        .sort((a: any, b: any) => b.business_count - a.business_count)
+        .slice(0, 6)
+    } else if (nearbyAreasRaw) {
+      // Fallback: count businesses per area from bizList city
+      const { data: cityBiz } = await getSupabase()
+        .from('businesses')
+        .select('area_id')
+        .eq('city_id', city.id)
+        .eq('active', true)
+
+      const fallbackCounts: Record<string, number> = {}
+      if (cityBiz) {
+        for (const b of cityBiz) {
+          if (b.area_id) fallbackCounts[b.area_id] = (fallbackCounts[b.area_id] || 0) + 1
+        }
+      }
+      nearbyAreas = nearbyAreasRaw
+        .map((a: any) => ({ ...a, business_count: fallbackCounts[a.id] || 0 }))
+        .filter((a: any) => a.business_count > 0)
+        .sort((a: any, b: any) => b.business_count - a.business_count)
+        .slice(0, 6)
+    }
+  }
 
   const isEmpty = bizList.length === 0
 
-  // Schema.org ItemList
+  // Schema.org ItemList - cap to first 20 businesses
+  const itemListBiz = bizList.slice(0, 20)
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `Businesses in ${area.name}, ${city.name}`,
     description: `Top-rated businesses in ${area.name}, ${city.name}`,
     numberOfItems: bizList.length,
-    itemListElement: bizList.map((biz, index) => ({
+    itemListElement: itemListBiz.map((biz, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       item: {
@@ -191,7 +226,7 @@ export default async function AreaPage({ params }: PageProps) {
             Businesses in <span className="text-hustle-amber">{area.name}</span>
           </h1>
           <p className="text-blue-200 text-lg mt-3">
-            See what's happening in {area.name}
+            See what{"'"}{"s"} happening in {area.name}
           </p>
           {(area.seo_description || area.description) && (
             <p className="text-blue-300 mt-2 max-w-3xl">{area.seo_description || area.description}</p>
@@ -350,18 +385,176 @@ export default async function AreaPage({ params }: PageProps) {
               </div>
             )}
 
+            {/* ===== Section A: Business Landscape ===== */}
+            {bizList.length > 0 && (
+              <div className="mb-12">
+                <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 md:p-8 border border-gray-100">
+                  <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
+                    Business Directory for {area.name}, {city.name}
+                  </h2>
+                  <div className="text-hustle-muted leading-relaxed space-y-3">
+                    <p>
+                      MyHustle has discovered <strong>{bizList.length} {bizList.length === 1 ? 'business' : 'businesses'}</strong> in {area.name} so far,
+                      spanning {categoriesWithCounts.filter(c => c.business_count > 0).length} different categories.
+                      {city.state ? ` Located in ${city.name}, ${city.state}, ` : ` In ${city.name}, `}
+                      {area.name} is home to a {bizList.length > 100 ? 'thriving' : bizList.length > 30 ? 'growing' : 'developing'} business community
+                      that continues to expand as more local entrepreneurs and service providers join the platform.
+                    </p>
+                    <p>
+                      {(() => {
+                        const topCats = categoriesWithCounts
+                          .filter(c => c.business_count > 0)
+                          .sort((a, b) => b.business_count - a.business_count)
+                          .slice(0, 3)
+                        if (topCats.length === 0) return null
+                        const catPhrases = topCats.map(c => `${c.icon || ''} ${c.name} (${c.business_count} ${c.business_count === 1 ? 'listing' : 'listings'})`)
+                        return `The most represented industries found to date include ${catPhrases.join(', ')}. These numbers reflect businesses currently listed on MyHustle and are updated automatically as new businesses register and existing listings are verified.`
+                      })()}
+                    </p>
+                    <p>
+                      Whether you{"'"}re searching for a trusted service provider, comparing options before making a decision,
+                      or looking to support local businesses in {area.name}, this directory gives you direct access to
+                      contact details, customer reviews, and booking options — all in one place.
+                      {bizList.filter(b => b.verified).length > 0 &&
+                        ` ${bizList.filter(b => b.verified).length} of these businesses have been verified by the MyHustle team, meaning their contact information and operating details have been independently confirmed.`
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== Section B: Popular Services ===== */}
+            {(() => {
+              const topServices = categoriesWithCounts
+                .filter(c => c.business_count > 0)
+                .sort((a, b) => b.business_count - a.business_count)
+                .slice(0, 8)
+              if (topServices.length === 0) return null
+              return (
+                <div className="mb-12">
+                  <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-2">
+                    Most Popular Services in {area.name}
+                  </h2>
+                  <p className="text-hustle-muted mb-6">
+                    Based on the number of listings found so far, these are the most sought-after business categories in {area.name}.
+                    This ranking updates dynamically as new businesses are added to the directory.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {topServices.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        href={`/${citySlug}/${areaSlug}/${cat.slug}`}
+                        className="flex items-start gap-3 bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber group"
+                      >
+                        <span className="text-2xl flex-shrink-0">{cat.icon || '📁'}</span>
+                        <div>
+                          <h3 className="font-heading text-sm font-semibold text-hustle-dark group-hover:text-hustle-blue transition-colors">
+                            {cat.name}
+                          </h3>
+                          <p className="text-xs text-hustle-muted mt-0.5">
+                            {cat.business_count} {cat.business_count === 1 ? 'business' : 'businesses'} found
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* ===== Section C: Area Insights ===== */}
+            {bizList.length > 5 && (
+              <div className="mb-12">
+                <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
+                  {area.name} at a Glance
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                    <p className="text-2xl md:text-3xl font-bold text-hustle-blue">{bizList.length}</p>
+                    <p className="text-xs text-hustle-muted mt-1">Businesses Found</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                    <p className="text-2xl md:text-3xl font-bold text-hustle-amber">{categoriesWithCounts.filter(c => c.business_count > 0).length}</p>
+                    <p className="text-xs text-hustle-muted mt-1">Categories</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                    <p className="text-2xl md:text-3xl font-bold text-green-600">{bizList.filter(b => b.verified).length}</p>
+                    <p className="text-xs text-hustle-muted mt-1">Verified</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
+                    <p className="text-2xl md:text-3xl font-bold text-purple-600">{(landmarks || []).length}</p>
+                    <p className="text-xs text-hustle-muted mt-1">Landmarks</p>
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                  <p className="text-hustle-muted leading-relaxed">
+                    {area.name} currently features {bizList.length} businesses across {categoriesWithCounts.filter(c => c.business_count > 0).length} categories
+                    in the MyHustle directory.
+                    {bizList.filter(b => b.verified).length > 0
+                      ? ` Of these, ${bizList.filter(b => b.verified).length} have been verified — meaning our team has confirmed their contact details, location, and operating status. `
+                      : ' '
+                    }
+                    {(landmarks || []).length > 0
+                      ? `The area is home to ${(landmarks || []).length} notable landmarks including ${(landmarks || []).slice(0, 3).map((l: any) => l.name).join(', ')}${(landmarks || []).length > 3 ? ' and more' : ''}, making it easy to find businesses near familiar locations. `
+                      : ''
+                    }
+                    This directory is a living resource — as businesses in {area.name} claim their listings, add descriptions,
+                    upload photos, and collect customer reviews, each profile becomes richer and more useful.
+                    New businesses are added regularly, so check back often or search for specific services above.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Business Listings */}
             <div className="mb-12">
               <h2 className="font-heading text-2xl font-bold mb-6">
                 All Businesses in {area.name}
                 <span className="text-hustle-muted text-lg font-normal ml-2">({bizList.length})</span>
               </h2>
-              <BusinessGrid
+              <PaginatedBusinessGrid
                 businesses={bizList}
-                emptyTitle={`${area.name} is waiting for you`}
-                emptyMessage={`No businesses listed here yet. Be the first to put ${area.name} on the map!`}
+                areaName={area.name}
               />
             </div>
+
+            {/* ===== Section D: Nearby Areas ===== */}
+            {nearbyAreas && nearbyAreas.length > 0 && (
+              <div className="mb-12">
+                <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-2">
+                  Explore More of {city.name}
+                </h2>
+                <p className="text-hustle-muted mb-6">
+                  Looking beyond {area.name}? These nearby areas in {city.name} also have active business listings on MyHustle.
+                  Each area has its own mix of services and local businesses waiting to be discovered.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {nearbyAreas.map((na) => (
+                    <Link
+                      key={na.id}
+                      href={`/${citySlug}/${na.slug}`}
+                      className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-blue group"
+                    >
+                      <h3 className="font-heading font-semibold text-hustle-dark group-hover:text-hustle-blue transition-colors">
+                        {na.name}
+                      </h3>
+                      <p className="text-sm text-hustle-amber font-medium mt-1">
+                        {na.business_count} {na.business_count === 1 ? 'business' : 'businesses'} listed
+                      </p>
+                      {na.seo_description && (
+                        <p className="text-xs text-hustle-muted mt-2 line-clamp-2">
+                          {na.seo_description}
+                        </p>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+                <p className="text-sm text-hustle-muted mt-4">
+                  Business counts shown reflect listings found so far and update as new businesses join MyHustle.
+                </p>
+              </div>
+            )}
 
             {/* Nearby Landmarks */}
             {landmarks && landmarks.length > 0 && (
@@ -389,8 +582,6 @@ export default async function AreaPage({ params }: PageProps) {
             </section>
           </>
         )}
-
-        <FAQSection faqs={areaFaqs} />
       </div>
     </div>
   )

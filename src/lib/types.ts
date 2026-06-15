@@ -29,6 +29,7 @@ export interface Area {
   lat: number
   lon: number
   description: string | null
+  seo_description: string | null
   city?: City
   landmarks?: Landmark[]
   businesses?: Business[]
@@ -39,6 +40,7 @@ export interface Category {
   slug: string
   name: string
   description: string | null
+  seo_description: string | null
   parent_id: string | null
   icon: string | null
   seo_title_template: string | null
@@ -60,6 +62,7 @@ export interface Landmark {
   radius_km: number
   aliases: string[]
   description: string | null
+  seo_description: string | null
   city?: City
   area?: Area
 }
@@ -69,6 +72,7 @@ export interface Business {
   slug: string
   name: string
   description: string | null
+  seo_description: string | null
   category_id: string
   city_id: string
   area_id: string | null
