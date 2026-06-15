@@ -10,7 +10,7 @@ import type { Metadata } from 'next'
 import { generateHomepageFAQs } from '@/lib/faq-generator'
 import FAQSection from '@/components/FAQSection'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'MyHustle.com — Find & Book Trusted Businesses Across Nigeria',

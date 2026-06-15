@@ -7,10 +7,8 @@ import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
-import { generateLandmarkCategoryFAQs } from '@/lib/faq-generator'
-import FAQSection from '@/components/FAQSection'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 86400
 
 interface PageProps {
   params: Promise<{ landmark: string; category: string }>
@@ -86,13 +84,6 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
     })),
   }
 
-  const lmCatFaqs = generateLandmarkCategoryFAQs({
-    landmarkName: landmark.name,
-    categoryName: category.name,
-    cityName: (landmark.area as any)?.city?.name || '',
-    businessCount: bizList.length,
-    businessNames: bizList.slice(0, 5).map(b => b.name),
-  })
 
   return (
     <div>
@@ -157,7 +148,6 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
           </div>
         </div>
 
-        <FAQSection faqs={lmCatFaqs} />
       </div>
     </div>
   )

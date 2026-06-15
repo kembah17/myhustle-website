@@ -3,7 +3,7 @@ import { getSupabase } from '@/lib/supabase'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 86400
 
 export const metadata: Metadata = {
   title: 'Browse Nigerian Cities | MyHustle',
