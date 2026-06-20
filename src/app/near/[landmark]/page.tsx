@@ -46,7 +46,16 @@ export default async function LandmarkPage({ params }: PageProps) {
 
   if (!landmark) notFound()
 
-  // Fetch businesses in the same area as the landmark
+  // Get total count of businesses in this area
+  const { count: totalCountRaw } = await getSupabase()
+    .from('businesses')
+    .select('id', { count: 'exact', head: true })
+    .eq('area_id', landmark.area_id)
+    .eq('active', true)
+
+  const totalCount = totalCountRaw ?? 0
+
+  // Fetch first 20 businesses for display
   const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
@@ -54,6 +63,7 @@ export default async function LandmarkPage({ params }: PageProps) {
     .eq('active', true)
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
+    .limit(20)
 
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
@@ -68,8 +78,8 @@ export default async function LandmarkPage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `Businesses Near ${landmark.name}`,
-    numberOfItems: bizList.length,
-    itemListElement: bizList.map((biz, i) => ({
+    numberOfItems: totalCount,
+    itemListElement: bizList.slice(0, 20).map((biz, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       item: {
@@ -81,9 +91,9 @@ export default async function LandmarkPage({ params }: PageProps) {
   }
 
   const landmarkTypeEmoji: Record<string, string> = {
-    mall: '🏬', market: '🏪', hotel: '🏨', hospital: '🏥',
-    university: '🎓', airport: '✈️', church: '⛪', mosque: '🕌',
-    stadium: '🏟️', park: '🌳',
+    mall: '\ud83c\udfec', market: '\ud83c\udfea', hotel: '\ud83c\udfe8', hospital: '\ud83c\udfe5',
+    university: '\ud83c\udf93', airport: '\u2708\ufe0f', church: '\u26ea', mosque: '\ud83d\udd4c',
+    stadium: '\ud83c\udfdf\ufe0f', park: '\ud83c\udf33',
   }
 
 
@@ -108,7 +118,7 @@ export default async function LandmarkPage({ params }: PageProps) {
             ]}
           />
           <div className="flex items-center gap-3 mt-4">
-            <span className="text-5xl">{landmarkTypeEmoji[landmark.type] || '📍'}</span>
+            <span className="text-5xl">{landmarkTypeEmoji[landmark.type] || '\ud83d\udccd'}</span>
             <div>
               <h1 className="font-heading text-3xl md:text-5xl font-bold">
                 Businesses Near <span className="text-hustle-amber">{landmark.name}</span>
@@ -144,13 +154,19 @@ export default async function LandmarkPage({ params }: PageProps) {
         <div className="mb-12">
           <h2 className="font-heading text-2xl font-bold mb-6">
             All Businesses Near {landmark.name}
-            <span className="text-hustle-muted text-lg font-normal ml-2">({bizList.length})</span>
+            <span className="text-hustle-muted text-lg font-normal ml-2">({totalCount})</span>
           </h2>
           <BusinessGrid
             businesses={bizList}
             emptyTitle={`Nothing near ${landmark.name} yet`}
             emptyMessage={`Know a business near ${landmark.name}? Tell them to list on MyHustle!`}
           />
+          {totalCount > 20 && (
+            <p className="mt-6 text-center text-hustle-muted text-sm">
+              Showing 20 of {totalCount} businesses near {landmark.name}.
+              Filter by category above to find specific services.
+            </p>
+          )}
         </div>
 
         {landmark.area && (
@@ -160,7 +176,7 @@ export default async function LandmarkPage({ params }: PageProps) {
               href={`/${(landmark.area as any)?.city?.slug || 'lagos'}/${landmark.area.slug}`}
               className="text-hustle-blue font-semibold hover:text-hustle-amber transition-colors"
             >
-              View all businesses in {landmark.area.name} →
+              View all businesses in {landmark.area.name} \u2192
             </Link>
           </div>
         )}

@@ -57,6 +57,17 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
     if (children) categoryIds = [category.id, ...children.map(c => c.id)]
   }
 
+  // Get total count
+  const { count: totalCountRaw } = await getSupabase()
+    .from('businesses')
+    .select('id', { count: 'exact', head: true })
+    .eq('area_id', landmark.area_id)
+    .in('category_id', categoryIds)
+    .eq('active', true)
+
+  const totalCount = totalCountRaw ?? 0
+
+  // Fetch first 20 businesses for display
   const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*, city:cities(*)), reviews(*)')
@@ -65,6 +76,7 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
     .eq('active', true)
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
+    .limit(20)
 
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
@@ -72,8 +84,8 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `${category.name} Near ${landmark.name}`,
-    numberOfItems: bizList.length,
-    itemListElement: bizList.map((biz, i) => ({
+    numberOfItems: totalCount,
+    itemListElement: bizList.slice(0, 20).map((biz, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       item: {
@@ -118,13 +130,18 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
         <div className="mb-12">
           <h2 className="font-heading text-2xl font-bold mb-6">
             {category.name} Near {landmark.name}
-            <span className="text-hustle-muted text-lg font-normal ml-2">({bizList.length})</span>
+            <span className="text-hustle-muted text-lg font-normal ml-2">({totalCount})</span>
           </h2>
           <BusinessGrid
             businesses={bizList}
             emptyTitle={`No ${category.name} businesses near ${landmark.name} yet`}
             emptyMessage={`Be the first to list your ${category.name} business near ${landmark.name}!`}
           />
+          {totalCount > 20 && (
+            <p className="mt-6 text-center text-hustle-muted text-sm">
+              Showing 20 of {totalCount} {category.name.toLowerCase()} businesses near {landmark.name}.
+            </p>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -134,7 +151,7 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
               href={`/near/${lmSlug}`}
               className="text-hustle-blue hover:text-hustle-amber transition-colors"
             >
-              View all businesses near {landmark.name} →
+              View all businesses near {landmark.name} \u2192
             </Link>
           </div>
           <div className="bg-hustle-light rounded-xl p-6">
@@ -143,7 +160,7 @@ export default async function LandmarkCategoryPage({ params }: PageProps) {
               href={`/category/${catSlug}`}
               className="text-hustle-blue hover:text-hustle-amber transition-colors"
             >
-              View all {category.name} in {(landmark.area as any)?.city?.name || 'this area'} →
+              View all {category.name} in {(landmark.area as any)?.city?.name || 'this area'} \u2192
             </Link>
           </div>
         </div>

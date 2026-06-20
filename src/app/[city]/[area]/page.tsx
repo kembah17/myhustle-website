@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
-import PaginatedBusinessGrid from '@/components/PaginatedBusinessGrid'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
@@ -73,7 +72,18 @@ export default async function AreaPage({ params }: PageProps) {
     notFound()
   }
 
-  // Fetch businesses in this area with relations
+  // Lightweight query: fetch only fields needed for counts (category_id, verified)
+  const { data: allBizMeta } = await getSupabase()
+    .from('businesses')
+    .select('category_id, verified')
+    .eq('area_id', area.id)
+    .eq('active', true)
+
+  const bizMeta = allBizMeta || []
+  const totalCount = bizMeta.length
+  const verifiedCount = bizMeta.filter(b => b.verified).length
+
+  // Display query: fetch full data for first 20 businesses only
   const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
@@ -81,10 +91,11 @@ export default async function AreaPage({ params }: PageProps) {
     .eq('active', true)
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
+    .limit(20)
 
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
-  // Get categories with counts for this area
+  // Get categories with counts for this area (using lightweight meta data)
   const { data: allCategories } = await getSupabase()
     .from('categories')
     .select('id, slug, name, icon, parent_id')
@@ -99,7 +110,7 @@ export default async function AreaPage({ params }: PageProps) {
       if (c.parent_id) childToParent[c.id] = c.parent_id
     }
   }
-  for (const biz of bizList) {
+  for (const biz of bizMeta) {
     const cid = biz.category_id
     catCountMap[cid] = (catCountMap[cid] || 0) + 1
     if (childToParent[cid]) {
@@ -121,7 +132,7 @@ export default async function AreaPage({ params }: PageProps) {
 
   // Fetch nearby businesses from other areas in the same city (for empty state)
   let nearbyBusinesses: (Business & { category: Category; area: Area; reviews: Review[] })[] = []
-  if (bizList.length === 0) {
+  if (totalCount === 0) {
     const { data: nearby } = await getSupabase()
       .from('businesses')
       .select('*, category:categories(*), area:areas(*), reviews(*)')
@@ -137,7 +148,7 @@ export default async function AreaPage({ params }: PageProps) {
 
   // Fetch nearby areas with business counts for the normal state
   let nearbyAreas: { id: string; name: string; slug: string; seo_description: string | null; business_count: number }[] = []
-  if (bizList.length > 0) {
+  if (totalCount > 0) {
     // Try RPC for area business counts
     const { data: cityAreaCounts } = await getSupabase()
       .rpc('get_area_business_counts', { target_city_id: city.id })
@@ -178,17 +189,16 @@ export default async function AreaPage({ params }: PageProps) {
     }
   }
 
-  const isEmpty = bizList.length === 0
+  const isEmpty = totalCount === 0
 
-  // Schema.org ItemList - cap to first 20 businesses
-  const itemListBiz = bizList.slice(0, 20)
+  // Schema.org ItemList - cap to first 20 businesses (already limited by query)
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: `Businesses in ${area.name}, ${city.name}`,
     description: `Top-rated businesses in ${area.name}, ${city.name}`,
-    numberOfItems: bizList.length,
-    itemListElement: itemListBiz.map((biz, index) => ({
+    numberOfItems: totalCount,
+    itemListElement: bizList.slice(0, 20).map((biz, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       item: {
@@ -386,7 +396,7 @@ export default async function AreaPage({ params }: PageProps) {
             )}
 
             {/* ===== Section A: Business Landscape ===== */}
-            {bizList.length > 0 && (
+            {totalCount > 0 && (
               <div className="mb-12">
                 <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 md:p-8 border border-gray-100">
                   <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
@@ -394,10 +404,10 @@ export default async function AreaPage({ params }: PageProps) {
                   </h2>
                   <div className="text-hustle-muted leading-relaxed space-y-3">
                     <p>
-                      MyHustle has discovered <strong>{bizList.length} {bizList.length === 1 ? 'business' : 'businesses'}</strong> in {area.name} so far,
+                      MyHustle has discovered <strong>{totalCount} {totalCount === 1 ? 'business' : 'businesses'}</strong> in {area.name} so far,
                       spanning {categoriesWithCounts.filter(c => c.business_count > 0).length} different categories.
                       {city.state ? ` Located in ${city.name}, ${city.state}, ` : ` In ${city.name}, `}
-                      {area.name} is home to a {bizList.length > 100 ? 'thriving' : bizList.length > 30 ? 'growing' : 'developing'} business community
+                      {area.name} is home to a {totalCount > 100 ? 'thriving' : totalCount > 30 ? 'growing' : 'developing'} business community
                       that continues to expand as more local entrepreneurs and service providers join the platform.
                     </p>
                     <p>
@@ -415,8 +425,8 @@ export default async function AreaPage({ params }: PageProps) {
                       Whether you{"'"}re searching for a trusted service provider, comparing options before making a decision,
                       or looking to support local businesses in {area.name}, this directory gives you direct access to
                       contact details, customer reviews, and booking options — all in one place.
-                      {bizList.filter(b => b.verified).length > 0 &&
-                        ` ${bizList.filter(b => b.verified).length} of these businesses have been verified by the MyHustle team, meaning their contact information and operating details have been independently confirmed.`
+                      {verifiedCount > 0 &&
+                        ` ${verifiedCount} of these businesses have been verified by the MyHustle team, meaning their contact information and operating details have been independently confirmed.`
                       }
                     </p>
                   </div>
@@ -464,14 +474,14 @@ export default async function AreaPage({ params }: PageProps) {
             })()}
 
             {/* ===== Section C: Area Insights ===== */}
-            {bizList.length > 5 && (
+            {totalCount > 5 && (
               <div className="mb-12">
                 <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
                   {area.name} at a Glance
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
-                    <p className="text-2xl md:text-3xl font-bold text-hustle-blue">{bizList.length}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-hustle-blue">{totalCount}</p>
                     <p className="text-xs text-hustle-muted mt-1">Businesses Found</p>
                   </div>
                   <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
@@ -479,7 +489,7 @@ export default async function AreaPage({ params }: PageProps) {
                     <p className="text-xs text-hustle-muted mt-1">Categories</p>
                   </div>
                   <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
-                    <p className="text-2xl md:text-3xl font-bold text-green-600">{bizList.filter(b => b.verified).length}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-green-600">{verifiedCount}</p>
                     <p className="text-xs text-hustle-muted mt-1">Verified</p>
                   </div>
                   <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
@@ -489,10 +499,10 @@ export default async function AreaPage({ params }: PageProps) {
                 </div>
                 <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
                   <p className="text-hustle-muted leading-relaxed">
-                    {area.name} currently features {bizList.length} businesses across {categoriesWithCounts.filter(c => c.business_count > 0).length} categories
+                    {area.name} currently features {totalCount} businesses across {categoriesWithCounts.filter(c => c.business_count > 0).length} categories
                     in the MyHustle directory.
-                    {bizList.filter(b => b.verified).length > 0
-                      ? ` Of these, ${bizList.filter(b => b.verified).length} have been verified — meaning our team has confirmed their contact details, location, and operating status. `
+                    {verifiedCount > 0
+                      ? ` Of these, ${verifiedCount} have been verified — meaning our team has confirmed their contact details, location, and operating status. `
                       : ' '
                     }
                     {(landmarks || []).length > 0
@@ -511,12 +521,15 @@ export default async function AreaPage({ params }: PageProps) {
             <div className="mb-12">
               <h2 className="font-heading text-2xl font-bold mb-6">
                 All Businesses in {area.name}
-                <span className="text-hustle-muted text-lg font-normal ml-2">({bizList.length})</span>
+                <span className="text-hustle-muted text-lg font-normal ml-2">({totalCount})</span>
               </h2>
-              <PaginatedBusinessGrid
-                businesses={bizList}
-                areaName={area.name}
-              />
+              <BusinessGrid businesses={bizList} />
+              {totalCount > 20 && (
+                <p className="mt-6 text-center text-hustle-muted text-sm">
+                  Showing 20 of {totalCount} businesses in {area.name}.
+                  Browse by category above to find specific services.
+                </p>
+              )}
             </div>
 
             {/* ===== Section D: Nearby Areas ===== */}

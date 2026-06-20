@@ -70,7 +70,18 @@ export default async function AreaCategoryPage({ params }: PageProps) {
     if (children) categoryIds = [category.id, ...children.map(c => c.id)]
   }
 
-  // Fetch businesses matching area + category
+  // Lightweight count query: get total count and verified count
+  const { data: bizMeta, count: totalCountRaw } = await getSupabase()
+    .from('businesses')
+    .select('verified', { count: 'exact' })
+    .eq('area_id', area.id)
+    .in('category_id', categoryIds)
+    .eq('active', true)
+
+  const totalCount = totalCountRaw ?? (bizMeta || []).length
+  const verifiedCount = (bizMeta || []).filter(b => b.verified).length
+
+  // Display query: fetch full data for first 20 businesses only
   const { data: businesses } = await getSupabase()
     .from('businesses')
     .select('*, category:categories(*), area:areas(*), reviews(*)')
@@ -79,6 +90,7 @@ export default async function AreaCategoryPage({ params }: PageProps) {
     .eq('active', true)
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
+    .limit(20)
 
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
@@ -99,7 +111,7 @@ export default async function AreaCategoryPage({ params }: PageProps) {
     '@type': 'ItemList',
     name: `${category.name} in ${area.name}, ${city.name}`,
     description: `Best ${category.name} businesses in ${area.name}, ${city.name}`,
-    numberOfItems: bizList.length,
+    numberOfItems: totalCount,
     itemListElement: bizList.slice(0, 20).map((biz, index) => ({
       '@type': 'ListItem',
       position: index + 1,
@@ -167,17 +179,22 @@ export default async function AreaCategoryPage({ params }: PageProps) {
         <div className="mb-12">
           <h2 className="font-heading text-2xl font-bold mb-6">
             {category.name} in {area.name}
-            <span className="text-hustle-muted text-lg font-normal ml-2">({bizList.length})</span>
+            <span className="text-hustle-muted text-lg font-normal ml-2">({totalCount})</span>
           </h2>
           <BusinessGrid
             businesses={bizList}
             emptyTitle={`No ${category.name} businesses in ${area.name} yet`}
             emptyMessage={`Be the first to list your ${category.name} business in ${area.name}, ${city.name}!`}
           />
+          {totalCount > 20 && (
+            <p className="mt-6 text-center text-hustle-muted text-sm">
+              Showing 20 of {totalCount} {category.name.toLowerCase()} businesses in {area.name}.
+            </p>
+          )}
         </div>
 
         {/* Directory Context */}
-        {bizList.length > 0 && (
+        {totalCount > 0 && (
           <div className="mb-12">
             <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 border border-gray-100">
               <h2 className="font-heading text-lg md:text-xl font-bold text-hustle-dark mb-3">
@@ -185,9 +202,9 @@ export default async function AreaCategoryPage({ params }: PageProps) {
               </h2>
               <div className="text-hustle-muted leading-relaxed space-y-3 text-sm">
                 <p>
-                  MyHustle has found <strong>{bizList.length} {category.name.toLowerCase()} {bizList.length === 1 ? 'business' : 'businesses'}</strong> in {area.name} so far.
-                  {bizList.filter(b => b.verified).length > 0
-                    ? ` Of these, ${bizList.filter(b => b.verified).length} have been verified by our team, confirming their contact details and operating status.`
+                  MyHustle has found <strong>{totalCount} {category.name.toLowerCase()} {totalCount === 1 ? 'business' : 'businesses'}</strong> in {area.name} so far.
+                  {verifiedCount > 0
+                    ? ` Of these, ${verifiedCount} have been verified by our team, confirming their contact details and operating status.`
                     : ' As businesses are verified, their listings will display a verification badge for added trust.'
                   }
                 </p>

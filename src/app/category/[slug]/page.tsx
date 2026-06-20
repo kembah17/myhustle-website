@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
-import PaginatedBusinessGrid from '@/components/PaginatedBusinessGrid'
+import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
@@ -97,15 +97,24 @@ export default async function CategoryPage({ params }: PageProps) {
     ? [category.id, ...children.map(c => c.id)]
     : [category.id]
 
-  // Fetch businesses (limit 1000 - Supabase default)
-  const { data: businesses, count: totalCount } = await getSupabase()
+  // Lightweight query: get area_id for all businesses in this category (for area distribution + total count)
+  const { data: bizMeta, count: totalCount } = await getSupabase()
     .from('businesses')
-    .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)', { count: 'exact' })
+    .select('area_id, area:areas!inner(id, slug, name, city:cities!inner(slug, name))', { count: 'exact' })
     .in('category_id', categoryIds)
+    .eq('active', true)
 
+  const allBizMeta = bizMeta || []
+
+  // Display query: fetch full data for first 20 businesses only
+  const { data: businesses } = await getSupabase()
+    .from('businesses')
+    .select('*, category:categories(*), area:areas(*, city:cities(slug, name)), reviews(*)')
+    .in('category_id', categoryIds)
+    .eq('active', true)
     .order('verified', { ascending: false })
     .order('created_at', { ascending: false })
-    .limit(1000)
+    .limit(20)
 
   const bizList = (businesses || []) as (Business & { category: Category; area: Area; reviews: Review[] })[]
 
@@ -121,26 +130,29 @@ export default async function CategoryPage({ params }: PageProps) {
     children = children.map(c => ({ ...c, business_count: countMap[c.id] || 0 }))
   }
 
-  // Get areas that have businesses in this category
+  // Get areas that have businesses in this category (from lightweight meta query)
   const areaMap = new Map<string, { slug: string; name: string; count: number; citySlug: string }>()
-  for (const biz of bizList) {
-    if (biz.area) {
-      const existing = areaMap.get(biz.area.id)
+  for (const biz of allBizMeta) {
+    const bizArea = biz.area as any
+    if (bizArea) {
+      const existing = areaMap.get(bizArea.id)
       if (existing) {
         existing.count++
       } else {
-        areaMap.set(biz.area.id, { slug: biz.area.slug, name: biz.area.name, count: 1, citySlug: (biz.area as any)?.city?.slug || 'lagos' })
+        areaMap.set(bizArea.id, { slug: bizArea.slug, name: bizArea.name, count: 1, citySlug: bizArea.city?.slug || 'lagos' })
       }
     }
   }
   const areasWithCount = Array.from(areaMap.values()).sort((a, b) => b.count - a.count)
 
-  // Collect city names for content sections
+  // Collect city names for content sections (from lightweight meta query)
   const cityNamesSet = new Set<string>()
-  bizList.forEach(b => {
+  allBizMeta.forEach(b => {
     const cn = (b.area as any)?.city?.name
     if (cn) cityNamesSet.add(cn)
   })
+
+  const displayTotal = totalCount ?? allBizMeta.length
 
   // Schema.org - Enhanced ItemList
   const itemListJsonLd = {
@@ -149,7 +161,7 @@ export default async function CategoryPage({ params }: PageProps) {
     name: `${category.name} in Nigeria`,
     description: `Top ${category.name} businesses across Nigeria on MyHustle`,
     url: `https://myhustle.space/category/${slug}`,
-    numberOfItems: totalCount ?? bizList.length,
+    numberOfItems: displayTotal,
     itemListElement: bizList.slice(0, 20).map((biz, index) => {
       const bizReviews = biz.reviews || []
       const bizAvgRating = bizReviews.length > 0
@@ -262,16 +274,19 @@ export default async function CategoryPage({ params }: PageProps) {
         <div className="mb-12">
           <h2 className="font-heading text-2xl font-bold mb-6">
             {isParent ? `All ${category.name} Businesses` : category.name}
-            <span className="text-hustle-muted text-lg font-normal ml-2">({totalCount ?? bizList.length})</span>
+            <span className="text-hustle-muted text-lg font-normal ml-2">({displayTotal})</span>
           </h2>
-          <PaginatedBusinessGrid
-            businesses={bizList}
-            areaName={category.name}
-          />
+          <BusinessGrid businesses={bizList} />
+          {displayTotal > 20 && (
+            <p className="mt-6 text-center text-hustle-muted text-sm">
+              Showing 20 of {displayTotal.toLocaleString()} businesses.
+              Browse by area above to find {category.name.toLowerCase()} near you.
+            </p>
+          )}
         </div>
 
         {/* Category Overview */}
-        {bizList.length > 0 && (
+        {displayTotal > 0 && (
           <div className="mb-12">
             <div className="bg-gradient-to-r from-hustle-blue/5 to-hustle-amber/5 rounded-xl p-6 md:p-8 border border-gray-100">
               <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-4">
@@ -279,7 +294,7 @@ export default async function CategoryPage({ params }: PageProps) {
               </h2>
               <div className="text-hustle-muted leading-relaxed space-y-3">
                 <p>
-                  MyHustle has discovered <strong>{(totalCount ?? bizList.length).toLocaleString()} {category.name.toLowerCase()} {(totalCount ?? bizList.length) === 1 ? 'business' : 'businesses'}</strong> across Nigeria so far,
+                  MyHustle has discovered <strong>{displayTotal.toLocaleString()} {category.name.toLowerCase()} {displayTotal === 1 ? 'business' : 'businesses'}</strong> across Nigeria so far,
                   spanning {areasWithCount.length} different {areasWithCount.length === 1 ? 'area' : 'areas'}
                   {cityNamesSet.size > 0 ? ` in ${cityNamesSet.size} ${cityNamesSet.size === 1 ? 'city' : 'cities'}` : ''}.
                   This directory is updated as new {category.name.toLowerCase()} businesses register on the platform.
@@ -327,7 +342,7 @@ export default async function CategoryPage({ params }: PageProps) {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
-                <p className="text-2xl font-bold text-hustle-blue">{(totalCount ?? bizList.length).toLocaleString()}</p>
+                <p className="text-2xl font-bold text-hustle-blue">{displayTotal.toLocaleString()}</p>
                 <p className="text-xs text-hustle-muted mt-1">Total Found</p>
               </div>
               <div className="bg-white rounded-xl p-4 text-center border border-gray-100">
