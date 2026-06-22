@@ -16,66 +16,16 @@ import VoiceReceptionist from '@/components/VoiceReceptionist'
 import ContactTracker from '@/components/analytics/ContactTracker'
 import type { Business, Category, Area, Review, ReviewResponse, BusinessHour, BusinessPhoto } from '@/lib/types'
 import ShareButtons from '@/components/ShareButtons'
-import { generateBusinessFAQs } from '@/lib/faq-generator'
 import ClaimBusinessButton from '@/components/ClaimBusinessButton'
 import ReportListingButton from '@/components/ReportListingButton'
-import FAQSection from '@/components/FAQSection'
 import SimilarBusinesses from '@/components/SimilarBusinesses'
-import { generateBusinessContent, hasRichDescription } from '@/lib/content-enrichment'
 import { getSchemaMapping, getMetaServices } from '@/lib/schema-mappings'
-import ServicesSection from '@/components/business/ServicesSection'
-import { calculateQualityScore } from '@/lib/quality-score'
 
 // Task 5: Switch from force-dynamic to ISR with 24-hour revalidation
 export const revalidate = 86400
 
 interface PageProps {
   params: Promise<{ slug: string }>
-}
-
-/**
- * Helper: fetch quality signals for a business by slug.
- * Used by both generateMetadata and the page component.
- */
-async function fetchQualitySignals(slug: string) {
-  const supabase = getSupabase()
-
-  const { data: biz } = await supabase
-    .from('businesses')
-    .select('id, description, area_id, website, verified, verification_tier')
-    .eq('slug', slug)
-    .single()
-
-  if (!biz) return null
-
-  // Check for photos
-  const { count: photoCount } = await supabase
-    .from('business_photos')
-    .select('id', { count: 'exact', head: true })
-    .eq('business_id', biz.id)
-
-  // Check for published reviews
-  const { count: reviewCount } = await supabase
-    .from('reviews')
-    .select('id', { count: 'exact', head: true })
-    .eq('business_id', biz.id)
-    .eq('status', 'published')
-
-  // Check for business hours
-  const { count: hoursCount } = await supabase
-    .from('business_hours')
-    .select('id', { count: 'exact', head: true })
-    .eq('business_id', biz.id)
-
-  return calculateQualityScore({
-    description: biz.description,
-    area_id: biz.area_id,
-    website: biz.website,
-    hasPhotos: (photoCount || 0) > 0,
-    hasReviews: (reviewCount || 0) > 0,
-    hasHours: (hoursCount || 0) > 0,
-    isClaimed: biz.verified || (biz.verification_tier || 0) > 0,
-  })
 }
 
 
@@ -99,15 +49,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const serviceKeywords = getMetaServices(parentSlug, biz.name)
   const description = `Find ${biz.name} in ${areaName}, ${cityName}. ${catName} services including ${serviceKeywords}. Read reviews, compare, and book on MyHustle.`
 
-  // Task 3: Quality-based robots directive
-  const qualityScore = await fetchQualitySignals(slug)
-  const shouldIndex = qualityScore?.isIndexable ?? false
-
   return {
     title,
     description,
     robots: {
-      index: shouldIndex,
+      index: true,
       follow: true,
     },
     openGraph: { title, description, type: 'article' },
@@ -187,20 +133,6 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     .map(dayNum => hoursList.find(h => h.day === dayNum))
     .filter(Boolean) as BusinessHour[]
 
-  // Task 3: Calculate quality score for conditional rendering
-  const qualityScore = calculateQualityScore({
-    description: biz.description,
-    area_id: biz.area_id,
-    website: biz.website,
-    hasPhotos: photoList.length > 0,
-    hasReviews: rawReviews.length > 0,
-    hasHours: sortedHours.length > 0,
-    isClaimed: biz.verified || (biz.verification_tier || 0) > 0,
-  })
-  const isIndexed = qualityScore.isIndexable
-  // Show template content ONLY on noindexed pages (for UX), hide on indexed pages (to avoid duplication)
-  const showTemplateContent = !isIndexed
-
   // Fetch similar businesses nearby (Recommendation 2)
   let similarBusinesses: any[] = []
   if (biz.category_id && biz.area_id) {
@@ -239,51 +171,8 @@ export default async function BusinessDetailPage({ params }: PageProps) {
   // Determine cover photo
   const coverPhoto = biz.cover_photo_url || photoList.find(p => p.is_cover)?.url || null
 
-  // Determine parent category slug for content enrichment and schema
+  // Determine parent category slug for schema
   const parentCategorySlug = (biz.category as any)?.parent?.slug || biz.category?.slug || 'other'
-  const parentCategoryName = (biz.category as any)?.parent?.name || biz.category?.name || ''
-
-  // Generate enriched content for thin listings (Fix 2) — only if showing template content
-  const showEnrichedContent = showTemplateContent && !hasRichDescription(biz.description)
-  const enrichedContent = showEnrichedContent
-    ? generateBusinessContent({
-        businessName: biz.name,
-        categoryName: biz.category?.name || '',
-        parentCategorySlug,
-        areaName: biz.area?.name || '',
-        cityName: (biz.area as any)?.city?.name || 'Nigeria',
-        hasPhone: !!biz.phone,
-        hasWebsite: !!biz.website,
-        hasAddress: !!biz.address,
-        hasHours: sortedHours.length > 0,
-        reviewCount: reviewList.length,
-        avgRating,
-      })
-    : null
-
-  // Generate FAQs only if showing template content
-  const DAY_NAMES_FOR_FAQ = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  const bizFaqs = showTemplateContent
-    ? generateBusinessFAQs({
-        businessName: biz.name,
-        categoryName: biz.category?.name || '',
-        areaName: biz.area?.name || '',
-        cityName: (biz.area as any)?.city?.name || '',
-        hasBooking: true,
-        hasWhatsApp: !!biz.whatsapp,
-        hasPhone: !!biz.phone,
-        reviewCount: reviewList.length,
-        avgRating,
-        isVerified: biz.verified || biz.verification_tier > 0,
-        verificationTier: biz.verification_tier || 0,
-        hours: sortedHours.map(h => ({
-          day: DAY_NAMES_FOR_FAQ[h.day],
-          open: h.open_time || '',
-          close: h.close_time || '',
-          closed: h.closed,
-        })),
-      })
-    : []
 
   // Fix 5: Enhanced LocalBusiness schema with specific types, geo, priceRange, areaServed
   const schemaMapping = getSchemaMapping(parentCategorySlug)
@@ -347,32 +236,9 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     } : {}),
   }
 
-  // Service schema JSON-LD (Recommendation 3) — only for indexed pages
-  const serviceSchemaServices = isIndexed ? (getSchemaMapping(parentCategorySlug)?.services || []) : []
-  const serviceSchemaJsonLd = serviceSchemaServices.length > 0 ? serviceSchemaServices.map(service => ({
-    '@context': 'https://schema.org',
-    '@type': 'Service',
-    serviceType: service,
-    provider: {
-      '@type': 'LocalBusiness',
-      name: biz.name,
-      url: `https://myhustle.space/business/${biz.slug}`,
-    },
-    areaServed: {
-      '@type': 'City',
-      name: (biz.area as any)?.city?.name || 'Nigeria',
-    },
-  })) : []
-
   return (
     <div>
       <JsonLd data={localBusinessJsonLd} />
-      {serviceSchemaJsonLd.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchemaJsonLd) }}
-        />
-      )}
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.space' },
@@ -480,55 +346,6 @@ export default async function BusinessDetailPage({ params }: PageProps) {
                 </div>
               </div>
             )}
-
-            {/* Enriched Content for thin listings — ONLY on noindexed pages */}
-            {showTemplateContent && enrichedContent && (
-              <div className="space-y-8">
-                {/* About Section - enriched */}
-                <div>
-                  {!biz.description && (
-                    <h2 className="font-heading text-2xl font-bold mb-4">About {biz.name}</h2>
-                  )}
-                  <div className="prose prose-lg text-hustle-muted max-w-none">
-                    {enrichedContent.aboutSection.split('\n\n').map((paragraph, i) => (
-                      <p key={i}>{paragraph}</p>
-                    ))}
-                  </div>
-                </div>
-
-                {/* What to Expect */}
-                <div>
-                  <h2 className="font-heading text-2xl font-bold mb-4">What to Expect</h2>
-                  <div className="bg-gray-50 rounded-xl p-6">
-                    <ul
-                      className="space-y-3 text-hustle-muted"
-                      dangerouslySetInnerHTML={{ __html: enrichedContent.whatToExpect.replace(/<li>/g, '<li class="flex items-start gap-2"><span class="text-hustle-blue mt-1 flex-shrink-0">✓</span><span>').replace(/<\/li>/g, '</span></li>') }}
-                    />
-                  </div>
-                </div>
-
-                {/* Area Guide */}
-                <div>
-                  <h2 className="font-heading text-2xl font-bold mb-4">{biz.area?.name || 'Area'} Guide</h2>
-                  <div className="prose prose-lg text-hustle-muted max-w-none">
-                    <p>{enrichedContent.areaGuide}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Services Section — ONLY on noindexed pages */}
-            {showTemplateContent && (() => {
-              const schemaServices = getSchemaMapping(parentCategorySlug)?.services || []
-              if (schemaServices.length === 0) return null
-              return (
-                <ServicesSection
-                  services={schemaServices}
-                  businessName={biz.name}
-                  categoryName={biz.category?.name || ''}
-                />
-              )
-            })()}
 
             {/* Photo Gallery - above business hours */}
             <PhotoGallery photos={photoList} businessName={biz.name} />
@@ -685,11 +502,6 @@ export default async function BusinessDetailPage({ params }: PageProps) {
             <ReportListingButton businessId={biz.id} businessName={biz.name} />
           </div>
         </div>
-
-        {/* FAQ Section — ONLY on noindexed pages */}
-        {showTemplateContent && bizFaqs.length > 0 && (
-          <FAQSection faqs={bizFaqs} />
-        )}
 
         {/* Similar Businesses Nearby — always shown (good for internal linking) */}
         {similarBusinesses.length > 0 && (
