@@ -42,6 +42,7 @@ export default function Footer() {
             <h4 className="font-heading font-semibold mb-4">For Business Owners</h4>
             <ul className="space-y-2 text-sm text-hustle-muted">
               <li><Link href="/list-your-business" className="hover:text-hustle-amber transition-colors">List Your Business / Hustle</Link></li>
+              <li><Link href="/tools" className="hover:text-hustle-amber transition-colors">Free Business Tools</Link></li>
               <li><Link href="/pricing" className="hover:text-hustle-amber transition-colors">Pricing</Link></li>
               <li><Link href="/dashboard" className="hover:text-hustle-amber transition-colors">Dashboard</Link></li>
             </ul>
