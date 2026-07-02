@@ -17,6 +17,7 @@ const adminNav = [
   { href: '/dashboard/admin/landmarks', label: 'Landmarks', icon: '🏛️' },
   { href: '/dashboard/admin/categories', label: 'Categories', icon: '📂' },
   { href: '/dashboard/admin/import', label: 'Bulk Import', icon: '📦' },
+  { href: '/dashboard/admin/whatsapp', label: 'WhatsApp', icon: '💬' },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
