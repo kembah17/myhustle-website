@@ -234,6 +234,10 @@ export default async function BusinessDetailPage({ params }: PageProps) {
         closes: h.close_time,
       })),
     } : {}),
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', '.business-description', '.business-address'],
+    },
   }
 
   return (

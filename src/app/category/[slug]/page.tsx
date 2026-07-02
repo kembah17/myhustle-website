@@ -9,6 +9,8 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Category, Business, Area, Review } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import { getSchemaMapping } from '@/lib/schema-mappings'
+import DataFreshness from '@/components/DataFreshness'
 
 export const revalidate = 86400
 
@@ -208,9 +210,36 @@ export default async function CategoryPage({ params }: PageProps) {
     { label: category.name },
   ]
 
+  const schemaMapping = getSchemaMapping(parentCategory?.slug || slug)
+  const serviceJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: category.name + ' Services in Nigeria',
+    description: `Find ${category.name.toLowerCase()} services across Nigeria. ${displayTotal.toLocaleString()} businesses listed on MyHustle.`,
+    url: `https://myhustle.space/category/${slug}`,
+    provider: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+    areaServed: { '@type': 'Country', name: 'Nigeria' },
+    serviceType: schemaMapping.services.join(', '),
+  }
+
+  const datasetJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: `${category.name} Businesses in Nigeria - MyHustle Directory`,
+    description: `Directory of ${displayTotal.toLocaleString()} ${category.name.toLowerCase()} businesses across Nigeria. Updated daily.`,
+    url: `https://myhustle.space/category/${slug}`,
+    license: 'https://myhustle.space/legal/terms-of-service',
+    creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+    dateModified: new Date().toISOString().split('T')[0],
+    spatialCoverage: { '@type': 'Place', name: 'Nigeria' },
+    variableMeasured: 'Number of business listings',
+  }
+
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
+      <JsonLd data={serviceJsonLd} />
+      <JsonLd data={datasetJsonLd} />
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.space' },
@@ -235,8 +264,12 @@ export default async function CategoryPage({ params }: PageProps) {
               {category.description && (
                 <p className="text-blue-200 text-lg mt-2">{category.description}</p>
               )}
+              <DataFreshness count={displayTotal} label={`${category.name.toLowerCase()} businesses`} />
             </div>
           </div>
+          <p className="text-blue-100 mt-4 max-w-3xl">
+            Nigeria has {displayTotal.toLocaleString()} {category.name.toLowerCase()} businesses listed on MyHustle{areasWithCount.length > 0 ? `, spanning ${areasWithCount.length} areas across ${cityNamesSet.size} cities` : ''}.
+          </p>
         </div>
       </section>
 

@@ -10,6 +10,9 @@ export const metadata: Metadata = {
     description: "Connecting Nigeria's businesses and hustles with customers who need them.",
     url: 'https://myhustle.space/about',
   },
+  alternates: {
+    canonical: 'https://myhustle.space/about',
+  },
 }
 
 export default function AboutPage() {

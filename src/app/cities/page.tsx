@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import JsonLd from '@/components/JsonLd'
+import DataFreshness from '@/components/DataFreshness'
 import type { Metadata } from 'next'
 
 export const revalidate = 86400
@@ -127,9 +128,25 @@ export default async function CitiesPage() {
     ],
   }
 
+  const totalBusinesses = Object.values(grouped).flat().reduce((sum, c) => sum + (c.business_count || 0), 0)
+
+  const datasetJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: 'Nigerian Business Directory by City - MyHustle',
+    description: `Directory of ${totalBusinesses.toLocaleString()} businesses across ${totalCities} Nigerian cities. Updated daily.`,
+    url: 'https://myhustle.space/cities',
+    license: 'https://myhustle.space/legal/terms-of-service',
+    creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+    dateModified: new Date().toISOString().split('T')[0],
+    spatialCoverage: { '@type': 'Place', name: 'Nigeria' },
+    variableMeasured: 'Number of business listings',
+  }
+
   return (
     <div className="min-h-screen bg-hustle-light">
       <JsonLd data={breadcrumbJsonLd} />
+      <JsonLd data={datasetJsonLd} />
 
       {/* Header */}
       <section className="bg-hustle-blue text-white py-12">
@@ -145,6 +162,10 @@ export default async function CitiesPage() {
           <p className="text-blue-200 mt-2 text-lg">
             {totalCities} cities across Nigeria — find businesses near you
           </p>
+          <p className="text-blue-100 mt-2">
+            MyHustle lists {totalBusinesses.toLocaleString()} businesses across {totalCities} Nigerian cities, making it one of the most comprehensive SME directories in the country.
+          </p>
+          <DataFreshness count={totalBusinesses} label="businesses" />
         </div>
       </section>
 

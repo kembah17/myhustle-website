@@ -6,6 +6,7 @@ import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 import { getCityIntro } from '@/lib/city-intros'
+import DataFreshness from '@/components/DataFreshness'
 
 export const revalidate = 86400
 
@@ -131,10 +132,45 @@ export default async function CityPage({ params }: PageProps) {
     })),
   }
 
+  const placeJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'City',
+    name: city.name,
+    url: `https://myhustle.space/${citySlug}`,
+    description: city.seo_description || `Business directory for ${city.name}, Nigeria`,
+    containedInPlace: {
+      '@type': 'Country',
+      name: 'Nigeria',
+      sameAs: 'https://en.wikipedia.org/wiki/Nigeria',
+    },
+    ...(city.lat && city.lon ? {
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: city.lat,
+        longitude: city.lon,
+      },
+    } : {}),
+  }
+
+  const datasetJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: `Businesses in ${city.name} - MyHustle Directory`,
+    description: `Directory of ${totalBusinesses.toLocaleString()} businesses in ${city.name}, Nigeria. Updated daily.`,
+    url: `https://myhustle.space/${citySlug}`,
+    license: 'https://myhustle.space/legal/terms-of-service',
+    creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+    dateModified: new Date().toISOString().split('T')[0],
+    spatialCoverage: { '@type': 'Place', name: city.name + ', Nigeria' },
+    variableMeasured: 'Number of business listings',
+  }
+
   return (
     <div>
       <JsonLd data={breadcrumbLd} />
       <JsonLd data={itemListLd} />
+      <JsonLd data={placeJsonLd} />
+      <JsonLd data={datasetJsonLd} />
 
       {/* Hero Section */}
       <section className="bg-hustle-blue text-white py-12">
@@ -160,6 +196,9 @@ export default async function CityPage({ params }: PageProps) {
             <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-3">
               About Business in {city.name}
             </h2>
+            <p className="text-hustle-dark font-medium leading-relaxed mb-2">
+              {city.name} has {totalBusinesses.toLocaleString()} registered businesses across {totalAreas} areas on MyHustle{city.state ? `, making it a key business hub in ${city.state} State` : ''}, Nigeria.
+            </p>
             <p className="text-hustle-muted leading-relaxed">
               {cityIntro}
             </p>

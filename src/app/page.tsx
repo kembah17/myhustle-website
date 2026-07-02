@@ -162,16 +162,28 @@ export default async function HomePage() {
   const organizationJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'MyHustle.com',
+    name: 'MyHustle',
+    alternateName: 'MyHustle.com',
     url: 'https://myhustle.space',
     logo: 'https://myhustle.space/logo-dark.png',
-    description: "Nigeria's trusted SME directory",
-    sameAs: [],
+    description: "Nigeria's trusted SME directory. Find, book, and pay for services from over 74,000 businesses across 39 cities.",
+    foundingDate: '2025',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Nigeria',
+      sameAs: 'https://en.wikipedia.org/wiki/Nigeria',
+    },
+    sameAs: [
+      'https://wa.me/2349160763078',
+    ],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
       availableLanguage: ['English'],
+      url: 'https://myhustle.space/contact',
     },
+    numberOfEmployees: { '@type': 'QuantitativeValue', value: 1 },
+    knowsAbout: ['Nigerian businesses', 'SME directory', 'business listings', 'local services Nigeria'],
   }
 
   const homeFaqs = generateHomepageFAQs({
@@ -181,10 +193,24 @@ export default async function HomePage() {
     cityNames: cities.map(c => c.name),
   })
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: homeFaqs.map(faq => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  }
+
   return (
     <div>
       <JsonLd data={websiteJsonLd} />
       <JsonLd data={organizationJsonLd} />
+      <JsonLd data={faqJsonLd} />
 
       {/* Hero Section - optimized for mobile visibility */}
       <section className="bg-hustle-blue text-white min-h-[60vh] md:min-h-[70vh] flex flex-col justify-center relative">

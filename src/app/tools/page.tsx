@@ -11,6 +11,9 @@ export const metadata: Metadata = {
       'Free online tools to help Nigerian businesses operate more efficiently. No signup, no downloads — works in your browser.',
     url: 'https://myhustle.space/tools',
   },
+  alternates: {
+    canonical: 'https://myhustle.space/tools',
+  },
 };
 
 const tools = [

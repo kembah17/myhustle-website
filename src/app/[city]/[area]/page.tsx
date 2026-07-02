@@ -8,6 +8,7 @@ import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import DataFreshness from '@/components/DataFreshness'
 import { WHATSAPP_URL } from '@/components/WhatsAppCTA'
 
 export const revalidate = 86400
@@ -211,9 +212,44 @@ export default async function AreaPage({ params }: PageProps) {
     })),
   }
 
+  const areaPlaceJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Place',
+    name: `${area.name}, ${city.name}`,
+    url: `https://myhustle.space/${citySlug}/${areaSlug}`,
+    description: area.seo_description || `Businesses in ${area.name}, ${city.name}`,
+    containedInPlace: {
+      '@type': 'City',
+      name: city.name,
+      url: `https://myhustle.space/${citySlug}`,
+    },
+    ...(area.lat && area.lon ? {
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: area.lat,
+        longitude: area.lon,
+      },
+    } : {}),
+  }
+
+  const datasetJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: `Businesses in ${area.name}, ${city.name} - MyHustle Directory`,
+    description: `Directory of ${totalCount} businesses in ${area.name}, ${city.name}, Nigeria. Updated daily.`,
+    url: `https://myhustle.space/${citySlug}/${areaSlug}`,
+    license: 'https://myhustle.space/legal/terms-of-service',
+    creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+    dateModified: new Date().toISOString().split('T')[0],
+    spatialCoverage: { '@type': 'Place', name: `${area.name}, ${city.name}, Nigeria` },
+    variableMeasured: 'Number of business listings',
+  }
+
   return (
     <div>
       <JsonLd data={itemListJsonLd} />
+      <JsonLd data={areaPlaceJsonLd} />
+      <JsonLd data={datasetJsonLd} />
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.space' },
@@ -238,9 +274,16 @@ export default async function AreaPage({ params }: PageProps) {
           <p className="text-blue-200 text-lg mt-3">
             See what{"'"}{"s"} happening in {area.name}
           </p>
+          <DataFreshness count={totalCount} label="businesses" />
           {(area.seo_description || area.description) && (
             <p className="text-blue-300 mt-2 max-w-3xl">{area.seo_description || area.description}</p>
           )}
+          <p className="text-blue-100 mt-2 text-sm">
+            {totalCount > 0
+              ? `${area.name} has ${totalCount.toLocaleString()} registered businesses on MyHustle, serving the ${city.name} area.`
+              : `We're building our directory in ${area.name}, ${city.name}.`
+            }
+          </p>
         </div>
       </section>
 

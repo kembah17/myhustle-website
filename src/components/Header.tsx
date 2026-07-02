@@ -151,6 +151,9 @@ export default function Header() {
             <Link href="/near-me" className="text-sm font-medium hover:text-hustle-amber transition-colors">
               Nearby
             </Link>
+            <Link href="/pricing" className="text-sm font-medium hover:text-hustle-amber transition-colors">
+              Pricing
+            </Link>
             <Link href="/help" className="text-sm font-medium hover:text-hustle-amber transition-colors">
               Help
             </Link>
