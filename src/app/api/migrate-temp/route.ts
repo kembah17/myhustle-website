@@ -11,11 +11,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Construct connection from Supabase URL
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
-  const dbPassword = encodeURIComponent('{Pwd(4)my-hustle}');
-  const connectionString = `postgresql://postgres.${projectRef}:${dbPassword}@aws-0-eu-west-2.pooler.supabase.com:5432/postgres`;
+  const connectionString = `postgresql://postgres.${projectRef}:%7BPwd%284%29my-hustle%7D@aws-0-eu-west-2.pooler.supabase.com:5432/postgres`;
 
   const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
 
