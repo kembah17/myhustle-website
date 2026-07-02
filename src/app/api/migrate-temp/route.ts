@@ -4,7 +4,6 @@ import pg from 'pg';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  // Auth check - first 20 chars of service role key
   const authHeader = request.headers.get('x-migration-key');
   const expectedKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 20);
 
@@ -12,10 +11,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
-  if (!connectionString) {
-    return NextResponse.json({ error: 'No database URL configured' }, { status: 500 });
-  }
+  // Construct connection from Supabase URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const projectRef = supabaseUrl.replace('https://', '').replace('.supabase.co', '');
+  const dbPassword = encodeURIComponent('{Pwd(4)my-hustle}');
+  const connectionString = `postgresql://postgres.${projectRef}:${dbPassword}@aws-0-eu-west-2.pooler.supabase.com:5432/postgres`;
 
   const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
 
