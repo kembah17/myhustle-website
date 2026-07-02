@@ -4,7 +4,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Free Business Tools — MyHustle',
   description:
-    'Free online tools for Nigerian business owners. PDF editor, invoice generator, QR codes, image tools, password generator, and more — all free, no signup required.',
+    'Free online tools for Nigerian business owners. Business name generator, CAC registration guide, PDF editor, invoice generator, QR codes, image tools, and more — all free, no signup required.',
   openGraph: {
     title: 'Free Business Tools — MyHustle',
     description:
@@ -16,7 +16,28 @@ export const metadata: Metadata = {
   },
 };
 
-const tools = [
+const myHustleTools = [
+  {
+    name: 'Business Name Generator',
+    href: '/tools/business-name-generator',
+    emoji: '💡',
+    description:
+      'Generate unique, memorable business name ideas for your Nigerian company. Get inspired with names that blend local flavour with professional appeal. Includes CAC registration tips.',
+    tags: ['Business', 'Free Tool'],
+    isNew: true,
+  },
+  {
+    name: 'CAC Registration Guide',
+    href: '/tools/cac-registration-guide',
+    emoji: '📋',
+    description:
+      'Step-by-step interactive checklist for registering your business with CAC in Nigeria. Covers Business Name and LLC registration with current 2025 fees and required documents.',
+    tags: ['Business', 'Guide'],
+    isNew: true,
+  },
+];
+
+const externalTools = [
   {
     name: 'Invoice Generator',
     url: 'https://invoicegenerator.one',
@@ -141,16 +162,68 @@ export default function ToolsPage() {
             Free Business Tools
           </h1>
           <p className="mt-4 text-lg text-blue-100 sm:text-xl">
-            Powerful online tools to help you run your business — invoicing,
-            documents, design, security, and more. All free, no signup required.
+            Powerful online tools to help you run your business — from naming and
+            registration to invoicing, documents, design, and more. All free, no
+            signup required.
           </p>
         </div>
       </section>
 
-      {/* Tools Grid */}
+      {/* MyHustle Tools (Featured) */}
+      <section className="mx-auto max-w-6xl px-4 pt-12 sm:pt-16">
+        <h2 className="font-heading text-2xl font-bold text-hustle-dark mb-2">
+          Nigerian Business Tools
+        </h2>
+        <p className="text-hustle-muted mb-6">
+          Tools built specifically for Nigerian entrepreneurs and business owners.
+        </p>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {myHustleTools.map((tool) => (
+            <Link
+              key={tool.href}
+              href={tool.href}
+              className="group relative rounded-xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm transition-all hover:border-emerald-400 hover:shadow-md"
+            >
+              {tool.isNew && (
+                <span className="absolute -top-2.5 right-4 rounded-full bg-emerald-600 px-3 py-0.5 text-xs font-bold text-white">
+                  NEW
+                </span>
+              )}
+              <div className="mb-3 text-3xl">{tool.emoji}</div>
+              <h3 className="font-heading text-lg font-semibold text-hustle-dark group-hover:text-emerald-700">
+                {tool.name}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-hustle-muted">
+                {tool.description}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {tool.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4 text-sm font-medium text-emerald-600 opacity-0 transition-opacity group-hover:opacity-100">
+                Open tool &rarr;
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* External Tools Grid */}
       <section className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+        <h2 className="font-heading text-2xl font-bold text-hustle-dark mb-2">
+          More Free Tools
+        </h2>
+        <p className="text-hustle-muted mb-6">
+          Productivity tools for documents, design, calculations, and more.
+        </p>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {tools.map((tool) => (
+          {externalTools.map((tool) => (
             <a
               key={tool.url}
               href={tool.url}
@@ -159,9 +232,9 @@ export default function ToolsPage() {
               className="group rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-hustle-amber hover:shadow-md"
             >
               <div className="mb-3 text-3xl">{tool.emoji}</div>
-              <h2 className="font-heading text-lg font-semibold text-hustle-dark group-hover:text-hustle-blue">
+              <h3 className="font-heading text-lg font-semibold text-hustle-dark group-hover:text-hustle-blue">
                 {tool.name}
-              </h2>
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-hustle-muted">
                 {tool.description}
               </p>

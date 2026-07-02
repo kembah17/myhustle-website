@@ -12,6 +12,8 @@ const STATIC_PAGES = [
   { path: '/contact', changefreq: 'monthly', priority: '0.5' },
   { path: '/help', changefreq: 'monthly', priority: '0.4' },
   { path: '/tools', changefreq: 'monthly', priority: '0.6' },
+  { path: '/tools/business-name-generator', changefreq: 'monthly', priority: '0.6' },
+  { path: '/tools/cac-registration-guide', changefreq: 'monthly', priority: '0.6' },
   { path: '/pricing', changefreq: 'monthly', priority: '0.7' },
   { path: '/privacy', changefreq: 'monthly', priority: '0.3' },
   { path: '/terms', changefreq: 'monthly', priority: '0.3' },
