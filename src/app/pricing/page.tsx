@@ -131,25 +131,45 @@ const faqs = [
 ]
 
 export default function PricingPage() {
-  const productJsonLd = {
+  const serviceJsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: 'MyHustle Business Listing',
+    '@type': 'WebPage',
+    name: 'MyHustle Pricing — Business Listing Plans',
     description:
-      "List your business on Nigeria's largest SME directory. Get discovered by customers searching for your services.",
-    brand: { '@type': 'Organization', name: 'MyHustle' },
-    offers: tiers.map((tier) => ({
-      '@type': 'Offer',
-      name: tier.name + ' Plan',
-      price: tier.priceValue,
-      priceCurrency: 'NGN',
-      description: tier.description,
-      url: `https://myhustle.space${tier.ctaHref}`,
-      availability: 'https://schema.org/InStock',
-      ...(tier.priceValue > 0
-        ? { priceValidUntil: new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0] }
-        : {}),
-    })),
+      'Choose the right plan to list your business on MyHustle. Free listings available. Premium plans from ₦5,000/month.',
+    url: 'https://myhustle.space/pricing',
+    mainEntity: {
+      '@type': 'Service',
+      name: 'MyHustle Business Listing',
+      description:
+        "List your business on Nigeria's largest SME directory. Get discovered by customers searching for your services.",
+      provider: {
+        '@type': 'Organization',
+        name: 'MyHustle',
+        url: 'https://myhustle.space',
+        areaServed: { '@type': 'Country', name: 'Nigeria' },
+      },
+      serviceType: 'Business Directory Listing',
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'MyHustle Listing Plans',
+        itemListElement: tiers.map((tier) => ({
+          '@type': 'Offer',
+          name: tier.name + ' Plan',
+          description: tier.description,
+          price: String(tier.priceValue),
+          priceCurrency: 'NGN',
+          url: `https://myhustle.space${tier.ctaHref}`,
+          priceSpecification: {
+            '@type': 'UnitPriceSpecification',
+            price: String(tier.priceValue),
+            priceCurrency: 'NGN',
+            unitText: tier.priceValue === 0 ? 'forever' : 'month',
+            ...(tier.priceValue > 0 ? { billingDuration: 'P1M' } : {}),
+          },
+        })),
+      },
+    },
   }
 
   const faqJsonLd = {
@@ -167,7 +187,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-hustle-light">
-      <JsonLd data={productJsonLd} />
+      <JsonLd data={serviceJsonLd} />
       <JsonLd data={faqJsonLd} />
       <BreadcrumbJsonLd
         items={[
