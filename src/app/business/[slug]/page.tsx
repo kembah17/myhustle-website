@@ -20,6 +20,7 @@ import ClaimBusinessButton from '@/components/ClaimBusinessButton'
 import ReportListingButton from '@/components/ReportListingButton'
 import SimilarBusinesses from '@/components/SimilarBusinesses'
 import { getSchemaMapping, getMetaServices } from '@/lib/schema-mappings'
+import ClaimCTA from '@/components/ClaimCTA'
 
 // Task 5: Switch from force-dynamic to ISR with 24-hour revalidation
 export const revalidate = 86400
@@ -519,6 +520,9 @@ export default async function BusinessDetailPage({ params }: PageProps) {
           />
         )}
       </div>
+
+      {/* Sticky Claim CTA for unclaimed businesses */}
+      {!biz.user_id && <ClaimCTA businessName={biz.name} businessSlug={biz.slug} />}
     </div>
   )
 }

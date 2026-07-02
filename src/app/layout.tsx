@@ -4,6 +4,7 @@ import './globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import WhatsAppFloatingButton from '@/components/WhatsAppFloatingButton'
+import SmartPopup from '@/components/SmartPopup'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import AIReferralTracker from '@/components/analytics/AIReferralTracker'
 
@@ -73,6 +74,7 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer />
         <WhatsAppFloatingButton />
+        <SmartPopup />
       </body>
     </html>
   )

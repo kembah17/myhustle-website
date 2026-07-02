@@ -30,6 +30,7 @@ export async function GET() {
     `${BASE_URL}/sitemaps/cities`,
     `${BASE_URL}/sitemaps/categories`,
     `${BASE_URL}/sitemaps/landmarks`,
+    `${BASE_URL}/sitemaps/top`,
   ]
 
   for (let i = 0; i < businessPages; i++) {
