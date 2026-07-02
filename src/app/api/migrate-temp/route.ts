@@ -6,11 +6,23 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: Request) {
   const authHeader = request.headers.get('x-migration-key');
   const expectedKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 20);
+
   if (!authHeader || authHeader !== expectedKey) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const connectionString = "postgresql://postgres:%7BPwd%284%29my-hustle%7D@db.ngqwdfdkvkfgydrtovsq.supabase.co:5432/postgres";
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const connectionString = body.connectionString;
+  if (!connectionString) {
+    return NextResponse.json({ error: 'connectionString required in body' }, { status: 400 });
+  }
+
   const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
 
   try {
@@ -84,14 +96,14 @@ export async function POST(request: Request) {
       ALTER TABLE whatsapp_flows ENABLE ROW LEVEL SECURITY;
     `;
 
+    await client.query(sql);
+
     const policyStatements = [
       `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='whatsapp_config' AND policyname='Service role full access') THEN CREATE POLICY "Service role full access" ON whatsapp_config FOR ALL USING (auth.role() = 'service_role'); END IF; END $$`,
       `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='whatsapp_messages' AND policyname='Service role full access') THEN CREATE POLICY "Service role full access" ON whatsapp_messages FOR ALL USING (auth.role() = 'service_role'); END IF; END $$`,
       `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='whatsapp_templates' AND policyname='Service role full access') THEN CREATE POLICY "Service role full access" ON whatsapp_templates FOR ALL USING (auth.role() = 'service_role'); END IF; END $$`,
       `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='whatsapp_flows' AND policyname='Service role full access') THEN CREATE POLICY "Service role full access" ON whatsapp_flows FOR ALL USING (auth.role() = 'service_role'); END IF; END $$`,
     ];
-
-    await client.query(sql);
 
     const policyResults = [];
     for (const stmt of policyStatements) {
