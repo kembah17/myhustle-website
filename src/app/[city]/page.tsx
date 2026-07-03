@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
@@ -7,6 +6,7 @@ import type { Metadata } from 'next'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 import { getCityIntro } from '@/lib/city-intros'
 import DataFreshness from '@/components/DataFreshness'
+import PaginatedAreaGrid from '@/components/PaginatedAreaGrid'
 
 export const revalidate = 86400
 
@@ -235,34 +235,7 @@ export default async function CityPage({ params }: PageProps) {
             <h2 className="font-heading text-xl md:text-2xl font-bold text-hustle-dark mb-6">
               Browse by Area in {city.name}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {areas.map((area) => (
-                <Link
-                  key={area.id}
-                  href={`/${citySlug}/${area.slug}`}
-                  className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber block group"
-                >
-                  <div className="flex items-start justify-between">
-                    <h3 className="font-semibold text-hustle-dark text-base md:text-lg group-hover:text-hustle-blue transition-colors">
-                      {area.name}
-                    </h3>
-                    <span className="bg-hustle-blue/10 text-hustle-blue text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ml-2">
-                      {area.business_count.toLocaleString()}
-                    </span>
-                  </div>
-
-                  {area.area_type && (
-                    <p className="text-xs text-hustle-muted mt-2 capitalize">
-                      {area.area_type} area
-                    </p>
-                  )}
-
-                  <p className="text-xs text-hustle-blue mt-3 group-hover:text-hustle-amber transition-colors">
-                    View all businesses &rarr;
-                  </p>
-                </Link>
-              ))}
-            </div>
+            <PaginatedAreaGrid areas={areas} citySlug={citySlug} cityName={city.name} />
           </section>
         ) : (
           <div className="text-center py-16">
