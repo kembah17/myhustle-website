@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import JsonLd from '@/components/JsonLd'
 import DataFreshness from '@/components/DataFreshness'
+import PaginatedCityGrid from '@/components/PaginatedCityGrid'
 import type { Metadata } from 'next'
 
 export const revalidate = 86400
@@ -45,7 +46,6 @@ async function getCityBusinessCounts(): Promise<Record<string, number>> {
   }
 
   // Fallback: paginate through businesses fetching only city_id
-  // Supabase returns max 1000 rows per request
   const PAGE_SIZE = 1000
   let offset = 0
   let hasMore = true
@@ -169,39 +169,10 @@ export default async function CitiesPage() {
         </div>
       </section>
 
-      {/* Cities grouped by state */}
+      {/* Cities grouped by state - paginated */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-10">
-            {sortedStates.map((state) => (
-              <div key={state}>
-                <h2 className="font-heading text-xl font-bold text-hustle-dark mb-4 border-b border-gray-200 pb-2">
-                  {state}
-                  <span className="text-sm font-normal text-hustle-muted ml-2">
-                    ({grouped[state].length} {grouped[state].length === 1 ? 'city' : 'cities'})
-                  </span>
-                </h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {grouped[state]
-                    .sort((a, b) => (b.business_count || 0) - (a.business_count || 0))
-                    .map((city) => (
-                      <Link
-                        key={city.slug}
-                        href={`/${city.slug}`}
-                        className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-hustle-amber group"
-                      >
-                        <h3 className="font-heading text-sm font-semibold text-hustle-dark group-hover:text-hustle-blue transition-colors">
-                          {city.name}
-                        </h3>
-                        <p className="text-xs text-hustle-muted mt-0.5">
-                          {city.business_count} {city.business_count === 1 ? 'business' : 'businesses'}
-                        </p>
-                      </Link>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <PaginatedCityGrid grouped={grouped} sortedStates={sortedStates} />
         </div>
       </section>
 
