@@ -5,6 +5,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import DataFreshness from '@/components/DataFreshness'
+import ExpandableAreaPills from '@/components/ExpandableAreaPills'
 import type { Metadata } from 'next'
 
 export const revalidate = 86400
@@ -103,7 +104,7 @@ export default async function TopCategoryCityPage({ params }: PageProps) {
     .eq('city_id', city.id)
     .eq('category_id', category.id)
     .eq('active', true)
-    .limit(50)
+    .limit(25)
 
   // Sort by quality score and take top 20
   const businesses = (rawBusinesses || [])
@@ -118,7 +119,7 @@ export default async function TopCategoryCityPage({ params }: PageProps) {
     .eq('category_id', category.id)
     .eq('active', true)
     .not('area_id', 'is', null)
-    .limit(200)
+    .limit(100)
 
   // Deduplicate areas
   const areaMap = new Map<string, { name: string; slug: string }>()
@@ -299,17 +300,19 @@ export default async function TopCategoryCityPage({ params }: PageProps) {
           <h2 className="text-xl font-heading font-bold text-hustle-dark mb-4">
             Browse {category.name} by Area in {city.name}
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {uniqueAreas.map((area) => (
-              <Link
-                key={area.slug}
-                href={`/${city.slug}/${area.slug}/${category.slug}`}
-                className="inline-block px-3 py-1.5 bg-gray-100 hover:bg-green-100 text-gray-700 hover:text-green-700 rounded-lg text-sm transition-colors"
-              >
-                {area.name}
-              </Link>
-            ))}
-          </div>
+          <ExpandableAreaPills
+            areas={uniqueAreas.map((area) => ({
+              slug: area.slug,
+              name: area.name,
+              count: 0,
+              citySlug: city.slug,
+              cityName: city.name,
+            }))}
+            categorySlug={category.slug}
+            initialCount={20}
+            batchSize={20}
+            groupByCity={false}
+          />
         </section>
       )}
 

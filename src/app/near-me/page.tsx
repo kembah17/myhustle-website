@@ -3,6 +3,7 @@ import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
+import PaginatedNearMe from '@/components/PaginatedNearMe'
 
 export const revalidate = 86400
 
@@ -116,68 +117,12 @@ export default async function NearMePage() {
           </p>
         </div>
 
-        {/* Cities with Areas */}
-        <div className="space-y-8">
-          {citiesWithAreas.map((city) => (
-            <div
-              key={city.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
-            >
-              {/* City Header */}
-              <Link
-                href={`/${city.slug}`}
-                className="block px-6 py-4 bg-hustle-blue hover:bg-hustle-blue/90 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="font-heading text-xl font-bold text-white">
-                      {city.name}
-                    </h2>
-                    <p className="text-blue-200 text-sm">{city.state} State</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-hustle-amber font-bold text-lg">
-                      {city.business_count}
-                    </span>
-                    <p className="text-blue-200 text-xs">
-                      {city.business_count === 1 ? 'business' : 'businesses'}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Areas Grid */}
-              {city.areas.length > 0 && (
-                <div className="p-6">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    {city.areas.map((area) => (
-                      <Link
-                        key={area.id}
-                        href={`/${city.slug}/${area.slug}`}
-                        className="group px-3 py-2.5 rounded-lg border border-gray-100 hover:border-hustle-amber hover:bg-hustle-amber/5 transition-all text-center"
-                      >
-                        <span className="text-sm font-medium text-hustle-dark group-hover:text-hustle-blue transition-colors">
-                          {area.name}
-                        </span>
-                        {area.business_count > 0 && (
-                          <span className="block text-xs text-hustle-muted mt-0.5">
-                            {area.business_count} {area.business_count === 1 ? 'biz' : 'businesses'}
-                          </span>
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {city.areas.length === 0 && (
-                <div className="p-6 text-center text-hustle-muted text-sm">
-                  Areas coming soon for {city.name}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Cities with Areas - paginated */}
+        <PaginatedNearMe
+          cities={citiesWithAreas}
+          initialCityCount={10}
+          initialAreaCount={8}
+        />
 
         {/* Bottom CTA */}
         <div className="mt-12 text-center bg-white rounded-xl p-8 shadow-sm border border-gray-100">

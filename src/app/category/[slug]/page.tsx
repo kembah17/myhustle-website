@@ -11,6 +11,7 @@ import type { Category, Business, Area, Review } from '@/lib/types'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 import { getSchemaMapping } from '@/lib/schema-mappings'
 import DataFreshness from '@/components/DataFreshness'
+import ExpandableAreaPills from '@/components/ExpandableAreaPills'
 
 export const revalidate = 86400
 
@@ -105,6 +106,7 @@ export default async function CategoryPage({ params }: PageProps) {
     .select('area_id, area:areas!inner(id, slug, name, city:cities!inner(slug, name))', { count: 'exact' })
     .in('category_id', categoryIds)
     .eq('active', true)
+    .limit(500)
 
   const allBizMeta = bizMeta || []
 
@@ -133,7 +135,7 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   // Get areas that have businesses in this category (from lightweight meta query)
-  const areaMap = new Map<string, { slug: string; name: string; count: number; citySlug: string }>()
+  const areaMap = new Map<string, { slug: string; name: string; count: number; citySlug: string; cityName: string }>()
   for (const biz of allBizMeta) {
     const bizArea = biz.area as any
     if (bizArea) {
@@ -141,7 +143,7 @@ export default async function CategoryPage({ params }: PageProps) {
       if (existing) {
         existing.count++
       } else {
-        areaMap.set(bizArea.id, { slug: bizArea.slug, name: bizArea.name, count: 1, citySlug: bizArea.city?.slug || 'lagos' })
+        areaMap.set(bizArea.id, { slug: bizArea.slug, name: bizArea.name, count: 1, citySlug: bizArea.city?.slug || 'lagos', cityName: bizArea.city?.name || 'Lagos' })
       }
     }
   }
@@ -288,18 +290,13 @@ export default async function CategoryPage({ params }: PageProps) {
             <h2 className="font-heading text-2xl font-bold mb-6">
               Find {category.name} Near You
             </h2>
-            <div className="flex flex-wrap gap-3">
-              {areasWithCount.map((area) => (
-                <Link
-                  key={area.slug}
-                  href={`/${area.citySlug}/${area.slug}/${slug}`}
-                  className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm hover:border-hustle-amber hover:shadow-sm transition-all"
-                >
-                  <span className="font-medium text-hustle-dark">{area.name}</span>
-                  <span className="text-hustle-muted">({area.count})</span>
-                </Link>
-              ))}
-            </div>
+            <ExpandableAreaPills
+              areas={areasWithCount}
+              categorySlug={slug}
+              initialCount={20}
+              batchSize={20}
+              groupByCity={true}
+            />
           </div>
         )}
 

@@ -223,20 +223,20 @@ export default async function SearchPage({ searchParams }: PageProps) {
   // Apply sorting
   switch (sort) {
     case 'rating':
-      query = query.limit(100)
+      query = query.limit(20)
       break
     case 'newest':
-      query = query.order('created_at', { ascending: false }).limit(100)
+      query = query.order('created_at', { ascending: false }).limit(20)
       break
     case 'az':
-      query = query.order('name', { ascending: true }).limit(100)
+      query = query.order('name', { ascending: true }).limit(20)
       break
     case 'relevant':
     default:
       query = query
         .order('verified', { ascending: false })
         .order('created_at', { ascending: false })
-        .limit(100)
+        .limit(20)
       break
   }
 
@@ -278,9 +278,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
       })
     }
 
-    bizList = filtered.map((item) => item.biz).slice(0, 50)
+    bizList = filtered.map((item) => item.biz).slice(0, 20)
   } else {
-    bizList = bizList.slice(0, 50)
+    bizList = bizList.slice(0, 20)
   }
 
   // Client-side sort by average rating if needed
@@ -295,7 +295,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         return { ...b, _avgRating: avgRating }
       })
       .sort((a, b) => (b as typeof a & { _avgRating: number })._avgRating - (a as typeof a & { _avgRating: number })._avgRating)
-      .slice(0, 50)
+      .slice(0, 20)
   }
 
   // Build active filters for pills
@@ -411,6 +411,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
               query={q || catSlug || areaSlug || 'browse'}
             />
             <BusinessGrid businesses={bizList} />
+            {bizList.length >= 20 && (
+              <p className="mt-6 text-center text-hustle-muted text-sm">
+                Showing top 20 results. Refine your search with more specific terms or add filters for better matches.
+              </p>
+            )}
           </>
         ) : (
           <div className="text-center py-16">
