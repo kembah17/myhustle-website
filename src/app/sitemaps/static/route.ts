@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { articles } from '@/lib/articles'
 
 export const revalidate = 86400
 
@@ -17,15 +18,27 @@ const STATIC_PAGES = [
   { path: '/pricing', changefreq: 'monthly', priority: '0.7' },
   { path: '/privacy', changefreq: 'monthly', priority: '0.3' },
   { path: '/terms', changefreq: 'monthly', priority: '0.3' },
+  { path: '/insights', changefreq: 'weekly', priority: '0.8' },
 ]
 
 export async function GET() {
+  // Add article pages dynamically
+  const articlePages = articles.map(a => ({
+    path: `/insights/${a.slug}`,
+    changefreq: 'monthly' as const,
+    priority: '0.7',
+    lastmod: a.dateModified,
+  }))
+
+  const allPages = [...STATIC_PAGES, ...articlePages]
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${STATIC_PAGES.map(p => `  <url>
+${allPages.map(p => `  <url>
     <loc>${BASE_URL}${p.path}</loc>
     <changefreq>${p.changefreq}</changefreq>
-    <priority>${p.priority}</priority>
+    <priority>${p.priority}</priority>${'lastmod' in p ? `
+    <lastmod>${p.lastmod}</lastmod>` : ''}
   </url>`).join('\n')}
 </urlset>`
 
