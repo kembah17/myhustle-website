@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$doing-business-in-lagos-guide`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Lagos is not just Nigeria&apos;s commercial capital &mdash; it is the economic engine of West Africa.</strong> With a GDP larger than most African countries, a metropolitan population exceeding 20 million, and a business culture that rewards hustle, resilience, and innovation, Lagos offers unmatched opportunities for entrepreneurs and established businesses alike. Our directory data shows <strong>453 verified businesses operating across 97 distinct areas</strong>, making Lagos the most commercially dense city on the MyHustle platform by a significant margin.

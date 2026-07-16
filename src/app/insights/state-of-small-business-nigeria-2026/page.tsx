@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$state-of-small-business-nigeria-2026`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Nigeria&apos;s small business ecosystem is larger, more diverse, and more digitally connected than ever.</strong> Our analysis of 74,901 verified business listings across 39 cities, 1,500 neighbourhoods, and 218 categories reveals a commercial landscape that defies simple narratives — one where catering entrepreneurs in Abuja outnumber tech consultants in Lagos, and where 99.5% of businesses have phone numbers but fewer than 1% use email as a contact method.

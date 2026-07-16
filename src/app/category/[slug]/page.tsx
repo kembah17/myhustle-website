@@ -5,6 +5,7 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import CategoryGrid from '@/components/CategoryGrid'
 import JsonLd from '@/components/JsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Category, Business, Area, Review } from '@/lib/types'
@@ -239,6 +240,7 @@ export default async function CategoryPage({ params }: PageProps) {
 
   return (
     <div>
+      <SpeakableJsonLd name={`${category.name} in Nigeria — MyHustle`} url={`https://myhustle.space/category/${category.slug}`} />
       <JsonLd data={itemListJsonLd} />
       <JsonLd data={serviceJsonLd} />
       <JsonLd data={datasetJsonLd} />

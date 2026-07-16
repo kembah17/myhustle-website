@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$popular-business-categories-nigeria-2026`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Catering services, management consulting, and diagnostics labs are the three most popular business categories in Nigeria in 2026.</strong> Our analysis of 74,901 verified business listings across 218 categories reveals what Nigerian entrepreneurs are building — and where the biggest opportunities lie for new entrants.

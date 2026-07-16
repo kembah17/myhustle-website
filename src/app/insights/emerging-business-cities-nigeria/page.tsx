@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$emerging-business-cities-nigeria`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Nigeria&apos;s business landscape extends far beyond Lagos and Abuja.</strong> While those two cities dominate headlines and investment flows, a new generation of business cities is emerging across the country &mdash; cities where lower costs, less competition, and growing consumer markets are creating compelling opportunities for entrepreneurs and investors. Our analysis of business listings across 39 cities reveals that cities like Port Harcourt, Enugu, Ibadan, Kano, and Akure are building vibrant commercial ecosystems that deserve serious attention.

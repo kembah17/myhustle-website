@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$how-to-register-business-nigeria-cac-guide`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Registering your business with the Corporate Affairs Commission (CAC) is the single most important legal step you can take as a Nigerian entrepreneur.</strong> It transforms your hustle from an informal operation into a recognised legal entity &mdash; one that can open corporate bank accounts, bid for contracts, access government grants, and build the kind of credibility that attracts serious customers and partners.

@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$digital-presence-nigerian-smes-online-listing`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>If your business isn&apos;t online, it&apos;s invisible to a growing majority of Nigerian consumers.</strong> Our analysis of 74,901 verified business listings reveals a striking digital divide: while 99.5% of Nigerian businesses have phone numbers and 97.8% have descriptions, only 57.7% maintain a website &mdash; and a mere 5 businesses (less than 0.01%) have listed an email address. For the tens of thousands of SMEs operating without any digital presence, the question is no longer whether to go online, but how to do it quickly and affordably.

@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$beauty-wellness-businesses-nigeria`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Nigeria&apos;s beauty and wellness sector is one of the fastest-growing segments of the SME economy.</strong> Across the MyHustle directory, 157 businesses operate in the combined beauty, hair salon, and tailoring categories &mdash; making this sector the second-largest cluster after food services. From luxury beauty studios in Victoria Island to neighbourhood hair salons in Akure, the industry reflects Nigeria&apos;s deep cultural investment in personal appearance and self-expression.

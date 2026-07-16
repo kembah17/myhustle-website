@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 
 export const metadata: Metadata = {
   title: 'Pricing — List Your Business on MyHustle',
@@ -187,6 +188,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-hustle-light">
+      <SpeakableJsonLd name="Pricing — MyHustle" url="https://myhustle.space/pricing" />
       <JsonLd data={serviceJsonLd} />
       <JsonLd data={faqJsonLd} />
       <BreadcrumbJsonLd

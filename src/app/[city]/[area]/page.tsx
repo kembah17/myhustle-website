@@ -4,6 +4,7 @@ import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BusinessGrid from '@/components/BusinessGrid'
 import JsonLd from '@/components/JsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 import type { Metadata } from 'next'
 import type { Area, Business, Category, Review, Landmark } from '@/lib/types'
@@ -247,6 +248,7 @@ export default async function AreaPage({ params }: PageProps) {
 
   return (
     <div>
+      <SpeakableJsonLd name={`Businesses in ${area.name}, ${city.name} — MyHustle`} url={`https://myhustle.space/${city.slug}/${area.slug}`} />
       <JsonLd data={itemListJsonLd} />
       <JsonLd data={areaPlaceJsonLd} />
       <JsonLd data={datasetJsonLd} />

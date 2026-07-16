@@ -9,6 +9,9 @@ import type { Category, Business, Area, Review } from '@/lib/types'
 import type { Metadata } from 'next'
 import { generateHomepageFAQs } from '@/lib/faq-generator'
 import FAQSection from '@/components/FAQSection'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
+import DataFreshness from '@/components/DataFreshness'
 
 export const revalidate = 3600
 
@@ -211,6 +214,19 @@ export default async function HomePage() {
       <JsonLd data={websiteJsonLd} />
       <JsonLd data={organizationJsonLd} />
       <JsonLd data={faqJsonLd} />
+      <BreadcrumbJsonLd items={[{ name: 'Home', url: 'https://myhustle.space' }]} />
+      <SpeakableJsonLd name="MyHustle — Find & Book Trusted Businesses Across Nigeria" url="https://myhustle.space" />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        name: 'Nigerian Business Directory',
+        description: `Comprehensive directory of ${cities.reduce((sum, c) => sum + (c.business_count || 0), 0).toLocaleString()} businesses across ${cities.length} Nigerian cities and ${categories.length} categories.`,
+        url: 'https://myhustle.space',
+        license: 'https://myhustle.space/terms',
+        creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+        temporalCoverage: '2025/..',
+        spatialCoverage: { '@type': 'Place', name: 'Nigeria' },
+      }} />
 
       {/* Hero Section - optimized for mobile visibility */}
       <section className="bg-hustle-blue text-white min-h-[60vh] md:min-h-[70vh] flex flex-col justify-center relative">
@@ -231,6 +247,20 @@ export default async function HomePage() {
           <svg className="w-6 h-6 text-blue-200/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
+        </div>
+      </section>
+
+      {/* Entity-first content block */}
+      <section className="bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-hustle-muted text-lg" data-speakable="true">
+            MyHustle is Nigeria&apos;s business directory with{' '}
+            <strong className="text-hustle-dark">{cities.reduce((sum, c) => sum + (c.business_count || 0), 0).toLocaleString()} verified business listings</strong>{' '}
+            across <strong className="text-hustle-dark">{cities.length} cities</strong> and{' '}
+            <strong className="text-hustle-dark">{categories.length} categories</strong>.{' '}
+            Updated daily, MyHustle helps Nigerians find, compare, and book trusted local services.
+          </p>
+          <DataFreshness count={cities.reduce((sum, c) => sum + (c.business_count || 0), 0)} label="businesses" />
         </div>
       </section>
 

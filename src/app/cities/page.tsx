@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import JsonLd from '@/components/JsonLd'
 import DataFreshness from '@/components/DataFreshness'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import PaginatedCityGrid from '@/components/PaginatedCityGrid'
 import type { Metadata } from 'next'
 
@@ -146,6 +147,7 @@ export default async function CitiesPage() {
   return (
     <div className="min-h-screen bg-hustle-light">
       <JsonLd data={breadcrumbJsonLd} />
+      <SpeakableJsonLd name="Browse Nigerian Cities — MyHustle" url="https://myhustle.space/cities" />
       <JsonLd data={datasetJsonLd} />
 
       {/* Header */}

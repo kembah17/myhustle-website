@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import WhatsAppCTA from '@/components/WhatsAppCTA'
 import { generateListYourBusinessFAQs } from '@/lib/faq-generator'
 import FAQSection from '@/components/FAQSection'
@@ -72,6 +74,8 @@ export default function ListYourBusinessPage() {
 
   return (
     <div>
+      <BreadcrumbJsonLd items={[{ name: 'Home', url: 'https://myhustle.space' }, { name: 'List Your Business', url: 'https://myhustle.space/list-your-business' }]} />
+      <SpeakableJsonLd name="List Your Business Free on MyHustle" url="https://myhustle.space/list-your-business" />
       <JsonLd data={pageJsonLd} />
 
       {/* Hero Section */}

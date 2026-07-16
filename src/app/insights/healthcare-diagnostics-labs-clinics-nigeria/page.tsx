@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$healthcare-diagnostics-labs-clinics-nigeria`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Healthcare remains one of the most critical sectors in Nigeria&apos;s economy, yet access to quality diagnostics and clinical services varies dramatically depending on where you live.</strong> Our analysis of 94 healthcare businesses listed across 39 cities on the MyHustle directory reveals a sector that is simultaneously growing and deeply unequal &mdash; one where Lagos and Abuja account for over half of all diagnostics facilities, while entire states in the North and South-South have minimal formal healthcare infrastructure.

@@ -3,6 +3,8 @@ import CategoryGrid from '@/components/CategoryGrid'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
+import DataFreshness from '@/components/DataFreshness'
 
 export const revalidate = 86400
 
@@ -81,6 +83,16 @@ export default async function CategoriesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <JsonLd data={breadcrumbLd} />
+      <SpeakableJsonLd name="Business Categories in Nigeria — MyHustle" url="https://myhustle.space/categories" />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        name: 'Nigerian Business Categories',
+        description: `Browse businesses across ${categoriesWithCounts.length} categories in Nigeria on MyHustle.`,
+        url: 'https://myhustle.space/categories',
+        license: 'https://myhustle.space/terms',
+        creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+      }} />
 
       <Breadcrumbs items={[{ label: 'Categories' }]} />
 
@@ -94,6 +106,7 @@ export default async function CategoriesPage() {
             Explore {categoriesWithCounts.length} categories with{' '}
             {totalBusinesses.toLocaleString()} businesses across Nigeria
           </p>
+          <DataFreshness count={totalBusinesses} label="businesses" />
         </div>
 
         {/* Category Grid */}

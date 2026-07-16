@@ -4,6 +4,8 @@ import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
 import type { Metadata } from 'next'
 import PaginatedNearMe from '@/components/PaginatedNearMe'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
+import DataFreshness from '@/components/DataFreshness'
 
 export const revalidate = 86400
 
@@ -102,6 +104,17 @@ export default async function NearMePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <JsonLd data={breadcrumbLd} />
+      <SpeakableJsonLd name="Find Businesses Near You | MyHustle" url="https://myhustle.space/near-me" />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        name: 'Nigerian Businesses by Location',
+        description: `${totalBusinesses.toLocaleString()} businesses across ${citiesWithAreas.length} cities and ${totalAreas.toLocaleString()} areas in Nigeria.`,
+        url: 'https://myhustle.space/near-me',
+        license: 'https://myhustle.space/terms',
+        creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+        spatialCoverage: { '@type': 'Place', name: 'Nigeria' },
+      }} />
 
       <Breadcrumbs items={[{ label: 'Near Me' }]} />
 
@@ -111,10 +124,11 @@ export default async function NearMePage() {
           <h1 className="font-heading text-3xl md:text-4xl font-bold text-hustle-dark mb-3">
             Find Businesses Near You
           </h1>
-          <p className="text-hustle-muted text-lg max-w-2xl mx-auto">
+          <p className="text-hustle-muted text-lg max-w-2xl mx-auto" data-speakable="true">
             Browse {totalBusinesses.toLocaleString()} businesses across{' '}
             {citiesWithAreas.length} cities and {totalAreas.toLocaleString()} areas in Nigeria
           </p>
+          <DataFreshness count={totalBusinesses} label="businesses" />
         </div>
 
         {/* Cities with Areas - paginated */}

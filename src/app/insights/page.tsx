@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { articles } from '@/lib/articles'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 
 export const revalidate = 86400
 
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
 export default function InsightsPage() {
   return (
     <div className="min-h-screen bg-white">
+      <SpeakableJsonLd name="Insights — MyHustle" url="https://myhustle.space/insights" />
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.space' },

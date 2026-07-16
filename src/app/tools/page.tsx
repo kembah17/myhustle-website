@@ -1,5 +1,9 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import JsonLd from '@/components/JsonLd';
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd';
+import SpeakableJsonLd from '@/components/SpeakableJsonLd';
+import DataFreshness from '@/components/DataFreshness';
 
 export const metadata: Metadata = {
   title: 'Free Business Tools — MyHustle',
@@ -155,6 +159,17 @@ const externalTools = [
 export default function ToolsPage() {
   return (
     <main className="min-h-screen bg-white">
+      <BreadcrumbJsonLd items={[{ name: 'Home', url: 'https://myhustle.space' }, { name: 'Free Business Tools', url: 'https://myhustle.space/tools' }]} />
+      <SpeakableJsonLd name="Free Business Tools — MyHustle" url="https://myhustle.space/tools" />
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Dataset',
+        name: 'Free Business Tools for Nigerian Entrepreneurs',
+        description: `${myHustleTools.length + externalTools.length} free online tools for Nigerian business owners including invoicing, PDF editing, QR codes, and more.`,
+        url: 'https://myhustle.space/tools',
+        license: 'https://myhustle.space/terms',
+        creator: { '@type': 'Organization', name: 'MyHustle', url: 'https://myhustle.space' },
+      }} />
       {/* Hero */}
       <section className="bg-hustle-blue px-4 py-16 text-center text-white sm:py-20">
         <div className="mx-auto max-w-3xl">
@@ -166,6 +181,7 @@ export default function ToolsPage() {
             registration to invoicing, documents, design, and more. All free, no
             signup required.
           </p>
+          <DataFreshness count={myHustleTools.length + externalTools.length} label="free tools" />
         </div>
       </section>
 

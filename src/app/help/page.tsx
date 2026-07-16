@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import FAQClient from '@/components/FAQClient'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 
 export const metadata: Metadata = {
   title: 'Help & FAQ — MyHustle',
   description:
     "Find answers to common questions about using MyHustle.com — Nigeria's trusted business directory.",
+  alternates: { canonical: 'https://myhustle.space/help' },
 }
 
 const FAQ_STRUCTURED_DATA = {
@@ -89,6 +92,8 @@ const FAQ_STRUCTURED_DATA = {
 export default function HelpPage() {
   return (
     <div className="bg-white min-h-screen">
+      <BreadcrumbJsonLd items={[{ name: 'Home', url: 'https://myhustle.space' }, { name: 'Help & FAQ', url: 'https://myhustle.space/help' }]} />
+      <SpeakableJsonLd name="Help & FAQ — MyHustle" url="https://myhustle.space/help" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_STRUCTURED_DATA) }}

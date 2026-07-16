@@ -3,6 +3,7 @@ import { getArticleBySlug } from '@/lib/articles'
 import ArticleLayout from '@/components/ArticleLayout'
 import JsonLd from '@/components/JsonLd'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import Link from 'next/link'
 
 export const revalidate = 86400
@@ -53,8 +54,13 @@ export default function Article() {
           dateModified: article.dateModified,
           mainEntityOfPage: { '@type': 'WebPage', '@id': `https://myhustle.space/insights/${slug}` },
           image: 'https://myhustle.space/logo-dark.png',
+          speakable: {
+            '@type': 'SpeakableSpecification',
+            cssSelector: ['h1', '[data-speakable]'],
+          },
         }}
       />
+      <SpeakableJsonLd name={article.title} url={`https://myhustle.space/insights/$nigerian-businesses-going-digital-trends`} />
       <ArticleLayout article={article}>
         <p className="text-xl text-gray-700 leading-relaxed">
           <strong>Nigeria&apos;s digital transformation is happening &mdash; but not in the way most people think.</strong> Our analysis of 74,901 verified business listings across 39 cities reveals a complex picture: near-universal phone adoption (99.5%), moderate website presence (57.7%), and virtually non-existent email usage (less than 0.01%). Nigerian businesses aren&apos;t resisting technology &mdash; they&apos;re adopting it selectively, leapfrogging some channels entirely while embracing others with remarkable speed.

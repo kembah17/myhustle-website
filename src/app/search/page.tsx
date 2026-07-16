@@ -7,6 +7,7 @@ import type { Metadata } from 'next'
 import type { Business, Category, Area, Review } from '@/lib/types'
 import SearchImpressionTracker from '@/components/analytics/SearchImpressionTracker'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import { expandSearchTerms, expandMultiWordQuery } from '@/lib/synonyms'
 import { inferCategoryFromTerms } from '@/lib/category-inference'
 
@@ -29,6 +30,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     robots: { index: false },
     openGraph: { title, description },
     twitter: { card: 'summary_large_image', title, description },
+    alternates: { canonical: `https://myhustle.space/search${q ? `?q=${encodeURIComponent(q)}` : ''}` },
   }
 }
 
@@ -347,6 +349,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   return (
     <div>
+      <SpeakableJsonLd name={`Search Results | MyHustle`} url="https://myhustle.space/search" />
       <section className="bg-hustle-blue text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Search Results' }]} />

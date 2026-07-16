@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import DataFreshness from '@/components/DataFreshness'
 import type { Metadata } from 'next'
 
@@ -67,6 +68,7 @@ export default async function TopIndexPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6">
+      <SpeakableJsonLd name="Top Businesses Across Nigeria — MyHustle" url="https://myhustle.space/top" />
       <BreadcrumbJsonLd
         items={[
           { name: 'Home', url: 'https://myhustle.space' },

@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 
 export const metadata: Metadata = {
   title: 'About Us — MyHustle',
@@ -18,6 +21,8 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-white">
+      <BreadcrumbJsonLd items={[{ name: 'Home', url: 'https://myhustle.space' }, { name: 'About', url: 'https://myhustle.space/about' }]} />
+      <SpeakableJsonLd name="About MyHustle" url="https://myhustle.space/about" />
       {/* Hero Section */}
       <section className="bg-hustle-blue text-white py-16 sm:py-24">
         <div className="max-w-4xl mx-auto px-4 text-center">

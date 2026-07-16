@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getSupabase } from '@/lib/supabase'
 import Breadcrumbs from '@/components/Breadcrumbs'
 import JsonLd from '@/components/JsonLd'
+import SpeakableJsonLd from '@/components/SpeakableJsonLd'
 import type { Metadata } from 'next'
 import SuggestWhatsApp from '@/components/SuggestWhatsApp'
 import { getCityIntro } from '@/lib/city-intros'
@@ -167,6 +168,7 @@ export default async function CityPage({ params }: PageProps) {
 
   return (
     <div>
+      <SpeakableJsonLd name={`Businesses in ${city.name} — MyHustle`} url={`https://myhustle.space/${city.slug}`} />
       <JsonLd data={breadcrumbLd} />
       <JsonLd data={itemListLd} />
       <JsonLd data={placeJsonLd} />
