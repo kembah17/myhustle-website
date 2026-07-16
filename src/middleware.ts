@@ -31,7 +31,7 @@ const KNOWN_ROUTE_PREFIXES = new Set([
   'api', 'dashboard', 'onboarding', 'login', 'signup', 'forgot-password',
   'search', 'business', 'category', 'categories', 'cities', 'near', 'near-me',
   'about', 'contact', 'help', 'legal', 'list-your-business', 'nigeria-only',
-  'sitemaps', 'sitemap.xml', '_next', 'favicon.ico', 'manifest',
+  'insights', 'pricing', 'tools', 'top', 'sitemaps', 'sitemap.xml', '_next', 'favicon.ico', 'manifest',
 ])
 
 // 410 Gone HTML response body
