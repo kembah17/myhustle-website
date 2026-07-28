@@ -1,5 +1,5 @@
-import { getSupabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
+import { fetchQualityBusinessSlugs } from '@/lib/sitemap-quality'
 
 export const revalidate = 86400 // 24 hours
 
@@ -7,23 +7,17 @@ const BASE_URL = 'https://myhustle.space'
 const BUSINESSES_PER_PAGE = 5000
 
 export async function GET() {
-  let totalBusinesses = 0
+  let qualityBusinessCount = 0
 
   try {
-    // Count ALL active businesses — no quality filtering
-    const { count, error } = await getSupabase()
-      .from('businesses')
-      .select('*', { count: 'exact', head: true })
-      .eq('active', true)
-
-    if (!error && count !== null) {
-      totalBusinesses = count
-    }
+    // Count quality-eligible businesses (cached by ISR)
+    const qualified = await fetchQualityBusinessSlugs()
+    qualityBusinessCount = qualified.length
   } catch (e) {
-    console.error('Sitemap index: error counting businesses', e)
+    console.error('Sitemap index: error counting quality businesses', e)
   }
 
-  const businessPages = Math.ceil(totalBusinesses / BUSINESSES_PER_PAGE)
+  const businessPages = Math.ceil(qualityBusinessCount / BUSINESSES_PER_PAGE)
 
   const sitemaps = [
     `${BASE_URL}/sitemaps/static`,

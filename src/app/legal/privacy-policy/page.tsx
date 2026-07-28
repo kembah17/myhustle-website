@@ -1,14 +1,63 @@
 import type { Metadata } from 'next'
+import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy',
+  title: 'Privacy Policy — How MyHustle Protects Your Data',
   description:
-    'MyHustle.com Privacy Policy — how we collect, use, and protect your personal data in compliance with Nigeria\'s NDPR/NDPA.',
+    "MyHustle.com Privacy Policy — how we collect, use, and protect your personal data in compliance with Nigeria's NDPR and NDPA. Learn about your data rights.",
+  openGraph: {
+    title: 'Privacy Policy — How MyHustle Protects Your Data',
+    description:
+      'How MyHustle collects, uses, and protects your personal data. NDPR/NDPA compliant. Learn about your data rights as a Nigerian user.',
+    type: 'website',
+    url: 'https://myhustle.space/legal/privacy-policy',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Privacy Policy — How MyHustle Protects Your Data',
+    description:
+      'How MyHustle collects, uses, and protects your personal data. NDPR/NDPA compliant.',
+  },
+  alternates: {
+    canonical: 'https://myhustle.space/legal/privacy-policy',
+  },
 }
 
 export default function PrivacyPolicyPage() {
+  const webPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Privacy Policy',
+    description:
+      "MyHustle.com Privacy Policy — how we collect, use, and protect your personal data in compliance with Nigeria's NDPR and NDPA.",
+    url: 'https://myhustle.space/legal/privacy-policy',
+    inLanguage: 'en',
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'MyHustle.com',
+      url: 'https://myhustle.space',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'MyHustle',
+      url: 'https://myhustle.space',
+    },
+    dateModified: '2026-04-05',
+    lastReviewed: '2026-04-05',
+  }
+
   return (
     <div>
+      <JsonLd data={webPageJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.space' },
+          { name: 'Legal', url: 'https://myhustle.space/legal' },
+          { name: 'Privacy Policy', url: 'https://myhustle.space/legal/privacy-policy' },
+        ]}
+      />
+
       <span className="text-sm text-hustle-muted bg-hustle-light rounded-lg px-4 py-2 inline-block mb-8">
         Last updated: 5 April 2026
       </span>
@@ -38,6 +87,10 @@ export default function PrivacyPolicyPage() {
         <li><strong>Location data:</strong> City, area, and coordinates associated with business listings</li>
         <li><strong>Booking details:</strong> Appointment dates, times, service requests, and customer notes</li>
         <li><strong>Usage data:</strong> Pages visited, search queries, device information, and browser type</li>
+        <li><strong>Voice interaction data:</strong> Transcripts and metadata from AI voice receptionist interactions</li>
+        <li><strong>WhatsApp data:</strong> Messages exchanged through our WhatsApp Business integration for bookings and notifications</li>
+        <li><strong>Payment data:</strong> Transaction records processed through Paystack (we do not store card details)</li>
+        <li><strong>Verification data:</strong> Phone numbers and OTP verification records for business ownership claims</li>
       </ul>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
@@ -49,8 +102,10 @@ export default function PrivacyPolicyPage() {
       <ul className="list-disc list-inside text-hustle-muted space-y-2 mb-4 ml-4">
         <li>Displaying business listings in our directory for public discovery</li>
         <li>Facilitating bookings between customers and businesses</li>
-        <li>Sending booking confirmations, reminders, and updates</li>
-        <li>Verifying business ownership and authenticity</li>
+        <li>Sending booking confirmations, reminders, and updates via email and WhatsApp</li>
+        <li>Verifying business ownership and authenticity through OTP verification</li>
+        <li>Powering AI voice receptionist services for subscribed businesses</li>
+        <li>Processing subscription payments and managing billing</li>
         <li>Analysing platform usage to improve our services</li>
         <li>Communicating important updates about your account or our platform</li>
         <li>Preventing fraud and ensuring platform security</li>
@@ -64,7 +119,7 @@ export default function PrivacyPolicyPage() {
       </p>
       <ul className="list-disc list-inside text-hustle-muted space-y-2 mb-4 ml-4">
         <li><strong>Consent:</strong> When you create an account or submit a business listing</li>
-        <li><strong>Contractual necessity:</strong> To provide our directory and booking services</li>
+        <li><strong>Contractual necessity:</strong> To provide our directory, booking, and subscription services</li>
         <li><strong>Legitimate interest:</strong> To improve our platform and prevent misuse</li>
         <li><strong>Legal obligation:</strong> To comply with applicable Nigerian laws</li>
       </ul>
@@ -110,6 +165,8 @@ export default function PrivacyPolicyPage() {
       <ul className="list-disc list-inside text-hustle-muted space-y-2 mb-4 ml-4">
         <li><strong>Paystack:</strong> Payment processing for subscription billing and transactions</li>
         <li><strong>Google Maps:</strong> Location services and map display for business listings</li>
+        <li><strong>WhatsApp / Meta:</strong> Messaging for booking notifications and customer communication</li>
+        <li><strong>Brevo:</strong> Transactional email delivery for booking confirmations and account notifications</li>
         <li><strong>Analytics providers:</strong> Aggregated usage data to improve platform performance</li>
       </ul>
       <p className="text-hustle-muted leading-relaxed mb-4">
@@ -124,6 +181,7 @@ export default function PrivacyPolicyPage() {
         <li><strong>Active accounts:</strong> Data is retained for as long as your account remains active</li>
         <li><strong>Deleted accounts:</strong> Personal data is removed within 30 days of account deletion</li>
         <li><strong>Booking records:</strong> Retained for 2 years for dispute resolution and legal compliance</li>
+        <li><strong>Voice interaction logs:</strong> Retained for 90 days, then automatically purged</li>
         <li><strong>Analytics data:</strong> Aggregated and anonymised data may be retained indefinitely</li>
       </ul>
 
@@ -139,7 +197,7 @@ export default function PrivacyPolicyPage() {
       </p>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        9. Children's Privacy
+        9. Children&apos;s Privacy
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         MyHustle is not intended for use by individuals under the age of 18. We do not knowingly

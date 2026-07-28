@@ -5,7 +5,7 @@
  */
 
 export interface QualityScore {
-  /** Numeric score (0-13 max) */
+  /** Numeric score (0-12 max) */
   score: number
   /** Human-readable list of signals that contributed to the score */
   signals: string[]

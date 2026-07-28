@@ -21,6 +21,7 @@ import ReportListingButton from '@/components/ReportListingButton'
 import SimilarBusinesses from '@/components/SimilarBusinesses'
 import { getSchemaMapping, getMetaServices } from '@/lib/schema-mappings'
 import ClaimCTA from '@/components/ClaimCTA'
+import { calculateQualityScore } from '@/lib/quality-score'
 
 // Task 5: Switch from force-dynamic to ISR with 24-hour revalidation
 export const revalidate = 86400
@@ -32,13 +33,46 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const { data: biz } = await getSupabase()
+  const supabase = getSupabase()
+
+  // Fetch business with fields needed for quality scoring
+  const { data: biz } = await supabase
     .from('businesses')
-    .select('name, description, category:categories(name, slug, parent_id, parent:categories(slug)), area:areas(name, city:cities(name, slug))')
+    .select('id, name, description, website, verified, verification_tier, cover_photo_url, area_id, category:categories(name, slug, parent_id, parent:categories(slug)), area:areas(name, city:cities(name, slug))')
     .eq('slug', slug)
     .single()
 
   if (!biz) return { title: 'Business Not Found' }
+
+  // Count published reviews for quality scoring
+  const { count: reviewCount } = await supabase
+    .from('reviews')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', biz.id)
+    .eq('status', 'published')
+
+  // Check for photos
+  const { count: photoCount } = await supabase
+    .from('business_photos')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', biz.id)
+
+  // Check for business hours
+  const { count: hoursCount } = await supabase
+    .from('business_hours')
+    .select('id', { count: 'exact', head: true })
+    .eq('business_id', biz.id)
+
+  // Calculate quality score
+  const { isIndexable } = calculateQualityScore({
+    description: biz.description,
+    area_id: biz.area_id,
+    website: biz.website,
+    hasPhotos: !!(biz.cover_photo_url || (photoCount && photoCount > 0)),
+    hasReviews: !!(reviewCount && reviewCount > 0),
+    hasHours: !!(hoursCount && hoursCount > 0),
+    isClaimed: !!(biz.verified || (biz.verification_tier && biz.verification_tier > 0)),
+  })
 
   const catName = (biz.category as unknown as Category)?.name || ''
   const areaName = (biz.area as unknown as Area)?.name || ''
@@ -54,7 +88,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     robots: {
-      index: true,
+      index: isIndexable,
       follow: true,
     },
     openGraph: { title, description, type: 'article' },

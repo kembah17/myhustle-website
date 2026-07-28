@@ -1,14 +1,63 @@
 import type { Metadata } from 'next'
+import JsonLd from '@/components/JsonLd'
+import BreadcrumbJsonLd from '@/components/BreadcrumbJsonLd'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service',
+  title: 'Terms of Service — Rules for Using MyHustle',
   description:
-    'Terms of Service for MyHustle.com — the rules and conditions governing your use of Nigeria\'s trusted business directory.',
+    "Terms of Service for MyHustle.com — the rules and conditions governing your use of Nigeria's trusted business directory, including listings, bookings, and subscriptions.",
+  openGraph: {
+    title: 'Terms of Service — Rules for Using MyHustle',
+    description:
+      "Terms and conditions for using MyHustle.com — Nigeria's trusted business directory. Covers listings, bookings, subscriptions, and user obligations.",
+    type: 'website',
+    url: 'https://myhustle.space/legal/terms-of-service',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Terms of Service — Rules for Using MyHustle',
+    description:
+      "Terms and conditions for using MyHustle.com — Nigeria's trusted business directory.",
+  },
+  alternates: {
+    canonical: 'https://myhustle.space/legal/terms-of-service',
+  },
 }
 
 export default function TermsOfServicePage() {
+  const webPageJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Terms of Service',
+    description:
+      "Terms of Service for MyHustle.com — the rules and conditions governing your use of Nigeria's trusted business directory.",
+    url: 'https://myhustle.space/legal/terms-of-service',
+    inLanguage: 'en',
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'MyHustle.com',
+      url: 'https://myhustle.space',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'MyHustle',
+      url: 'https://myhustle.space',
+    },
+    dateModified: '2026-04-05',
+    lastReviewed: '2026-04-05',
+  }
+
   return (
     <div>
+      <JsonLd data={webPageJsonLd} />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://myhustle.space' },
+          { name: 'Legal', url: 'https://myhustle.space/legal' },
+          { name: 'Terms of Service', url: 'https://myhustle.space/legal/terms-of-service' },
+        ]}
+      />
+
       <span className="text-sm text-hustle-muted bg-hustle-light rounded-lg px-4 py-2 inline-block mb-8">
         Last updated: 5 April 2026
       </span>
@@ -30,7 +79,8 @@ export default function TermsOfServicePage() {
       <p className="text-hustle-muted leading-relaxed mb-4">
         MyHustle.com is a business directory platform that connects customers with Nigerian small
         and medium enterprises (SMEs). Our services include business listing display, search and
-        discovery, booking facilitation, and business management tools.
+        discovery, booking facilitation, AI voice receptionist, WhatsApp integration, business
+        verification, and subscription-based business management tools.
       </p>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
@@ -87,6 +137,7 @@ export default function TermsOfServicePage() {
         <li>Disputes regarding services are between the customer and the business</li>
         <li>Businesses are responsible for honouring confirmed bookings or communicating changes promptly</li>
         <li>Customers should arrive on time and communicate cancellations in advance</li>
+        <li>Booking reminders are sent via email and WhatsApp as a courtesy and do not constitute a guarantee of service</li>
       </ul>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
@@ -97,12 +148,27 @@ export default function TermsOfServicePage() {
         <li>Subscriptions auto-renew at the end of each billing period unless cancelled</li>
         <li>You may cancel your subscription at any time through your dashboard</li>
         <li>No refunds are provided for partial billing periods</li>
-        <li>We reserve the right to change pricing with 30 days' notice</li>
+        <li>We reserve the right to change pricing with 30 days&apos; notice</li>
         <li>Free listings remain available with limited features</li>
+        <li>Premium features including AI voice receptionist, priority placement, and advanced analytics require an active subscription</li>
       </ul>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        7. Intellectual Property
+        7. AI Voice Receptionist Terms
+      </h2>
+      <p className="text-hustle-muted leading-relaxed mb-4">
+        Businesses with eligible subscriptions may access our AI voice receptionist service. By enabling this feature:
+      </p>
+      <ul className="list-disc list-inside text-hustle-muted space-y-2 mb-4 ml-4">
+        <li>You authorise MyHustle to handle incoming enquiries on behalf of your business using AI technology</li>
+        <li>You acknowledge that AI responses are generated automatically and may not always be perfectly accurate</li>
+        <li>You are responsible for keeping your business information current so the AI can provide accurate responses</li>
+        <li>Voice interactions may be recorded and analysed to improve service quality</li>
+        <li>MyHustle is not liable for any misunderstandings or errors arising from AI-generated responses</li>
+      </ul>
+
+      <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
+        8. Intellectual Property
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         The MyHustle platform, including its design, code, logos, and branding, is owned by
@@ -117,7 +183,7 @@ export default function TermsOfServicePage() {
       </p>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        8. Limitation of Liability
+        9. Limitation of Liability
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         To the maximum extent permitted by Nigerian law:
@@ -130,7 +196,7 @@ export default function TermsOfServicePage() {
       </ul>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        9. Dispute Resolution
+        10. Dispute Resolution
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         These Terms are governed by the laws of the Federal Republic of Nigeria. Any disputes
@@ -140,7 +206,7 @@ export default function TermsOfServicePage() {
       </p>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        10. Account Termination
+        11. Account Termination
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         MyHustle reserves the right to suspend or permanently remove accounts that:
@@ -160,16 +226,16 @@ export default function TermsOfServicePage() {
       </p>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        11. Changes to These Terms
+        12. Changes to These Terms
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
-        We may update these Terms from time to time. We will provide at least 30 days' notice
+        We may update these Terms from time to time. We will provide at least 30 days&apos; notice
         of material changes via email to your registered address. Your continued use of MyHustle
         after the effective date of changes constitutes acceptance of the updated Terms.
       </p>
 
       <h2 className="font-heading text-xl font-semibold text-hustle-dark mt-8 mb-4">
-        12. Contact Us
+        13. Contact Us
       </h2>
       <p className="text-hustle-muted leading-relaxed mb-4">
         If you have questions about these Terms, please contact us:

@@ -196,24 +196,11 @@ export default async function HomePage() {
     cityNames: cities.map(c => c.name),
   })
 
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: homeFaqs.map(faq => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
-    })),
-  }
 
   return (
     <div>
       <JsonLd data={websiteJsonLd} />
       <JsonLd data={organizationJsonLd} />
-      <JsonLd data={faqJsonLd} />
       <BreadcrumbJsonLd items={[{ name: 'Home', url: 'https://myhustle.space' }]} />
       <SpeakableJsonLd name="MyHustle — Find & Book Trusted Businesses Across Nigeria" url="https://myhustle.space" />
       <JsonLd data={{
